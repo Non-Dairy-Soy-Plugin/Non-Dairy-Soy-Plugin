@@ -1,0 +1,687 @@
+/*
+   Copyright 2010 Ed Venaglia
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// CUP specification for a simple expression evaluator (w/ actions)
+
+import java_cup.runtime.*;
+import net.venaglia.nondairy.soylang.lexer.cupparser.structure.*;
+import net.venaglia.nondairy.soylang.lexer.cupparser.structure.expr.*;
+import net.venaglia.nondairy.soylang.lexer.cupparser.structure.tag.*;
+import net.venaglia.nondairy.soylang.lexer.*;
+import java.util.List;
+import java.util.LinkedList;
+
+/* Preliminaries to set up and use the scanner.  */
+
+// scan with {: { Symbol t = super.scan(); System.err.println(t); return t; } :};
+
+/* Terminals (tokens returned by the scanner). */
+
+// everything not in braces or doc comments
+terminal String                        TEMPLATE_TEXT, IGNORED_TEXT, LITERAL_TEXT;
+
+// the tag bounding braces
+terminal String                        TAG_LBRACE, TAG_RBRACE, TAG_END_LBRACE, TAG_END_RBRACE;
+
+// lexicographical structures
+terminal String                        WHITESPACE, COMMENT;
+terminal String                        DOC_COMMENT, DOC_COMMENT_TAG, DOC_COMMENT_IDENTIFIER, DOC_COMMENT_END;
+
+// identifier tokens
+terminal String                        PARAMETER_REF, STRING_PARAMETER_REF, NAMESPACE_IDENTIFIER, TEMPLATE_IDENTIFIER;
+terminal String                        CAPTURED_IDENTIFIER, CAPTURED_FUNCTION_IDENTIFIER;
+
+// command tag pairs
+terminal SoySymbol                     TEMPLATE, LITERAL, MSG, IF, SWITCH, FOREACH, FOR, CALL, PARAM;
+
+// commands
+terminal SoySymbol                     NAMESPACE, PRINT, PRINT_IMPLICIT, ELSE_IF, ELSE, CASE, DEFAULT, IF_EMPTY, CSS;
+
+// special characters
+terminal SoySymbol                     SP_LITERAL, NIL_LITERAL, CR_LITERAL, LF_LITERAL, TAB_LITERAL, LB_LITERAL, RB_LITERAL;
+
+// template attributes
+//terminal                               PRIVATE, AUTOESCAPE;
+
+// print directives
+terminal String                        DIRECTIVE_IDENTIFIER, DIRECTIVE_PIPE, DIRECTIVE_COLON, DIRECTIVE_COMMA;
+//terminal                               NO_AUTOESCAPE, ID, ESCAPE_HTML, ESCAPE_URI, ESCAPE_JS, INSERT_WORD_BREAKS, BIDI_SPAN_WRAP, BIDI_UNICODE_WRAP;
+
+// functions
+//terminal SoySymbol           IS_FIRST, IS_LAST, INDEX, HAS_DATA, LENGTH, ROUND, FLOOR, CEILING, MIN, MAX, RANDOM_INT;
+//terminal SoySymbol           BIDI_GLOBAL_DIR, BIDI_DIR_ATTR, BIDI_MARK, BIDI_MARK_AFTER, BIDI_START_EDGE, BIDI_END_EDGE, BIDI_TEXT_DIR;
+
+// expression keywords
+terminal SoySymbol                     IN, RANGE;
+
+// msg attributes
+//terminal SoySymbol           DESC, MEANING;
+
+// call attributes
+//terminal SoySymbol           DATA;
+
+// literals
+terminal                               NULL_LITERAL;
+terminal Boolean                       BOOLEAN_LITERAL;
+terminal Integer                       INTEGER_LITERAL;
+terminal Double                        FLOATING_POINT_LITERAL;
+terminal String                        STRING_LITERAL_BEGIN, STRING_LITERAL_END, STRING_LITERAL, STRING_LITERAL_ESCAPE;
+
+// surrounding pairs
+terminal String                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+
+// operators
+terminal SoySymbol                     EQ, EQEQ, GT, LT, NOT, AND, OR, QUESTION, COLON, LTEQ, GTEQ, NOTEQ, PLUS, UMINUS;
+terminal SoySymbol                     MINUS, MULT, DIV, MOD, PIPE, DOT, COMMA;
+
+// errors
+terminal SoySymbol           DUPLICATE_NAMESPACE_DECLARATION, BAD_STRING_ESCAPE;
+terminal SoySymbol           UNTERMINATED_STRING_LITERAL, UNTERMINATED_TEMPLATE;
+terminal SoySymbol           LBRACE_ERROR, RBRACE_ERROR, ILLEGAL_TAG_DECLARATION, ILLEGAL_CLOSE_TAG;
+terminal SoySymbol           UNEXPECTED_EOF_IN_LITERAL_BLOCK, UNEXPECTED_EOF_IN_TAG_DECLARATION;
+terminal SoySymbol           UNEXPECTED_EOF_IN_STRING_LITERAL, UNEXPECTED_EOF_DOC_COMMENT;
+
+// eof marker
+// terminal SoySymbol           EOF;
+
+/* major non-terminals */
+non terminal TemplateFile              template_file;
+non terminal List<TemplateDeclaration> template_list;
+non terminal                           skip_element_list, skip_element;
+non terminal NamespaceDeclaration      namespace_def;
+non terminal String                    namespace_ident;
+//non terminal       ignored_text, comment;
+non terminal TemplateDocComment        template_doc_comment;
+non terminal SoyDocCommentBuffer       template_doc_buffer;
+non terminal TemplateDeclaration       template_def;
+non terminal String                    template_ident;
+
+/* tag non-terminals */
+non terminal ContentTagPair            template_tag;
+non terminal BeginTemplateTag          begin_template_tag;
+non terminal EndTag                    end_template_tag;
+non terminal ContentWrapper<?>         content_tag, non_content_tag;
+non terminal SpecialCharacterTag       special_char_tag;
+non terminal Character                 special_char;
+non terminal ContentTagPair            literal_tag, msg_tag, for_tag, param_tag;
+non terminal AlternatePathTag          if_tag, switch_tag, foreach_tag;
+non terminal AlternatePathTagBuffer    open_if_tag, closing_if_tag, open_switch_tag, closing_switch_tag;
+non terminal TemplateCall              call_tag;
+non terminal UnaryTag                  print_tag, else_if_tag, else_tag, case_tag, default_tag, ifempty_tag;
+//non terminal       css_tag;
+non terminal BeginTag                  begin_literal_tag, begin_msg_tag, begin_if_tag, begin_switch_tag,
+                                       begin_foreach_tag, begin_for_tag, begin_param_tag;
+non terminal BeginCallTag              begin_call_tag;
+non terminal EndTag                    end_literal_tag, end_msg_tag, end_if_tag, end_switch_tag,
+                                       end_foreach_tag, end_for_tag, end_call_tag, end_param_tag;
+non terminal IterableSequence          foreach_seq, for_seq;
+non terminal FunctionCall              for_range;
+non terminal List<ContentWrapper<?>>   param_list;
+non terminal List<Attribute>           attribute_list;
+non terminal Attribute                 attribute;
+non terminal List<Directive>           directive_list;
+non terminal Directive                 directive, simple_directive, compound_directive;
+
+/* other non-terminals */
+non terminal ContentWrapper<?>         content_element;
+non terminal List<ContentWrapper<?>>   content_sequence;
+non terminal List<Expression>          expr_list, dir_expr_list;
+non terminal Expression                expr, dot_reference, dir_expr;
+non terminal LiteralExpression<?>      literal_value;
+non terminal String                    string_literal;
+non terminal StringBuilder             string_literal_buf;
+non terminal BinaryOperator            binary_operator;
+
+///* Precedences */
+precedence left QUESTION, COLON;
+precedence left OR;
+precedence left AND;
+precedence left EQEQ, NOTEQ;
+precedence left LT, GT, LTEQ, GTEQ;
+precedence left PLUS, MINUS;
+precedence left MULT, DIV, MOD;
+precedence left UMINUS, NOT;
+precedence left DOT, LBRACK, RBRACK, LPAREN;
+
+/* The grammar */
+template_file      ::= skip_element_list namespace_def:n skip_element_list template_list:l
+                       {: RESULT = new TemplateFile(n,l); :}
+                   |   skip_element_list namespace_def:n template_list:l
+                       {: RESULT = new TemplateFile(n,l); :}
+                   |   namespace_def:n skip_element_list template_list:l
+                       {: RESULT = new TemplateFile(n,l); :}
+                   |   namespace_def:n template_list:l
+                       {: RESULT = new TemplateFile(n,l); :}
+                   ;
+
+template_list      ::= template_list:l skip_element
+                       {: RESULT = l; :}
+                   |   template_list:l template_def:t
+                       {: l.add(t); RESULT = l; :}
+//                   |   template_list:l namespace_def:n
+                   |   template_def:t
+                       {: List<TemplateDeclaration> l = new LinkedList<TemplateDeclaration>(); l.add(t); RESULT = l; :}
+                   ;
+skip_element_list  ::= skip_element_list skip_element
+                   |   skip_element
+                   ;
+skip_element       ::= COMMENT
+                   |   IGNORED_TEXT
+                   ;
+
+content_sequence   ::= content_element:e
+                       {: List<ContentWrapper<?>> l = new LinkedList<ContentWrapper<?>>(); l.add(e); RESULT = l; :}
+                   |   content_sequence:l content_element:e
+                       {: l.add(e); RESULT = l; :}
+                   ;
+content_element    ::= TEMPLATE_TEXT:t
+                       {: RESULT = ContentWrapper.create(new CapturedText(t)); :}
+                   |   COMMENT:c
+                       {: RESULT = ContentWrapper.create(new Comment(c)); :}
+                   |   content_tag:tag
+                       {: RESULT = tag; :}
+                   |   non_content_tag:tag
+                       {: RESULT = tag; :}
+                   ;
+content_tag        ::= literal_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+                   |   msg_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+                   |   if_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+                   |   switch_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+                   |   foreach_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+                   |   for_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+                   |   call_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+                   ;
+non_content_tag    ::= print_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+//                   |   css_tag
+                   |   special_char_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
+                   ;
+
+namespace_def      ::= TAG_LBRACE NAMESPACE NAMESPACE_IDENTIFIER:id TAG_RBRACE
+                       {: RESULT = new NamespaceDeclaration(id); :}
+                   |   TAG_LBRACE NAMESPACE RBRACE_ERROR
+                       {: RESULT = new NamespaceDeclaration(null); :}
+                   ;
+
+template_def       ::= template_doc_comment:doc template_tag:tag
+                       {: RESULT = new TemplateDeclaration(doc,tag); :}
+                   |   template_tag:tag
+                       {: RESULT = new TemplateDeclaration(null,tag); :}
+                   ;
+template_doc_comment ::= template_doc_buffer:buf DOC_COMMENT_END
+                       {: RESULT = new TemplateDocComment(buf); :}
+                   ;
+template_doc_buffer ::= template_doc_buffer:buf DOC_COMMENT:doc
+                       {: buf.append(doc); RESULT = buf; :}
+                   | template_doc_buffer:buf DOC_COMMENT_TAG:doc
+                       {: buf.append(doc); RESULT = buf; :}
+                   | template_doc_buffer:buf DOC_COMMENT_IDENTIFIER:doc
+                       {: buf.append(doc); RESULT = buf; :}
+                   | DOC_COMMENT:doc
+                       {: SoyDocCommentBuffer buf = new SoyDocCommentBuffer(); buf.append(doc); RESULT = buf; :}
+                   ;
+template_tag       ::= begin_template_tag:b content_sequence:c end_template_tag:e
+                       {: RESULT = new ContentTagPair(b,e,c); :}
+                   |   begin_template_tag:b end_template_tag:e
+                       {: RESULT = new ContentTagPair(b,e); :}
+                   |   TAG_LBRACE TEMPLATE ILLEGAL_TAG_DECLARATION TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new BeginTemplateTag(null,null,null),null); :}
+                   ;
+begin_template_tag ::= TAG_LBRACE TEMPLATE template_ident:id TAG_RBRACE
+                       {: RESULT = new BeginTemplateTag(id,null,null); :}
+                   |   TAG_LBRACE TEMPLATE template_ident:id attribute_list:att TAG_RBRACE
+                       {: RESULT = new BeginTemplateTag(id,null,att); :}
+                   |   TAG_LBRACE TEMPLATE ILLEGAL_TAG_DECLARATION TAG_RBRACE
+                       {: RESULT = new BeginTemplateTag(null,null,null); :}
+                   |   TAG_LBRACE TEMPLATE ILLEGAL_TAG_DECLARATION attribute_list:att TAG_RBRACE
+                       {: RESULT = new BeginTemplateTag(null,null,att); :}
+                   ;
+end_template_tag   ::= TAG_END_LBRACE TEMPLATE TAG_RBRACE
+                       {: RESULT = new EndTag("template"); :}
+                   ;
+
+literal_tag        ::= begin_literal_tag:b LITERAL_TEXT:text end_literal_tag:e
+                       {: RESULT = new ContentTagPair(b,e,ContentWrapper.create(new CapturedText(text))); :}
+                   ;
+begin_literal_tag  ::= TAG_LBRACE LITERAL TAG_RBRACE
+                       {: RESULT = new BeginTag("literal",null); :}
+                   ;
+end_literal_tag    ::= TAG_END_LBRACE LITERAL TAG_RBRACE
+                       {: RESULT = new EndTag("literal"); :}
+                   ;
+
+print_tag          ::= TAG_LBRACE PRINT expr:e TAG_RBRACE
+                       {: RESULT = new UnaryTag("print",e,null,null); :}
+                   |   TAG_LBRACE PRINT expr:e directive_list:l TAG_RBRACE
+                       {: RESULT = new UnaryTag("print",e,null,l); :}
+                   |   TAG_LBRACE PRINT_IMPLICIT expr:e TAG_RBRACE
+                       {: RESULT = new UnaryTag(null,e,null,null); :}
+                   |   TAG_LBRACE PRINT_IMPLICIT expr:e directive_list:l TAG_RBRACE
+                       {: RESULT = new UnaryTag(null,e,null,l); :}
+                   ;
+
+msg_tag            ::= begin_msg_tag:b content_sequence:l end_msg_tag:e
+                       {: RESULT = new ContentTagPair(b,e,l); :}
+                   |   begin_msg_tag:b end_msg_tag:e
+                       {: RESULT = new ContentTagPair(b,e); :}
+                   |   TAG_LBRACE MSG TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new UnaryTag("msg")); :}
+                   ;
+begin_msg_tag      ::= TAG_LBRACE MSG attribute_list:att TAG_RBRACE
+                       {: RESULT = new BeginTag("msg",att); :}
+                   |   TAG_LBRACE MSG TAG_RBRACE
+                       {: RESULT = new BeginTag("msg",null); :}
+                   ;
+end_msg_tag        ::= TAG_END_LBRACE MSG TAG_RBRACE
+                       {: RESULT = new EndTag("msg"); :}
+                   ;
+
+if_tag             ::= closing_if_tag:buf end_if_tag:e
+                       {: RESULT = new AlternatePathTag(buf,e); :}
+                   |   closing_if_tag:buf content_sequence:l end_if_tag:e
+                       {: RESULT = new AlternatePathTag(buf.append(l),e); :}
+                   |   open_if_tag:buf end_if_tag:e
+                       {: RESULT = new AlternatePathTag(buf,e); :}
+                   |   open_if_tag:buf content_sequence:l end_if_tag:e
+                       {: RESULT = new AlternatePathTag(buf.append(l),e); :}
+                   |   begin_if_tag:b end_if_tag:e
+                       {: RESULT = new AlternatePathTag(b,e,null); :}
+                   |   begin_if_tag:b content_sequence:l end_if_tag:e
+                       {: RESULT = new AlternatePathTag(b,e,l); :}
+                   |   TAG_LBRACE IF expr:e TAG_END_RBRACE
+                       {: RESULT = new AlternatePathTag(new UnaryTag("if",e,null,null),null,null); :}
+                   |   TAG_LBRACE IF TAG_END_RBRACE
+                       {: RESULT = new AlternatePathTag(new UnaryTag("if"),null,null); :}
+                   ;
+closing_if_tag     ::= open_if_tag:buf content_sequence:l else_tag:el
+                       {: RESULT = buf.append(l).append(el); :}
+                   |   open_if_tag:buf else_tag:el
+                       {: RESULT = buf.append(el); :}
+                   |   begin_if_tag:b content_sequence:l else_tag:el
+                       {: RESULT = new AlternatePathTagBuffer(b).append(l).append(el); :}
+                   |   begin_if_tag:b else_tag:el
+                       {: RESULT = new AlternatePathTagBuffer(b).append(el); :}
+                   ;
+open_if_tag        ::= open_if_tag:buf content_sequence:l else_if_tag:elif
+                       {: RESULT = buf.append(l).append(elif); :}
+                   |   open_if_tag:buf else_if_tag:elif
+                       {: RESULT = buf.append(elif); :}
+                   |   begin_if_tag:b content_sequence:l else_if_tag:elif
+                       {: RESULT = new AlternatePathTagBuffer(b).append(l).append(elif); :}
+                   |   begin_if_tag:b else_if_tag:elif
+                       {: RESULT = new AlternatePathTagBuffer(b).append(elif); :}
+                   ;
+begin_if_tag       ::= TAG_LBRACE IF expr:e TAG_RBRACE
+                       {: RESULT = new BeginTag("if",e,null,null); :}
+                   |   TAG_LBRACE IF TAG_RBRACE
+                       {: RESULT = new BeginTag("if",null); :}
+                   ;
+else_if_tag        ::= TAG_LBRACE ELSE_IF expr:e TAG_RBRACE
+                       {: RESULT = new UnaryTag("elseif",e,null,null); :}
+                   |   TAG_LBRACE ELSE_IF TAG_RBRACE
+                       {: RESULT = new UnaryTag("elseif"); :}
+                   ;
+else_tag           ::= TAG_LBRACE ELSE TAG_RBRACE
+                       {: RESULT = new UnaryTag("else"); :}
+                   ;
+end_if_tag         ::= TAG_END_LBRACE IF TAG_RBRACE
+                       {: RESULT = new EndTag("if"); :}
+                   ;
+
+switch_tag         ::= closing_switch_tag:buf content_sequence:l end_switch_tag:e
+                       {: RESULT = new AlternatePathTag(buf.append(l),e); :}
+                   |   closing_switch_tag:buf end_switch_tag:e
+                       {: RESULT = new AlternatePathTag(buf,e); :}
+                   |   open_switch_tag:buf content_sequence:l end_switch_tag:e
+                       {: RESULT = new AlternatePathTag(buf.append(l),e); :}
+                   |   open_switch_tag:buf end_switch_tag:e
+                       {: RESULT = new AlternatePathTag(buf,e); :}
+                   |   begin_switch_tag:b content_sequence:l end_switch_tag:e
+                       {: RESULT = new AlternatePathTag(b,e,l); :}
+                   |   begin_switch_tag:b end_switch_tag:e
+                       {: RESULT = new AlternatePathTag(b,e,null); :}
+                   |   TAG_LBRACE SWITCH expr:e TAG_END_RBRACE
+                       {: RESULT = new AlternatePathTag(new UnaryTag("switch",e,null,null),null,null); :}
+                   |   TAG_LBRACE SWITCH TAG_END_RBRACE
+                       {: RESULT = new AlternatePathTag(new UnaryTag("switch"),null,null); :}
+                   ;
+closing_switch_tag ::= open_switch_tag:buf content_sequence:l default_tag:d
+                       {: RESULT = buf.append(l).append(d); :}
+                   |   open_switch_tag:buf default_tag:d
+                       {: RESULT = buf.append(d); :}
+                   |   begin_switch_tag:b content_sequence:l default_tag:d
+                       {: RESULT = new AlternatePathTagBuffer(b).append(l).append(d); :}
+                   |   begin_switch_tag:b default_tag:d
+                       {: RESULT = new AlternatePathTagBuffer(b).append(d); :}
+                   ;
+open_switch_tag    ::= open_switch_tag:buf content_sequence:l case_tag:c
+                       {: RESULT = buf.append(l).append(c); :}
+                   |   open_switch_tag:buf case_tag:c
+                       {: RESULT = buf.append(c); :}
+                   |   begin_switch_tag:b content_sequence:l case_tag:c
+                       {: RESULT = new AlternatePathTagBuffer(b).append(l).append(c); :}
+                   |   begin_switch_tag:b case_tag:c
+                       {: RESULT = new AlternatePathTagBuffer(b).append(c); :}
+                   ;
+begin_switch_tag   ::= TAG_LBRACE SWITCH expr:e TAG_RBRACE
+                       {: RESULT = new BeginTag("switch",e,null,null); :}
+                   |   TAG_LBRACE SWITCH TAG_RBRACE
+                       {: RESULT = new BeginTag("switch",null); :}
+                   ;
+end_switch_tag     ::= TAG_END_LBRACE SWITCH TAG_RBRACE
+                       {: RESULT = new EndTag("switch"); :}
+                   ;
+case_tag           ::= TAG_LBRACE CASE expr_list:l TAG_RBRACE
+                       {: RESULT = new UnaryTag("case",l,null,null); :}
+                   |   TAG_LBRACE CASE TAG_RBRACE
+                       {: RESULT = new UnaryTag("case"); :}
+                   ;
+default_tag        ::= TAG_LBRACE DEFAULT TAG_RBRACE
+                       {: RESULT = new UnaryTag("default"); :}
+                   ;
+
+foreach_tag        ::= begin_foreach_tag:b content_sequence:l1 ifempty_tag:ie content_sequence:l2 end_foreach_tag:e
+                       {: RESULT = new AlternatePathTag(new AlternatePathTagBuffer(b).append(l1).append(ie).append(l2),e); :}
+                   |   begin_foreach_tag:b content_sequence:l ifempty_tag:ie end_foreach_tag:e
+                       {: RESULT = new AlternatePathTag(new AlternatePathTagBuffer(b).append(l).append(ie),e); :}
+                   |   begin_foreach_tag:b ifempty_tag:ie content_sequence:l end_foreach_tag:e
+                       {: RESULT = new AlternatePathTag(new AlternatePathTagBuffer(b).append(ie).append(l),e); :}
+                   |   begin_foreach_tag:b ifempty_tag:ie end_foreach_tag:e
+                       {: RESULT = new AlternatePathTag(new AlternatePathTagBuffer(b).append(ie),e); :}
+                   |   begin_foreach_tag:b content_sequence:l end_foreach_tag:e
+                       {: RESULT = new AlternatePathTag(b,e,l); :}
+                   |   begin_foreach_tag:b end_foreach_tag:e
+                       {: RESULT = new AlternatePathTag(b,e,null); :}
+                   |   TAG_LBRACE FOREACH TAG_END_RBRACE
+                       {: RESULT = new AlternatePathTag(new UnaryTag("foreach"),null,null); :}
+                   ;
+begin_foreach_tag  ::= TAG_LBRACE FOREACH foreach_seq:seq TAG_RBRACE
+                       {: RESULT = new BeginIteratorTag("foreach",seq,null,null); :}
+                   |   TAG_LBRACE FOREACH TAG_RBRACE
+                       {: RESULT = new BeginIteratorTag("foreach",null,null,null); :}
+                   ;
+end_foreach_tag    ::= TAG_END_LBRACE FOREACH TAG_RBRACE
+                       {: RESULT = new EndTag("foreach"); :}
+                   ;
+ifempty_tag        ::= TAG_LBRACE IF_EMPTY TAG_RBRACE
+                       {: RESULT = new UnaryTag("ifempty"); :}
+                   ;
+foreach_seq        ::= PARAMETER_REF:p IN expr:e
+                       {: RESULT = new IterableSequence(new CapturedIdentifier(p),e); :}
+                   ;
+
+for_tag            ::= begin_for_tag:b content_sequence:l end_for_tag:e
+                       {: RESULT = new ContentTagPair(b,e,l); :}
+                   |   begin_for_tag:b end_for_tag:e
+                       {: RESULT = new ContentTagPair(b,e); :}
+                   |   TAG_LBRACE FOR TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new UnaryTag("for")); :}
+                   ;
+begin_for_tag      ::= TAG_LBRACE FOR for_seq:seq TAG_RBRACE
+                       {: RESULT = new BeginIteratorTag("for",seq,null,null); :}
+                   ;
+end_for_tag        ::= TAG_END_LBRACE FOR TAG_RBRACE
+                       {: RESULT = new EndTag("for"); :}
+                   ;
+for_seq            ::= PARAMETER_REF:p for_range:r
+                       {: RESULT = new IterableSequence(new CapturedIdentifier(p),r.getArgs()); :}
+                   ;
+for_range          ::= IN RANGE LPAREN expr_list:l RPAREN
+                       {: RESULT = new FunctionCall(new CapturedIdentifier("range"),l); :}
+                   ;
+
+call_tag           ::= begin_call_tag:b param_list:p end_call_tag:e
+                       {: RESULT = new TemplateCall(b,e,p); :}
+                   |   begin_call_tag:b end_call_tag:e
+                       {: RESULT = new TemplateCall(b,e,null); :}
+                   |   TAG_LBRACE CALL TEMPLATE_IDENTIFIER:id TAG_END_RBRACE
+                       {: RESULT = new TemplateCall(new BeginCallTag(id,null),null,null); :}
+                   |   TAG_LBRACE CALL TEMPLATE_IDENTIFIER:id attribute_list:att TAG_END_RBRACE
+                       {: RESULT = new TemplateCall(new BeginCallTag(id,att),null,null); :}
+                   |   TAG_LBRACE CALL TAG_END_RBRACE
+                       {: RESULT = new TemplateCall(new BeginCallTag(null,null),null,null); :}
+                   ;
+begin_call_tag     ::= begin_call_tag:b TEMPLATE_TEXT
+                       {: RESULT = b; :}
+                   |   TAG_LBRACE CALL TEMPLATE_IDENTIFIER:id attribute_list:att TAG_RBRACE
+                       {: RESULT = new BeginCallTag(id,att); :}
+                   |   TAG_LBRACE CALL TEMPLATE_IDENTIFIER:id TAG_RBRACE
+                       {: RESULT = new BeginCallTag(id,null); :}
+                   |   TAG_LBRACE CALL attribute_list:att TAG_RBRACE
+                       {: RESULT = new BeginCallTag(null,att); :}
+                   |   TAG_LBRACE CALL TAG_RBRACE
+                       {: RESULT = new BeginCallTag(null,null); :}
+                   ;
+end_call_tag       ::= TAG_END_LBRACE CALL TAG_RBRACE
+                       {: RESULT = new EndTag("call"); :}
+                   ;
+
+param_list         ::= param_list:l TEMPLATE_TEXT
+                       {: RESULT = l; :}
+                   |   param_list:l param_tag:p
+                       {: l.add(ContentWrapper.create(p)); RESULT = l; :}
+                   |   param_tag:p
+                       {: LinkedList<ContentWrapper<?>> l = new LinkedList<ContentWrapper<?>>(); l.add(ContentWrapper.create(p)); RESULT = l; :}
+                   ;
+param_tag          ::= begin_param_tag:b content_sequence:l end_param_tag:e
+                       {: RESULT = new ContentTagPair(b,e,l); :}
+                   |   begin_param_tag:b end_param_tag:e
+                       {: RESULT = new ContentTagPair(b,e); :}
+                   |   TAG_LBRACE PARAM PARAMETER_REF:id COLON expr:e TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new BeginParamTag(id,e),null); :}
+                   |   TAG_LBRACE PARAM PARAMETER_REF:id TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new BeginParamTag(id),null); :}
+                   |   TAG_LBRACE PARAM TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new BeginParamTag(null),null); :}
+                   ;
+begin_param_tag    ::= TAG_LBRACE PARAM PARAMETER_REF:id COLON expr:e TAG_RBRACE
+                       {: RESULT = new BeginParamTag(id,e); :}
+                   |   TAG_LBRACE PARAM PARAMETER_REF:id TAG_RBRACE
+                       {: RESULT = new BeginParamTag(id); :}
+                   |   TAG_LBRACE PARAM TAG_RBRACE
+                       {: RESULT = new BeginParamTag(null); :}
+                   ;
+end_param_tag      ::= TAG_END_LBRACE PARAM TAG_RBRACE
+                       {: RESULT = new EndTag("param"); :}
+                   ;
+
+//css_tag            ::= TAG_LBRACE CSS TAG_RBRACE
+//                   ;
+
+attribute_list     ::= attribute:att
+                       {: LinkedList<Attribute> l = new LinkedList<Attribute>(); l.add(att); RESULT = l; :}
+                   |   attribute_list:l attribute:att
+                       {: l.add(att); RESULT = l; :}
+                   ;
+attribute          ::= CAPTURED_IDENTIFIER:name EQ string_literal:val
+                       {: RESULT = new Attribute(name,new StringLiteralExpression(val)); :}
+                   |   CAPTURED_IDENTIFIER:name EQ STRING_LITERAL_BEGIN STRING_PARAMETER_REF:val STRING_LITERAL_END
+                       {: RESULT = new Attribute(name,new ParameterRef(val)); :}
+                   ;
+
+directive_list     ::= directive:dir
+                       {: LinkedList<Directive> l = new LinkedList<Directive>(); l.add(dir); RESULT = l; :}
+                   |   directive_list:l directive:dir
+                       {: l.add(dir); RESULT = l; :}
+                   ;
+directive          ::= compound_directive:d
+                       {: RESULT = d; :}
+                   |   simple_directive:d
+                       {: RESULT = d; :}
+                   ;
+
+compound_directive ::= DIRECTIVE_PIPE DIRECTIVE_IDENTIFIER:i DIRECTIVE_COLON dir_expr_list:l
+                       {: RESULT = new Directive(i, l); :}
+                   ;
+
+dir_expr_list      ::= dir_expr:e
+                       {: List<Expression> l = new LinkedList<Expression>(); l.add(e); RESULT = l; :}
+                   |   dir_expr_list:l DIRECTIVE_COMMA dir_expr:e
+                       {: l.add(e); RESULT = l; :}
+                   ;
+
+dir_expr           ::= literal_value:e
+                       {: RESULT = e; :}
+                   |   NULL_LITERAL
+                       {: RESULT = new NullLiteralExpression(); :}
+                   |   PARAMETER_REF:id
+                       {: RESULT = new ParameterRef(id); :}
+                   ;
+
+simple_directive   ::= DIRECTIVE_PIPE DIRECTIVE_IDENTIFIER:i
+                       {: RESULT = new Directive(i); :}
+                   ;
+
+special_char_tag   ::= TAG_LBRACE special_char:c TAG_RBRACE
+                       {: RESULT = new SpecialCharacterTag(c); :}
+                   ;
+special_char       ::= SP_LITERAL
+                       {: RESULT = ' '; :}
+                   |   NIL_LITERAL
+                       {: RESULT = null; :}
+                   |   CR_LITERAL
+                       {: RESULT = '\r'; :}
+                   |   LF_LITERAL
+                       {: RESULT = '\n'; :}
+                   |   TAB_LITERAL
+                       {: RESULT = '\t'; :}
+                   |   LB_LITERAL
+                       {: RESULT = '{'; :}
+                   |   RB_LITERAL
+                       {: RESULT = '}'; :}
+                   ;
+
+expr_list          ::= expr:e
+                       {: List<Expression> l = new LinkedList<Expression>(); l.add(e); RESULT = l; :}
+                   |   expr_list:l COMMA expr:e
+                       {: l.add(e); RESULT = l; :}
+                   ;
+
+expr               ::= CAPTURED_IDENTIFIER:id
+                       {: RESULT = new CapturedIdentifier(id); :}
+                   |   PARAMETER_REF:id
+                       {: RESULT = new ParameterRef(id); :}
+                   |   CAPTURED_FUNCTION_IDENTIFIER:id LPAREN expr_list:l RPAREN
+                       {: RESULT = new FunctionCall(new CapturedIdentifier(id),l); :}
+                   |   CAPTURED_FUNCTION_IDENTIFIER:id LPAREN RPAREN
+                       {: RESULT = new FunctionCall(new CapturedIdentifier(id),null); :}
+                   |   expr:l dot_reference:r
+                       {: RESULT = new BinaryOperatorExpression(l,new BinaryOperator("."),r); :}
+                   |   expr:f LPAREN expr_list:args RPAREN
+                       {: RESULT = new FunctionCall(f,args); :}
+                   |   expr:f LPAREN RPAREN
+                       {: RESULT = new FunctionCall(f,null); :}
+                   |   literal_value:v
+                       {: RESULT = v; :}
+                   |   NULL_LITERAL
+                       {: RESULT = new NullLiteralExpression(); :}
+                   |   NOT expr:e
+                       {: RESULT = new UnaryOperatorExpression(new UnaryOperator("!"), e); :}
+                   |   expr:l binary_operator:op expr:r
+                       {: RESULT = new BinaryOperatorExpression(l,op,r); :}
+                   |   LPAREN expr:e RPAREN
+                       {: RESULT = e; :}
+                   |   expr:q QUESTION expr:y COLON expr:n
+                       {: RESULT = new TernaryOperatorExpression(q,y,n); :}
+                   ;
+
+literal_value      ::= MINUS INTEGER_LITERAL:i
+                       {: RESULT = new IntegerLiteralExpression(0 - i); :}
+                   |   INTEGER_LITERAL:i
+                       {: RESULT = new IntegerLiteralExpression(i); :}
+                   |   MINUS FLOATING_POINT_LITERAL:f
+                       {: RESULT = new FloatLiteralExpression(0.0 - f); :}
+                   |   FLOATING_POINT_LITERAL:f
+                       {: RESULT = new FloatLiteralExpression(f); :}
+                   |   string_literal:s
+                       {: RESULT = new StringLiteralExpression(s); :}
+                   |   BOOLEAN_LITERAL:b
+                       {: RESULT = new BooleanLiteralExpression(b); :}
+                   ;
+string_literal     ::= STRING_LITERAL_BEGIN string_literal_buf:buf STRING_LITERAL_END
+                       {: RESULT = buf.toString(); :}
+                   |   STRING_LITERAL_BEGIN STRING_LITERAL_END
+                       {: RESULT = ""; :}
+                   ;
+string_literal_buf ::= string_literal_buf:buf STRING_LITERAL:s
+                       {: buf.append(s); RESULT = buf; :}
+                   |   string_literal_buf:buf STRING_LITERAL_ESCAPE:s
+                       {: buf.append(s); RESULT = buf; :}
+                   |   STRING_LITERAL:s
+                       {: RESULT = new StringBuilder(s); :}
+                   |   STRING_LITERAL_ESCAPE:s
+                       {: RESULT = new StringBuilder(s); :}
+                   ;
+
+binary_operator    ::= PLUS
+                       {: RESULT = new BinaryOperator("+"); :}
+                   |   MINUS
+                       {: RESULT = new BinaryOperator("-"); :}
+                   |   MULT
+                       {: RESULT = new BinaryOperator("*"); :}
+                   |   DIV
+                       {: RESULT = new BinaryOperator("/"); :}
+                   |   MOD
+                       {: RESULT = new BinaryOperator("%"); :}
+                   |   EQEQ
+                       {: RESULT = new BinaryOperator("=="); :}
+                   |   NOTEQ
+                       {: RESULT = new BinaryOperator("!="); :}
+                   |   LT
+                       {: RESULT = new BinaryOperator("<"); :}
+                   |   LTEQ
+                       {: RESULT = new BinaryOperator("<="); :}
+                   |   GT
+                       {: RESULT = new BinaryOperator(">"); :}
+                   |   GTEQ
+                       {: RESULT = new BinaryOperator(">="); :}
+                   |   AND
+                       {: RESULT = new BinaryOperator("&"); :}
+                   |   OR
+                       {: RESULT = new BinaryOperator("|"); :}
+                   ;
+
+dot_reference      ::= DOT CAPTURED_IDENTIFIER:id
+                       {: RESULT = new CapturedIdentifier(id); :}
+                   |   DOT INTEGER_LITERAL:i
+                       {: RESULT = new IntegerLiteralExpression(i); :}
+                   |   LBRACK expr:e RBRACK
+                       {: RESULT = e; :}
+                   ;
+
+namespace_ident    ::= CAPTURED_IDENTIFIER:id
+                       {: RESULT = id; :}
+                   |   NAMESPACE_IDENTIFIER:id
+                       {: RESULT = id; :}
+                   |   namespace_ident:ns DOT CAPTURED_IDENTIFIER:id
+                       {: RESULT = ns + "." + id; :}
+                   ;
+
+template_ident     ::= DOT CAPTURED_IDENTIFIER:id
+                       {: RESULT = "." + id; :}
+                   |   TEMPLATE_IDENTIFIER:id
+                       {: RESULT = id; :}
+                   |   template_ident:t DOT CAPTURED_IDENTIFIER:id
+                       {: RESULT = t + "." + id; :}
+                   ;

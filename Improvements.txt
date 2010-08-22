@@ -1,0 +1,17 @@
+ver 0.2
+* Initial parser implementation completed
+* Open source release under Apache 2.0 license
+
+ver 0.1.2
+* Fixed bug where {/ and /} were not being colored correctly
+* Added syntax highlight for function names
+
+ver: 0.1.1
+* Only @param denotes a parameter in soy doc
+* Minor refinements and fixes to lexer
+* Fixed problem where {namespace...} would indicate a problem when there was none.
+* Support for short-cut line and block commenting
+* Support for basic brace matching
+* Cleaned out a bunch of CUP parser dependencies that were only used for testing lexical validity
+* Packaging cleanup, in preparation for open-source release
+* File icon is now transparent

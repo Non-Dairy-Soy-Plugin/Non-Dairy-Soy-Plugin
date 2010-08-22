@@ -1,0 +1,56 @@
+<!--
+  ~ Copyright 2010 Ed Venaglia
+  ~
+  ~    Licensed under the Apache License, Version 2.0 (the "License");
+  ~    you may not use this file except in compliance with the License.
+  ~    You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~    Unless required by applicable law or agreed to in writing, software
+  ~    distributed under the License is distributed on an "AS IS" BASIS,
+  ~    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~    See the License for the specific language governing permissions and
+  ~    limitations under the License.
+  -->
+
+<idea-plugin version="2">
+    <name>Non-Dairy Soy Plugin</name>
+    <description>
+        A plugin to help with the development of Closure Templates (soy files).
+
+        This plugin is still early in development, and updates are subject to
+        my available free time. For now, this initial version provides better
+        functionality than adding a custom language.
+
+        Use at your own risk! ...after all, this is my first plugin.
+    </description>
+    <version>0.1.1 (alpha)</version>
+    <vendor>Ed Venaglia</vendor>
+    <idea-version since-build="95.66"/>
+
+    <application-components>
+        <!-- Add your application components here -->
+        <component>
+            <implementation-class>net.venaglia.nondairy.NonDairyMain</implementation-class>
+        </component>
+    </application-components>
+
+    <project-components>
+        <!-- Add your project components here -->
+    </project-components>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileTypeFactory implementation="net.venaglia.nondairy.soylang.SoyFileTypeFactory"/>
+        <syntaxHighlighter key="soy" implementationClass="net.venaglia.nondairy.soylang.SoySyntaxHighlighter"/>
+        <colorSettingsPage implementation="net.venaglia.nondairy.soylang.SoyColorsAndFontsPage"/>
+        <!--<lang.foldingBuilder language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFoldingBuilder"/>-->
+        <lang.braceMatcher language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyBraceMatcher"/>
+        <lang.parserDefinition language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyParserDefinition"/>
+        <lang.commenter language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyCommenter"/>
+    </extensions>
+</idea-plugin>

@@ -1,0 +1,1 @@
+// line comments are not detected if they are not at the beginning of a line and there is non-whitespace anywhere before them.

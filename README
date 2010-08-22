@@ -1,0 +1,24 @@
+Welcome to the Non-Dairy Soy plugin!
+
+This document is subject to change, particularly at any point it is deemed
+necessary to add or revise something.
+
+== Project Goals ==
+
+ * Develop a top-quality IntelliJ language plugin
+ * Enhance the usability and maintainability of soy files
+ * Leverage the most powerful features of IntelliJ IDEA to promote a superior
+   developer experience
+ * I18N support from day one; hopefully with language additions available
+   before beta release
+ * Automated tests designed to ensure a quality release every time
+
+== FAQ ==
+
+Why a Plugin for Closure Templates?
+    Simply put, our team started using Closure Templates in our project because
+    they are nifty. As an avid IntelliJ IDEA user in an IntelliJ IDEA shop, I
+    was disappointed there wasn't one already.
+
+    Wait, I can write Java code, why not a plugin for the most awesome Java IDE
+    around?
