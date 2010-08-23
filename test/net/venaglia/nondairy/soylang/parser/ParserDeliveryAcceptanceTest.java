@@ -25,12 +25,14 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
 
 /**
  * Created by IntelliJ IDEA.
@@ -40,6 +42,8 @@ import java.util.NoSuchElementException;
  */
 @SuppressWarnings({ "HardCodedStringLiteral" })
 public class ParserDeliveryAcceptanceTest extends BaseParserTest {
+
+    private static final Pattern MATCH_DELETED_TEXT = Pattern.compile("\u007F+");
 
     private enum FailState { PASS, FAIL, RETRY_VERBOSE }
 
@@ -78,12 +82,15 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
         return outer;
     }
 
-    private int countPermutations(List<List<SoySymbol>> groupedSymbols) {
-        int count = 1;
+    private int[] countPermutations(List<List<SoySymbol>> groupedSymbols) {
+        int[] count = {1,0};
+        int totalSymbolCount = 0;
         for (List<SoySymbol> symbolGroup : groupedSymbols) {
             if (symbolGroup.isEmpty()) continue;
-            count += symbolGroup.size() * 3 - 2;
+            count[0] += symbolGroup.size() * 3 - 1;
+            totalSymbolCount += symbolGroup.size();
         }
+        count[1] = totalSymbolCount * 3 - 1;
         return count;
     }
 
@@ -188,12 +195,17 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
         List<List<SoySymbol>> groupedSymbols = groupSymbols(scanner.iterator());
         int symbolCount = 0;
         for (List<SoySymbol> symbolGroup : groupedSymbols) symbolCount += symbolGroup.size();
-        int permutationCount = countPermutations(groupedSymbols);
+        int[] permutationCount = countPermutations(groupedSymbols);
+        int permutationCountTotal = 0;
+        for (int c : permutationCount) {
+            permutationCountTotal += c;
+        }
+        permutationCountTotal *= 2;
         System.out.printf("Preparing permutable source from %d symbols [%d chars] with %d permutations.%n",
                           symbolCount,
                           source.length(),
-                          permutationCount);
-        return new PermutableMockTokenSource(source, groupedSymbols, 0, permutationCount);
+                          permutationCountTotal);
+        return buildPermutableMockTokenSource(source, groupedSymbols, 0, 0, permutationCount, permutationCountTotal);
     }
 
     @Override
@@ -231,23 +243,59 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
         testPermutatedParse("edge-cases.soy");
     }
 
+    private PermutableMockTokenSource buildPermutableMockTokenSource(CharSequence originalSource,
+                                                                     List<List<SoySymbol>> groupedSymbols,
+                                                                     int permutationSequence,
+                                                                     int permutationCountIndex,
+                                                                     int[] permutationCount,
+                                                                     int permutationCountTotal) {
+        CharSequence source;
+        Iterator<SoySymbol> symbolIterator;
+        if (permutationSequence % 2 == 0) {
+            source = permuteSourceBuffer(originalSource, groupedSymbols, permutationSequence >> 1);
+            symbolIterator = permute(groupedSymbols, permutationSequence);
+        } else {
+            source = MATCH_DELETED_TEXT.matcher(permuteSourceBuffer(originalSource, groupedSymbols, permutationSequence >> 1)).replaceAll("");
+            try {
+                symbolIterator = SoyScannerTest.buildScanner(source, "YYINITIAL").iterator();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return new PermutableMockTokenSource(source,
+                                             symbolIterator,
+                                             originalSource,
+                                             groupedSymbols,
+                                             permutationSequence,
+                                             permutationCountIndex,
+                                             permutationCount,
+                                             permutationCountTotal);
+    }
+
     private class PermutableMockTokenSource extends MockTokenSource {
 
         private final CharSequence originalSource;
         private final List<List<SoySymbol>> groupedSymbols;
         private final int permutationSequence;
-        private final int permutationCount;
+        private final int permutationCountIndex;
+        private final int[] permutationCount;
+        private final int permutationCountTotal;
 
-        private PermutableMockTokenSource(CharSequence originalSource,
+        private PermutableMockTokenSource(CharSequence source,
+                                          Iterator<SoySymbol> symbolIterator,
+                                          CharSequence originalSource,
                                           List<List<SoySymbol>> groupedSymbols,
                                           int permutationSequence,
-                                          int permutationCount) {
-            super(permuteSourceBuffer(originalSource, groupedSymbols, permutationSequence),
-                  permute(groupedSymbols, permutationSequence));
+                                          int permutationCountIndex,
+                                          int[] permutationCount,
+                                          int permutationCountTotal) {
+            super(source, symbolIterator);
             this.originalSource = originalSource;
             this.groupedSymbols = groupedSymbols;
             this.permutationSequence = permutationSequence;
+            this.permutationCountIndex = permutationCountIndex;
             this.permutationCount = permutationCount;
+            this.permutationCountTotal = permutationCountTotal;
         }
 
         @Override
@@ -262,18 +310,46 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
                     failState = FailState.RETRY_VERBOSE;
                     System.out.printf("Failed ParserDeliveryAcceptanceTest on permutation %d of %d%n",
                                       permutationSequence,
-                                      permutationCount);
-                    return new PermutableMockTokenSource(originalSource,
-                                                         groupedSymbols,
-                                                         permutationSequence,
-                                                         permutationCount);
+                                      permutationCountTotal);
+                    return buildPermutableMockTokenSource(originalSource,
+                                                          groupedSymbols,
+                                                          permutationSequence,
+                                                          permutationCountIndex,
+                                                          permutationCount,
+                                                          permutationCountTotal);
                 case PASS:
-                    if (permutationSequence + 1 < permutationCount) {
-                        return new PermutableMockTokenSource(originalSource,
-                                                             groupedSymbols,
-                                                             permutationSequence + 1,
-                                                             permutationCount);
+                    if (permutationSequence + 1 < permutationCount[permutationCountIndex]) {
+                        return buildPermutableMockTokenSource(originalSource,
+                                                              groupedSymbols,
+                                                              permutationSequence + 1,
+                                                              permutationCountIndex,
+                                                              permutationCount,
+                                                              permutationCountTotal);
                     }
+                    if (permutationCountIndex < permutationCount.length) {
+                        List<List<SoySymbol>> nextSymbolPermutationSet;
+                        nextSymbolPermutationSet = buildNextSymbolPermutationSet(permutationCountIndex + 1);
+                        if (nextSymbolPermutationSet == null) return null; // all done
+                        return buildPermutableMockTokenSource(originalSource,
+                                                              nextSymbolPermutationSet,
+                                                              1,
+                                                              permutationCountIndex + 1,
+                                                              permutationCount,
+                                                              permutationCountTotal);
+                    }
+            }
+            return null;
+        }
+
+        private List<List<SoySymbol>> buildNextSymbolPermutationSet(int i) {
+            if (permutationCount[i] == 0) return null;
+            switch (i) {
+                case 1:
+                    List<SoySymbol> flatSymbols = new LinkedList<SoySymbol>();
+                    for (List<SoySymbol> symbolGroup : groupedSymbols) {
+                        flatSymbols.addAll(symbolGroup);
+                    }
+                    return Arrays.asList(flatSymbols);
             }
             return null;
         }
