@@ -1,6 +1,10 @@
 ver 0.2
 * Initial parser implementation completed
 * Open source release under Apache 2.0 license
+* Support for highlighter color on function calls
+* Minor improvements in lexer to handle tags in attributes
+* Parser implementation now builds document structure
+* Limited error checking now provided (more to come)
 
 ver 0.1.2
 * Fixed bug where {/ and /} were not being colored correctly

@@ -60,8 +60,8 @@ public abstract class BaseParserTest {
         String msg = "Token from expected sequence does not follow token from source.";
         Iterator<Object> iterator = expectedSequence.iterator();
         for (SoySymbol symbol : testableSoyScanner) {
-            SoyToken expect = symbol.getToken();
-            SoyToken source = nextSoyToken(iterator);
+            IElementType expect = symbol.getToken();
+            IElementType source = nextSoyToken(iterator);
             Assert.assertEquals(msg, source, expect);
         }
         IElementType token = nextSoyToken(iterator);

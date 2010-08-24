@@ -47,7 +47,17 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
         INPUT_TOKENS_TO_SKIP = Collections.unmodifiableSet(inputTokensToSkip);
     }
 
+    private final SoyToken dummyTokenForNonSoyTokens;
+
     private Runnable doReset = null;
+
+    public TestableSoyScanner() {
+        this(null);
+    }
+
+    public TestableSoyScanner(SoyToken dummyTokenForNonSoyTokens) {
+        this.dummyTokenForNonSoyTokens = dummyTokenForNonSoyTokens;
+    }
 
     public Symbol next_token() throws IOException {
         do {
@@ -95,24 +105,20 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
 
     private SoySymbol lastSymbol = null;
 
-    SoyToken symbol(SoyToken type) {
-        return (lastSymbol = new SoySymbol(type, yystate(), yyline + 1, yychar, yylength())).getToken();
-    }
-
-    SoyToken symbol(SoyToken type, Object value) {
-        return (lastSymbol = new SoySymbol(type, yystate(), yyline + 1, yychar, yylength(), value)).getToken();
-    }
-
     IElementType symbol(IElementType type) {
-        if (type instanceof SoyToken) return symbol((SoyToken)type);
-        lastSymbol = new SoySymbol(SoyToken.TEMPLATE_TEXT, yystate(), yyline + 1, yychar, yylength());
-        return type;
+        IElementType symbolType = type instanceof SoyToken || dummyTokenForNonSoyTokens == null ? type : dummyTokenForNonSoyTokens;
+        lastSymbol = symbolType instanceof SoyToken
+                     ? new SoySymbol((SoyToken)symbolType, yystate(), yycolumn + 1, yyline + 1, yychar, yylength())
+                     : new SoySymbol(symbolType, yystate(), yyline + 1, yycolumn + 1, yychar, yylength());
+        return symbolType;
     }
 
     IElementType symbol(IElementType type, Object value) {
-        if (type instanceof SoyToken) return symbol((SoyToken)type, value);
-        lastSymbol = new SoySymbol(SoyToken.TEMPLATE_TEXT, yystate(), yyline + 1, yychar, yylength(), value);
-        return type;
+        IElementType symbolType = type instanceof SoyToken || dummyTokenForNonSoyTokens == null ? type : dummyTokenForNonSoyTokens;
+        lastSymbol = symbolType instanceof SoyToken
+                     ? new SoySymbol((SoyToken)symbolType, yystate(), yyline + 1, yycolumn + 1, yychar, yylength(), value)
+                     : new SoySymbol(symbolType, yystate(), yyline + 1, yycolumn + 1, yychar, yylength(), value);
+        return symbolType;
     }
 
     public Iterator<SoySymbol> iterator() {

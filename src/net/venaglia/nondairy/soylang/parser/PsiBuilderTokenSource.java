@@ -57,8 +57,7 @@ public class PsiBuilderTokenSource extends TokenSource {
     }
 
     public void error(String message) {
-        // Errors are suppressed for now
-//        builder.error(message);
+        builder.error(message);
     }
 
 }

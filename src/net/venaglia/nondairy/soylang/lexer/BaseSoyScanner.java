@@ -61,14 +61,6 @@ abstract class BaseSoyScanner {
 
     abstract char yycharat(int pos);
 
-    SoyToken symbol(SoyToken type) {
-        return type;
-    }
-
-    SoyToken symbol(SoyToken type, Object value) {
-        return type;
-    }
-
     IElementType symbol(IElementType type) {
         return type;
     }

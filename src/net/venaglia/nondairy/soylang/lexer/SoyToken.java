@@ -239,6 +239,7 @@ public final class SoyToken extends IElementType {
     public static final TokenSet NAME_TOKENS = fromValueRange(200, 299);
     public static final TokenSet ATTRIBUTE_TOKENS = TokenSet.create(CAPTURED_IDENTIFIER, EQ, STRING_PARAMETER_REF);
     public static final TokenSet DIRECTIVE_TOKENS = fromValueRange(600, 649);
+    public static final TokenSet TAG_SECTION_TOKENS = TokenSet.create(ELSE_IF, ELSE, CASE, DEFAULT, IF_EMPTY, PARAM);
     public static final TokenSet NON_TAG_TOKENS = fromValueRange(100, 199);
 
     static {

@@ -23,22 +23,48 @@
 
 {namespace edge.cases.soy}
 
+{namespace edge.cases.soy2}
+
 /**
-* Tests support for multiple parameters, or various types, to custom tag directives.
-*
-* @param id a parameter for the arg list
-* @param dummy some parameter to output
-* @param? person some parameter to output
+* Tests support for orphaned soy docs
+*/
+
+/**
+* Tests support for undefined parameters
 */
 {template .directiveArguments}
-    {$dummy |myCustomDirective:$id,'foo','',$id,false,null}
+    {$dummyNotDefined += 42}
+{/template}
+
+/*
+ * A template without proper soy docs
+ */
+{template .no_docs}
+Hello world
 {/template}
 
 /**
-* Tests support for tag pairs and tag sections in HTML attribute values and names
-*/
-{template .ifElseInHtmlAttr}
-    <div data-test="nav-{if GLOABL_USER.id}home{else}login{/if}"></div>
-    <div data-test='nav-{if GLOABL_USER.id}home{else}login{/if}'></div>
-    <div data-{if GLOABL_USER.id}who{else}-anon{/if}="test"></div>
+ * Checking support for invalid section tags
+ * @param dummy some parameter
+ */
+{template .no_docs}
+
+    {switch $dummy}
+    {case 1}
+    {default}
+    {case 2}
+    {default}
+    {/switch}
+
+    {if}
+    {elseif}
+    {else}
+    {elseif}
+    {/if}
+
+    {ifempty}
+
+    {param :foo}value{/param}
+
 {/template}
+

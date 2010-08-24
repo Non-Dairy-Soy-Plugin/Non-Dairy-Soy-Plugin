@@ -31,7 +31,7 @@ import static com.intellij.psi.xml.XmlTokenType.*;
  */
 public class SoyBraceMatcher implements PairedBraceMatcher {
     private static final BracePair[] PAIRS = new BracePair[]{
-            new BracePair(SoyToken.TAG_END_LBRACE, SoyToken.TAG_RBRACE, true),
+//            new BracePair(SoyToken.TAG_END_LBRACE, SoyToken.TAG_RBRACE, true),
             new BracePair(SoyToken.TAG_LBRACE, SoyToken.TAG_END_RBRACE, true),
 //            new BracePair(TAG_LBRACE, TAG_RBRACE, false),
             new BracePair(SoyToken.LBRACE, SoyToken.RBRACE, false),

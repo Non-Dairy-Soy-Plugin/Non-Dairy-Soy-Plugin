@@ -16,12 +16,17 @@
 
 package net.venaglia.nondairy.soylang.parser;
 
+import static net.venaglia.nondairy.i18n.MessageBuffer.msg;
 import static net.venaglia.nondairy.soylang.SoyElement.*;
 
 import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.xml.IXmlElementType;
 import net.venaglia.nondairy.i18n.I18N;
+import net.venaglia.nondairy.i18n.MessageBuffer;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
+
+import java.util.Stack;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,6 +37,9 @@ import net.venaglia.nondairy.soylang.lexer.SoyToken;
 public class SoyStructureParser {
 
     private TokenSource source;
+    private Stack<TagParser> unclosedTagParsers = new Stack<TagParser>();
+    private PsiBuilder.Marker docBeginMarker = null;
+
 
     public SoyStructureParser(TokenSource source) {
         this.source = source;
@@ -43,26 +51,33 @@ public class SoyStructureParser {
      */
     public void parse() {
         PsiBuilder.Marker marker = source.mark();
-//        PsiBuilder.Marker docBeginMarker = null;
+        PsiBuilder.Marker docBeginMarker = null;
         while (!source.eof()) {
             IElementType token = source.token();
             if (token == SoyToken.TAG_LBRACE || token == SoyToken.TAG_END_LBRACE) {
-                new TagParser(source).parse();
-//                if (docBeginMarker != null) {
-//                    docBeginMarker.done(tag_and_doc_comment);
-//                    docBeginMarker = null;
-//                }
+                TagParser tagParser = new TagParser(source);
+                tagParser.parse();
+                processParsedTag(tagParser);
+                if (docBeginMarker != null &&
+                    unclosedTagParsers.size() == 1 &&
+                    unclosedTagParsers.peek() == tagParser &&
+                    tagParser.getTagToken() == SoyToken.TEMPLATE) {
+                    this.docBeginMarker = docBeginMarker;
+                    docBeginMarker = null;
+                }
             } else if (SoyToken.DOC_COMMENT == token) {
-//                if (docBeginMarker != null) {
-//                    docBeginMarker.drop();
-//                }
-//                docBeginMarker = source.mark();
+                if (docBeginMarker != null) {
+                    docBeginMarker.drop();
+                }
+                docBeginMarker = source.mark();
                 new DocParser(source).parse();
+            } else if (token instanceof IXmlElementType) {
+                new TemplateTextParser(source).parse();
             } else {
-//                if (docBeginMarker != null) {
-//                    docBeginMarker.drop();
-//                    docBeginMarker = null;
-//                }
+                if (docBeginMarker != null) {
+                    docBeginMarker.drop();
+                    docBeginMarker = null;
+                }
                 if (token == SoyToken.IGNORED_TEXT || token == SoyToken.TEMPLATE_TEXT || token == SoyToken.LITERAL_TEXT) {
                     source.advance();
                 } else {
@@ -70,64 +85,110 @@ public class SoyStructureParser {
                 }
             }
         }
+        if (docBeginMarker != null) {
+            docBeginMarker.drop();
+        }
+        if (this.docBeginMarker != null) {
+            this.docBeginMarker.drop();
+        }
         marker.done(soy_file);
     }
 
-    private void parseToEndOfTag(PsiBuilder.Marker marker, IElementType type) {
-        boolean end = source.token() == SoyToken.TAG_RBRACE;
-        while (!source.eof()) {
-            source.advance();
-            if (end) break;
-            end = source.token() == SoyToken.TAG_RBRACE;
-        }
-        marker.done(type);
-    }
-
-    private void parseToEndOfComment(PsiBuilder.Marker marker, IElementType type) {
-        boolean end = source.token() == SoyToken.DOC_COMMENT_END;
-        while (!source.eof()) {
-            source.advance();
-            if (end) break;
-            end = source.token() == SoyToken.DOC_COMMENT_END;
-        }
-        marker.done(type);
-    }
-
-    /**
-     * Parses the body of a soy doc comment.
-     * @see net.venaglia.nondairy.soylang.lexer.SoyScanner#DOCS
-     * @see net.venaglia.nondairy.soylang.lexer.SoyScanner#DOCS_BOL
-     * @see net.venaglia.nondairy.soylang.lexer.SoyScanner#DOCS_IDENT
-     */
-    private void parseDoc() {
-        PsiBuilder.Marker commentMarker = source.mark();
-        source.advance();
-        PsiBuilder.Marker textMarker = source.mark();
-        try {
-            while (!source.eof()) {
-                IElementType token = source.token();
-                if (token == SoyToken.DOC_COMMENT) {
-                    // nothing to do, keep accumulating
-                    source.advance();
-                } else if (token == SoyToken.DOC_COMMENT_TAG) {
-                    source.advanceAndMark(doc_comment_param);
-                } else if (token == SoyToken.DOC_COMMENT_IDENTIFIER) {
-                    source.advanceAndMark(doc_comment_param);
-                } else if (token == SoyToken.DOC_COMMENT_END) {
-                    textMarker.done(doc_comment_text);
-                    textMarker = null;
-                    source.advance();
-                    commentMarker.done(doc_comment);
-                    commentMarker = null;
-                    return;
-                } else {
-                    source.advanceAndMarkBad(unexpected_symbol);
-                    return;
-                }
+    private void processParsedTag(TagParser tagParser) {
+        IElementType type = tagParser.getTagToken();
+        if (!(type instanceof SoyToken)) return;
+        SoyToken tagToken = (SoyToken)type;
+        String tagTokenName = tagToken.name().toLowerCase();
+        if (tagParser.isCloseTag()) {
+            TagParser within = findInStack(tagToken,
+                                           tagParser,
+                                           msg("syntax.error.unexpected.close.tag",
+                                               tagTokenName),
+                                           msg("syntax.error.unclosed.open.tag"));
+            if (within != null) {
+                within.getTagMarker().precede().done(tag_pair);
             }
-        } finally {
-            if (textMarker != null) textMarker.done(doc_comment_text);
-            if (commentMarker != null) commentMarker.drop();
+        } else if (SoyToken.TAG_SECTION_TOKENS.contains(tagToken)) {
+            SectionTag section = SectionTag.getBySoyToken(tagToken);
+            String sectionTokenName = section.getContainerToken().name().toLowerCase();
+            TagParser within = findInStack(section.getContainerToken(),
+                                           tagParser,
+                                           msg("syntax.error.orphaned.section.tag",
+                                               tagTokenName,
+                                               sectionTokenName),
+                                           msg("syntax.error.unclosed.open.tag"));
+            if (within != null) {
+                within.updateContainedSection(tagParser,
+                                              msg("syntax.error.out-of-order.section.tag",
+                                                  tagTokenName),
+                                              msg("syntax.error.duplicate.section.tag",
+                                                  tagTokenName,
+                                                  sectionTokenName));
+                unclosedTagParsers.push(within); // put it back
+            }
+            if (tagParser.isRequiresCloseTag()) unclosedTagParsers.push(tagParser);
+        } else if (tagToken == SoyToken.NAMESPACE || tagToken == SoyToken.TEMPLATE) {
+            if (!unclosedTagParsers.isEmpty()) {
+                TagParser within = unclosedTagParsers.get(0);
+                processBadTag(within, I18N.msg("syntax.error.unexpected.close.tag",
+                                               tagTokenName));
+                unclosedTagParsers.clear();
+            }
+            if (tagParser.isRequiresCloseTag()) {
+                unclosedTagParsers.push(tagParser);
+            }
+        } else if (tagParser.isRequiresCloseTag() && SoyToken.COMMAND_TOKENS.contains(tagToken)) {
+            unclosedTagParsers.push(tagParser);
         }
+    }
+
+    private TagParser findInStack(SoyToken type,
+                                  TagParser offendingTag,
+                                  MessageBuffer notInStack,
+                                  MessageBuffer notAtTopOfStack) {
+        if (unclosedTagParsers.isEmpty()) {
+            processBadTag(offendingTag, notInStack.toString());
+            return null;
+        }
+        if (unclosedTagParsers.peek().getTagToken() == type) {
+            TagParser top = unclosedTagParsers.pop();
+            if (unclosedTagParsers.isEmpty() && docBeginMarker != null) {
+                docBeginMarker.done(tag_and_doc_comment);
+                docBeginMarker = null;
+            }
+            return top;
+        }
+        boolean found = false;
+        for (TagParser within : unclosedTagParsers) {
+            if (within.getTagToken() == type) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            processBadTag(offendingTag, notInStack.toString());
+            return null;
+        }
+        TagParser last = null;
+        while (!unclosedTagParsers.isEmpty()) {
+            TagParser top = unclosedTagParsers.pop();
+            if (top.getTagToken() == type) {
+                processBadTag(last, notAtTopOfStack.toString());
+                if (unclosedTagParsers.isEmpty() && docBeginMarker != null) {
+                    docBeginMarker.done(tag_and_doc_comment);
+                    docBeginMarker = null;
+                }
+                return top;
+            }
+            last = top;
+        }
+        // should never get here
+        processBadTag(offendingTag, notInStack.toString());
+        return null;
+    }
+
+    private void processBadTag(TagParser tagParser, String message) {
+        PsiBuilder.Marker badMarker = tagParser.getTagMarker().precede();
+        badMarker.error(message);
     }
 }

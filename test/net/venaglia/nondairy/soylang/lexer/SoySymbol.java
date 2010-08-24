@@ -16,11 +16,8 @@
 
 package net.venaglia.nondairy.soylang.lexer;
 
+import com.intellij.psi.tree.IElementType;
 import java_cup.runtime.ComplexSymbolFactory;
-import net.venaglia.nondairy.soylang.lexer.SoyDocCommentBuffer;
-import net.venaglia.nondairy.soylang.lexer.SoyScanner;
-import net.venaglia.nondairy.soylang.lexer.SoySyntaxUtil;
-import net.venaglia.nondairy.soylang.lexer.SoyToken;
 
 import java.util.Map;
 
@@ -30,33 +27,51 @@ import java.util.Map;
  * Date: Jul 16, 2010
  * Time: 3:27:51 PM
  */
+@SuppressWarnings({ "HardCodedStringLiteral" })
 public class SoySymbol extends ComplexSymbolFactory.ComplexSymbol {
 //class SoySymbol extends IElementType {
 
     private static Map<Integer,String> STATES_BY_ID;
 
-    public final SoyToken token;
+    public final IElementType token;
     private final int state;
     public final int line;
+    public final int column;
     public final int position;
     private final int length;
     public final Object payload;
 
-    SoySymbol(SoyToken token, int state, int line, int position, int length) {
-        this(token, state, line, position, length, null);
+    SoySymbol(SoyToken token, int state, int line, int column, int position, int length) {
+        this(token, state, line, column, position, length, null);
     }
 
-    SoySymbol(SoyToken token, int state, int line, int position, int length, Object payload) {
+    SoySymbol(SoyToken token, int state, int line, int column, int position, int length, Object payload) {
         super(token.name(), token.parserValue(), location(line, position), location(line, position, payload), payload);
         this.token = token;
         this.state = state;
         this.line = line;
+        this.column = column;
         this.position = position;
         this.length = length;
         this.payload = payload;
     }
 
-    public SoyToken getToken() {
+    SoySymbol(IElementType token, int state, int line, int column, int position, int length) {
+        this(token, state, line, column, position, length, null);
+    }
+
+    SoySymbol(IElementType token, int state, int line, int column, int position, int length, Object payload) {
+        super(token.toString(), token.getIndex(), location(line, position), location(line, position, payload), payload);
+        this.token = token;
+        this.state = state;
+        this.line = line;
+        this.column = column;
+        this.position = position;
+        this.length = length;
+        this.payload = payload;
+    }
+
+    public IElementType getToken() {
         return token;
     }
 
@@ -85,7 +100,7 @@ public class SoySymbol extends ComplexSymbolFactory.ComplexSymbol {
 
     @Override
     public String toString() {
-        return String.format("%s [line:%d] <%s>", token, line, getState());
+        return String.format("%s [line:%d|col:%d] <%s>", token, line, column, getState());
     }
 
     private static ComplexSymbolFactory.Location location(int line, int column) {

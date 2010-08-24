@@ -104,7 +104,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 %state OPEN_TAG, CLOSE_TAG, SOY_TAG, LITERAL_BLOCK, NAMESPACE_TAG, TEMPLATE_TAG, IDENTIFIER_TAG, TAG_DIRECTIVE
 %state DOCS, DOCS_BOL, DOCS_IDENT, STRING, STRING_PARAM
 
-%state HTML_INITIAL, HTML_TAG_START, HTML_TAG_END, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_EQ
+%state HTML_INITIAL, HTML_TAG_START, HTML_TAG_END, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_NAME_RESUME, HTML_ATTRIBUTE_EQ
 %state HTML_ATTRIBUTE_VALUE, HTML_ATTRIBUTE_VALUE_1, HTML_ATTRIBUTE_VALUE_2, HTML_COMMENT
 
 %%
@@ -576,7 +576,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
   "{" "{"?                       { return symbol(LBRACE_ERROR); }
   "}" "}"?                       { return symbol(RBRACE_ERROR); }
-  "{" "{"? [^ \t\f\r\n/}]        { yybegin(OPEN_TAG);
+  "{" "{"? [^ \t\f\r\n} ]        { yybegin(OPEN_TAG);
                                    yypushback(1);
                                    closeTag = false;
                                    doubleBraceTag = yylength() == 2;
@@ -584,7 +584,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    nextStateAfterCloseTag = HTML_INITIAL;
                                    tagStartLine = yyline;
                                    return symbol(TAG_LBRACE, yytext().toString()); }
-  "{" "{"? "/" [^ \t\f\r\n/}]    { yybegin(OPEN_TAG);
+  "{" "{"? "/" [^ \t\f\r\n}]     { yybegin(OPEN_TAG);
                                    yypushback(1);
                                    closeTag = true;
                                    doubleBraceTag = yylength() == 3;
@@ -642,9 +642,47 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    closeTag = false;
                                    doubleBraceTag = yylength() == 2;
                                    currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_ATTRIBUTE_NAME_RESUME;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_LBRACE, yytext().toString()); }
+  "{" "{"? "/" [^ \t\f\r\n}]     { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = true;
+                                   doubleBraceTag = yylength() == 3;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_ATTRIBUTE_NAME_RESUME;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_END_LBRACE, yytext().toString()); }
+  "/>"                           { if (closeHtml) { yypushback(1); return symbol(XML_BAD_CHARACTER); }
+                                   yybegin(HTML_INITIAL); return symbol(XML_TAG_END);
+                                 }
+  ">"                            { yybegin(HTML_INITIAL); return symbol(XML_TAG_END); }
+  .                              { return symbol(XML_BAD_CHARACTER); }
+  <<EOF>>                        { yybegin(YYINITIAL); }
+}
+
+<HTML_ATTRIBUTE_NAME_RESUME> {
+  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  [-a-zA-Z0-9_-]+                { yybegin(HTML_ATTRIBUTE_EQ); return symbol(XML_EQ); }
+  "="                            { yypushback(1); yybegin(HTML_ATTRIBUTE_EQ); return symbol(XML_EQ); }
+  "{" "{"?                       { return symbol(LBRACE_ERROR); }
+  "}" "}"?                       { return symbol(RBRACE_ERROR); }
+  "{" "{"? [^ \t\f\r\n}]         { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = false;
+                                   doubleBraceTag = yylength() == 2;
+                                   currentCommand = null;
                                    nextStateAfterCloseTag = HTML_ATTRIBUTE_NAME;
                                    tagStartLine = yyline;
                                    return symbol(TAG_LBRACE, yytext().toString()); }
+  "{" "{"? "/" [^ \t\f\r\n}]     { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = true;
+                                   doubleBraceTag = yylength() == 3;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_ATTRIBUTE_NAME;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_END_LBRACE, yytext().toString()); }
   "/>"                           { if (closeHtml) { yypushback(1); return symbol(XML_BAD_CHARACTER); }
                                    yybegin(HTML_INITIAL); return symbol(XML_TAG_END);
                                  }
@@ -680,6 +718,14 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    nextStateAfterCloseTag = HTML_ATTRIBUTE_VALUE_1;
                                    tagStartLine = yyline;
                                    return symbol(TAG_LBRACE, yytext().toString()); }
+  "{" "{"? "/" [^ \t\f\r\n}]     { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = true;
+                                   doubleBraceTag = yylength() == 3;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_ATTRIBUTE_VALUE_1;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_END_LBRACE, yytext().toString()); }
   \'                             { yybegin(HTML_ATTRIBUTE_NAME); return symbol(XML_ATTRIBUTE_VALUE_END_DELIMITER); }
 
   {HtmlEntityRef}                { return symbol(XML_CHAR_ENTITY_REF, yytext()); }
@@ -700,6 +746,14 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    nextStateAfterCloseTag = HTML_ATTRIBUTE_VALUE_2;
                                    tagStartLine = yyline;
                                    return symbol(TAG_LBRACE, yytext().toString()); }
+  "{" "{"? "/" [^ \t\f\r\n}]     { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = true;
+                                   doubleBraceTag = yylength() == 3;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_ATTRIBUTE_VALUE_2;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_END_LBRACE, yytext().toString()); }
   \"                             { yybegin(HTML_ATTRIBUTE_NAME); return symbol(XML_ATTRIBUTE_VALUE_END_DELIMITER); }
 
   {HtmlEntityRef}                { return symbol(XML_CHAR_ENTITY_REF, yytext()); }

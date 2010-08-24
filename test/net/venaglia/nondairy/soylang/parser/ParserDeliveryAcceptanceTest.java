@@ -22,6 +22,7 @@ import net.venaglia.nondairy.soylang.lexer.SoySymbol;
 import net.venaglia.nondairy.soylang.lexer.TestableSoyScanner;
 import org.jetbrains.annotations.NonNls;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -241,6 +242,11 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
     @Test
     public void testEdgeCases() throws Exception {
         testPermutatedParse("edge-cases.soy");
+    }
+
+    @Test
+    public void testErrorCases() throws Exception {
+        testPermutatedParse("error-cases.soy");
     }
 
     private PermutableMockTokenSource buildPermutableMockTokenSource(CharSequence originalSource,

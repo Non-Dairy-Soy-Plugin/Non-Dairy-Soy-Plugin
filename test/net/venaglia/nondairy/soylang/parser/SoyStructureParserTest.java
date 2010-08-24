@@ -52,4 +52,8 @@ public class SoyStructureParserTest extends BaseParserTest {
         testParseSequence(SoyTestUtil.getTestSourceBuffer("edge-cases.soy"), "YYINITIAL", MockParseMetaToken.ASSERT_NO_ERRORS);
     }
 
+    @Test
+    public void testErrorCases() throws Exception {
+        testParseSequence(SoyTestUtil.getTestSourceBuffer("error-cases.soy"), "YYINITIAL");
+    }
 }

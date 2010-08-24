@@ -111,11 +111,13 @@ class ExpressionParser {
     private ExpressionParser parseInitial(IElementType token) {
         if (token == SoyToken.NULL_LITERAL || token == SoyToken.BOOLEAN_LITERAL || token == SoyToken.INTEGER_LITERAL || token == SoyToken.FLOATING_POINT_LITERAL) {
             prec = PREC_LITERAL;
+            expressionType = constant_expression;
             source.advance();
             remainingValues = 0;
             done();
         } else if (token == SoyToken.STRING_LITERAL_BEGIN) {
             prec = PREC_LITERAL;
+            expressionType = constant_expression;
             source.fastForward(SoyToken.STRING_LITERAL_END, null);
             remainingValues = 0;
             done();
@@ -132,6 +134,7 @@ class ExpressionParser {
             remainingValues = 0;
         } else if (token == SoyToken.LBRACK) {
             prec = PREC_PARENTHESIS;
+            expressionType = bracket_property_ref;
             source.advance();
             new ExpressionParser(source).parse();
             if (!source.eof() && source.token() == SoyToken.RBRACK) source.advance();
@@ -148,11 +151,17 @@ class ExpressionParser {
             prec = PREC_LITERAL;
             source.advance();
             remainingValues = 0;
+        } else if (token == SoyToken.CAPTURED_IDENTIFIER) {
+            prec = PREC_LITERAL;
+            expressionType = global_expression;
+            source.advance();
+            remainingValues = 0;
+            done();
         } else if (token == SoyToken.CAPTURED_FUNCTION_IDENTIFIER) {
             prec = PREC_FUNCTION;
             PsiBuilder.Marker beginFunction = source.mark();
             source.advanceAndMark(function_call_name);
-            if (!source.eof()) parseFunctionArgs();
+            if (!source.eof()) parseFunctionArgs(null);
             beginFunction.done(function_call);
             remainingValues = 0;
             return this;
@@ -165,22 +174,22 @@ class ExpressionParser {
         return remainingValues == 0 ? this : new ExpressionParser(this);
     }
 
-    private void parseFunctionArgs() {
+    int parseFunctionArgs(IElementType closeWith) {
         IElementType token = source.token();
         if (token != SoyToken.LPAREN) {
             source.advanceAndMarkBad(unexpected_symbol);
-            return;
+            return -1;
         }
         PsiBuilder.Marker beginCall = source.mark();
         source.advance();
         if (source.eof()) {
             beginCall.drop();
-            return;
+            return -1;
         }
 
         int argCount = 0;
         PsiBuilder.Marker beginArgList = source.mark();
-        new ExpressionParser(source).parse();
+        if (parseSingleExpression()) argCount++;
         while (!source.eof()) {
             token = source.token();
             if (token != SoyToken.COMMA) {
@@ -190,8 +199,7 @@ class ExpressionParser {
             }
             source.advance();
             if (!source.eof()) {
-                argCount++;
-                new ExpressionParser(source).parse();
+                if (parseSingleExpression()) argCount++;
             }
         }
 
@@ -204,6 +212,17 @@ class ExpressionParser {
                 beginCall.done(function_call_args);
             }
         }
+        if (closeWith != null) {
+            expressionType = closeWith;
+            done();
+        }
+        return argCount;
+    }
+
+    private boolean parseSingleExpression() {
+        ExpressionParser expressionParser = new ExpressionParser(source);
+        expressionParser.parse();
+        return expressionParser.prec != PREC_UNSPECIFIED;
     }
 
     private ExpressionParser push(int prec, int remainingValues) {
@@ -222,6 +241,7 @@ class ExpressionParser {
         PsiBuilder.Marker newMarker = parser.exprMarker.precede();
         parser.done();
         source.advance();
+        parser.expressionType = expression;
         parser.exprMarker = newMarker;
         parser.markerIsDone = false;
         parser.prec = prec;
@@ -236,6 +256,7 @@ class ExpressionParser {
     private ExpressionParser parseResume(ExpressionParser parser, IElementType token) {
         if (token == SoyToken.DOT) {
             parser = parser.push(PREC_DOT, 1);
+            parser.expressionType = member_property_ref;
         } else if (token == SoyToken.MULT || token == SoyToken.DIV || token == SoyToken.MOD) {
             parser = parser.push(PREC_MUL_DIV_MOD, 1);
         } else if (token == SoyToken.PLUS || token == SoyToken.MINUS) {

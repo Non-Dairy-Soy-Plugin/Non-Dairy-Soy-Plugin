@@ -25,6 +25,7 @@ import java_cup.runtime.ComplexSymbolFactory;
 import java_cup.runtime.Symbol;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -53,9 +54,13 @@ public class SoyScannerTest {
     }
 
     private static TestableSoyScanner buildScanner(String name) throws Exception {
-        CharSequence testSource = SoyTestUtil.getTestSourceBuffer(name);
+        String testSource = SoyTestUtil.getTestSourceBuffer(name);
         TestableSoyScanner testableSoyScanner = buildScanner(testSource, SoyScanner.YYINITIAL);
-        printf("Preparing test source: %s [%d chars]%n", testSource, testSource.length());
+        int start;
+        if (testSource.startsWith("/*") && (start = testSource.indexOf("*/", 2)) > 0) {
+            testSource = testSource.substring(start + 2);
+        }
+        printf("Preparing test source: [%d chars] %s%n", testSource.length(), testSource);
         return testableSoyScanner;
     }
 
@@ -72,25 +77,31 @@ public class SoyScannerTest {
     @Test
     public void testMinimal() throws Exception {
         TestableSoyScanner scanner = buildScanner("minimal.soy");
-        tallyTokens(scanner);
+        tallyTokens(scanner, false);
     }
 
     @Test
     public void testExample() throws Exception {
         TestableSoyScanner scanner = buildScanner("example.soy");
-        tallyTokens(scanner);
+        tallyTokens(scanner, false);
     }
 
     @Test
     public void testEdgeCases() throws Exception {
         TestableSoyScanner scanner = buildScanner("edge-cases.soy");
-        tallyTokens(scanner);
+        tallyTokens(scanner, false);
+    }
+
+    @Test
+    public void testErrorCases() throws Exception {
+        TestableSoyScanner scanner = buildScanner("error-cases.soy");
+        tallyTokens(scanner, true);
     }
 
     @Test
     public void testFeatures() throws Exception {
         TestableSoyScanner scanner = buildScanner("features.soy");
-        Map<SoyToken, Integer> tokenCounts = tallyTokens(scanner);
+        Map<SoyToken, Integer> tokenCounts = tallyTokens(scanner, false);
         StringBuffer hashBuffer = new StringBuffer();
         boolean first = true;
         for (Map.Entry<SoyToken,Integer> entry : tokenCounts.entrySet()) {
@@ -102,21 +113,22 @@ public class SoyScannerTest {
         // todo: assert token results are consistent
     }
 
-    private Map<SoyToken,Integer> tallyTokens(TestableSoyScanner scanner) {
+    private Map<SoyToken,Integer> tallyTokens(TestableSoyScanner scanner, boolean expectErrors) {
         List<SoySymbol> tokens = new LinkedList<SoySymbol>();
         Map<SoyToken,Integer> tokenCounts = new HashMap<SoyToken,Integer>();
         Set<SoyToken> badTokens = new HashSet<SoyToken>();
         int good = 0, bad = 0;
         for (SoySymbol token : scanner) {
             tokens.add(token);
-            SoyToken soyToken = token.getToken();
+            if (!(token.getToken() instanceof SoyToken)) continue;
+            SoyToken soyToken = (SoyToken)token.getToken();
             if (MATCH_BAD_TOKEN_NAME.matcher(soyToken.toString()).find()) {
                 badTokens.add(soyToken);
                 bad++;
             } else {
                 good++;
             }
-            if (badTokens.contains(token.getToken())) {
+            if (badTokens.contains(soyToken)) {
                 System.err.println(toString(token));
             }
             tokenCounts.put(soyToken, tokenCounts.containsKey(soyToken) ? tokenCounts.get(soyToken) + 1 : 1);
@@ -129,7 +141,11 @@ public class SoyScannerTest {
 //            if (!badTokens.contains(token.getToken())) continue;
             println(toString(token));
         }
-        assertEquals(0, bad);
+        if (expectErrors) {
+            assertTrue(bad > 0);
+        } else {
+            assertEquals(0, bad);
+        }
         return tokenCounts;
     }
 
@@ -151,7 +167,14 @@ public class SoyScannerTest {
 
     private SoyParser buildParser(String name) throws Exception {
         CharSequence testSource = SoyTestUtil.getTestSourceBuffer(name);
-        TestableSoyScanner scanner = new TestableSoyScanner();
+        TestableSoyScanner scanner = new TestableSoyScanner(SoyToken.TEMPLATE_TEXT) {
+            @Override
+            public Symbol next_token() throws IOException {
+                Symbol symbol = super.next_token();
+                System.out.println("next_token() -> " + symbol);
+                return symbol;
+            }
+        };
         SoyParser parser = new SoyParser(scanner, new ComplexSymbolFactory());
         scanner.reset(testSource);
         return parser;

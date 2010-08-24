@@ -22,13 +22,12 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import net.venaglia.nondairy.i18n.I18N;
+import net.venaglia.nondairy.i18n.MessageBuffer;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Deque;
+import java.util.LinkedList;
 
 /**
 * Created by IntelliJ IDEA.
@@ -41,29 +40,29 @@ class TagParser {
     private static final TokenSet END_OF_TAG_TOKENS = TokenSet.create(SoyToken.TAG_END_RBRACE, SoyToken.TAG_RBRACE, SoyToken.RBRACE_ERROR);
 
     private final TokenSource source;
+    private final PsiBuilder.Marker tagMarker;
     private final boolean isCloseTag;
 
     private int expected = TagDataType.COMMAND.value();
     private SoyElement element = tag;
     private IElementType tagToken = null;
-    private Set<SoyToken> companions = Collections.emptySet();
+    private Deque<SectionTag> companions = new LinkedList<SectionTag>();
     private boolean requiresCloseTag = false;
     private boolean markerIsDone = false;
-    private PsiBuilder.Marker tagPairMarker;
-    private PsiBuilder.Marker tagMarker;
+//    private PsiBuilder.Marker tagPairMarker;
     private PsiBuilder.Marker innerMarker;
 
     TagParser(TokenSource source) {
         this.source = source;
         if (source.eof()) {
-            throw new AssertionError("Cannot being parsing a tag unless the lexer is at a '{'");
+            throw new AssertionError("Cannot begin parsing a tag unless the lexer is at a '{'");
         }
         IElementType token = source.token();
         if (token != SoyToken.TAG_LBRACE && token != SoyToken.TAG_END_LBRACE) {
-            throw new AssertionError("Cannot being parsing a tag unless the lexer is at a '{'");
+            throw new AssertionError("Cannot begin parsing a tag unless the lexer is at a '{'");
         }
         this.isCloseTag = token == SoyToken.TAG_END_LBRACE;
-        this.tagPairMarker = source.mark();
+//        this.tagPairMarker = source.mark();
         this.tagMarker = source.mark();
         source.advance();
         this.innerMarker = source.mark();
@@ -94,21 +93,21 @@ class TagParser {
                 else source.error(errorMessage);
             }
             tagMarker.done(element);
-            if (tagPairMarker != null) {
-                if (isCloseTag) tagPairMarker.done(tag_pair);
-                else tagPairMarker.drop();
-            }
+//            if (tagPairMarker != null) {
+//                if (isCloseTag) tagPairMarker.done(tag_pair);
+//                else tagPairMarker.drop();
+//            }
             markerIsDone = true;
         }
     }
 
-    public TagParser setTagPairMarker(PsiBuilder.Marker tagPairMarker) {
-        if (this.tagPairMarker != tagPairMarker) {
-            if (this.tagPairMarker != null) this.tagPairMarker.drop();
-            this.tagPairMarker = tagPairMarker;
-        }
-        return this;
-    }
+//    public TagParser setTagPairMarker(PsiBuilder.Marker tagPairMarker) {
+//        if (this.tagPairMarker != tagPairMarker) {
+//            if (this.tagPairMarker != null) this.tagPairMarker.drop();
+//            this.tagPairMarker = tagPairMarker;
+//        }
+//        return this;
+//    }
 
     private void mayExpect(TagDataType tagDataClass) {
         expected = tagDataClass.removeExclusive(expected);
@@ -176,18 +175,7 @@ class TagParser {
                     break;
             }
             if (parser.expected == 0) {
-//                tagPairMarker = parser.requiresCloseTag ? tagMarker.precede() : null;
                 parser.parseToTagRBrace(SoyToken.TAG_RBRACE, SoyToken.TAG_END_RBRACE);
-//                if (parser.requiresCloseTag) {
-//                    parseContent();
-//                    if (!source.eof() && source.token() == TAG_END_LBRACE) {
-//                        TagParser closeTagParser = new TagParser(parser);
-//                        closeTagParser.tagToken = parser.tagToken;
-//                        closeTagParser.parseCloseTag();
-//                    }
-//                } else if (tagPairMarker != null) {
-//                    tagPairMarker.done(tag_pair);
-//                }
                 parser.done();
                 parser = null;
             }
@@ -198,7 +186,7 @@ class TagParser {
 
     private void parseAttribute() {
         IElementType token = source.token();
-        PsiBuilder.Marker beginAttribute = null;
+        PsiBuilder.Marker beginAttribute;
         if (token == SoyToken.CAPTURED_IDENTIFIER) {
             beginAttribute = source.mark();
         } else {
@@ -283,7 +271,7 @@ class TagParser {
         } else {
             source.advance();
         }
-        PsiBuilder.Marker beginDirective = null;
+        PsiBuilder.Marker beginDirective;
         if (!source.eof()) {
             token = source.token();
             if (!SoyToken.DIRECTIVE_TOKENS.contains(token)) {
@@ -304,8 +292,8 @@ class TagParser {
             return;
         }
 
-        PsiBuilder.Marker beginValueList = null;
-        PsiBuilder.Marker beginValue = null;
+        PsiBuilder.Marker beginValueList;
+        PsiBuilder.Marker beginValue;
         if (!source.eof()) {
             token = source.token();
             if (!SoyToken.DIRECTIVE_TOKENS.contains(token)) {
@@ -349,39 +337,6 @@ class TagParser {
         beginValueList.done(directive_value_list);
     }
 
-//    private void parseCloseTag() {
-//        PsiBuilder.Marker closeTagMarker = source.mark();
-//        if (!source.eof()) {
-//            IElementType token = source.token();
-//            if (token == tagToken) {
-//                notExpect(TagDataType.COMMAND);
-//                source.advanceAndMark(command_keyword);
-//            } else if (COMMANDS.contains(token)) {
-//                notExpect(TagDataType.COMMAND);
-//                source.advanceAndMarkBad(command_keyword, I18N.msg("syntax.error.invalid.close.tag"));
-//            } else if (END_OF_TAG_TOKENS.contains(token)) {
-//                source.error(I18N.msg("syntax.error.invalid.close.tag"));
-//            } else {
-//                source.advanceAndMarkBad(invalid_text, I18N.msg("syntax.error.invalid.close.tag"));
-//            }
-//            parseToTagRBrace(TAG_RBRACE, null);
-//        }
-//        done();
-//    }
-
-//    private void parseContent() {
-//        PsiBuilder.Marker contentMarker = null;
-//        while (!source.eof()) {
-//            IElementType token = source.token();
-//            if (token instanceof SoyToken && !NON_TAG_TOKENS.contains(token)) {
-//                break;
-//            }
-//            if (contentMarker == null) contentMarker = source.mark();
-//            source.advance();
-//        }
-//        if (contentMarker != null) contentMarker.done(template_content);
-//    }
-
     private TagParser parseInitial() {
         if (isExpecting(TagDataType.COMMAND)) {
             notExpect(TagDataType.COMMAND);
@@ -400,6 +355,9 @@ class TagParser {
                 source.advanceAndMark(command_keyword);
                 setCompanions(SoyToken.ELSE_IF, SoyToken.ELSE);
                 requiresCloseTag = true;
+            } else if (token == SoyToken.ELSE_IF) {
+                nowExpect(TagDataType.EXPRESSION);
+                source.advanceAndMark(command_keyword);
             } else if (token == SoyToken.SWITCH) {
                 nowExpect(TagDataType.EXPRESSION);
                 source.advanceAndMark(command_keyword);
@@ -407,9 +365,11 @@ class TagParser {
                 requiresCloseTag = true;
             } else if (token == SoyToken.FOREACH) {
                 source.advanceAndMark(command_keyword);
-                // todo: parse "foreach" in its entirety
-                setCompanions(SoyToken.IF_EMPTY);
-                requiresCloseTag = true;
+                if (!isCloseTag) {
+                    parseIteratorTag(false);
+                    setCompanions(SoyToken.IF_EMPTY);
+                    requiresCloseTag = true;
+                }
             } else if (token == SoyToken.LITERAL) {
                 source.advanceAndMark(command_keyword);
                 requiresCloseTag = true;
@@ -419,11 +379,14 @@ class TagParser {
                 requiresCloseTag = true;
             } else if (token == SoyToken.FOR) {
                 source.advanceAndMark(command_keyword);
-                // todo: parse "for" in its entirety
-                requiresCloseTag = true;
+                if (!isCloseTag) {
+                    parseIteratorTag(true);
+                    requiresCloseTag = true;
+                }
             } else if (token == SoyToken.CALL) {
                 nowExpect(TagDataType.NAME, TagDataType.ATTRIBUTES);
                 source.advanceAndMark(command_keyword);
+                setCompanions(SoyToken.PARAM);
                 requiresCloseTag = true;
             } else if (token == SoyToken.PARAM) {
                 nowExpect(TagDataType.EXPRESSION);
@@ -448,6 +411,55 @@ class TagParser {
         } else {
             source.advanceAndMarkBad(command_keyword);
             return this;
+        }
+    }
+
+    private void parseIteratorTag(boolean expectingRangeExpression) {
+        IElementType token;
+        if (!source.eof()) {
+            token = source.token();
+            if (token == SoyToken.PARAMETER_REF) {
+                source.advanceAndMark(parameter_def);
+            } else {
+                source.error(I18N.msg("syntax.error.expected.parameter.declaration"));
+            }
+        }
+        if (!source.eof()) {
+            token = source.token();
+            if (token == SoyToken.IN) {
+                source.advance();
+            } else {
+                source.error(I18N.msg("syntax.error.expected.keyword.in"));
+            }
+        }
+        if (!source.eof() && expectingRangeExpression) {
+            if (source.token() == SoyToken.RANGE) {
+                PsiBuilder.Marker startRangeExprMarker = source.mark();
+                source.advance();
+                startRangeExprMarker.done(function_call_name);
+                startRangeExprMarker = startRangeExprMarker.precede();
+                if (!source.eof()) {
+                    int argCount = new ExpressionParser(source).parseFunctionArgs(function_call_args);
+                    if (argCount == 0) {
+                        startRangeExprMarker.error(I18N.msg("syntax.error.missing.range.parameter"));
+                    } else if (argCount > 3) {
+                        startRangeExprMarker.error(I18N.msg("syntax.error.unexpected.range.parameter"));
+                    } else {
+                        startRangeExprMarker.done(function_call);
+                    }
+                    // todo: add support for RANGE keyword
+                } else {
+                    startRangeExprMarker.drop();
+                }
+            } else {
+                source.error(I18N.msg("syntax.error.expected.keyword.in"));
+                expectingRangeExpression = false;
+            }
+        }
+        if (!source.eof() && !expectingRangeExpression) {
+            if (!source.eof() && SoyToken.EXPRESSION_TOKENS.contains(source.token())) {
+                new ExpressionParser(source).parse();
+            }
         }
     }
 
@@ -489,7 +501,10 @@ class TagParser {
     }
 
     private void setCompanions(SoyToken... companions) {
-        this.companions = new HashSet<SoyToken>(Arrays.asList(companions));
+        this.companions.clear();
+        for (SoyToken companion : companions) {
+            this.companions.add(SectionTag.getBySoyToken(companion));
+        }
     }
 
     public boolean isCloseTag() {
@@ -500,15 +515,28 @@ class TagParser {
         return tagToken;
     }
 
-    public Set<SoyToken> getCompanions() {
-        return companions;
+    public void updateContainedSection(TagParser parser, MessageBuffer outOfOrder, MessageBuffer duplicate) {
+        SectionTag section = SectionTag.getBySoyToken((SoyToken)parser.getTagToken());
+        if (section != null) {
+            if (!companions.contains(section)) {
+                PsiBuilder.Marker badTagMarker = parser.tagMarker.precede();
+                if (section.isOrderImportant()) badTagMarker.error(outOfOrder.toString());
+                else if (!section.isRepeatable()) badTagMarker.error(duplicate.toString());
+                else badTagMarker.error(I18N.msg("syntax.error.unspecified"));
+            } else if (section.isOrderImportant()) {
+                while (!section.equals(companions.peekFirst())) companions.removeFirst();
+                if (!section.isRepeatable()) companions.removeFirst();
+            } else {
+                if (!section.isRepeatable()) companions.remove(section);
+            }
+        }
     }
 
     public boolean isRequiresCloseTag() {
         return requiresCloseTag;
     }
 
-    public PsiBuilder.Marker getTagPairMarker() {
-        return tagPairMarker;
+    public PsiBuilder.Marker getTagMarker() {
+        return tagMarker;
     }
 }

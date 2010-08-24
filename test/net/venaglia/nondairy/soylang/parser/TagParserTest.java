@@ -77,12 +77,12 @@ public class TagParserTest extends BaseParserTest {
             "                        PARAMETER_REF\n" +
             "                    }\n" +
             "                    DOT\n" +
-            "                    expression:{\n" +
+            "                    member_property_ref:{\n" +
             "                        CAPTURED_IDENTIFIER\n" +
             "                    }\n" +
             "                }\n" +
             "                LT\n" +
-            "                expression:{\n" +
+            "                constant_expression:{\n" +
             "                    INTEGER_LITERAL\n" +
             "                }\n" +
             "            }\n" +
@@ -102,19 +102,19 @@ public class TagParserTest extends BaseParserTest {
             "                                            PARAMETER_REF\n" +
             "                                        }\n" +
             "                                        DOT\n" +
-            "                                        expression:{\n" +
+            "                                        member_property_ref:{\n" +
             "                                            CAPTURED_IDENTIFIER\n" +
             "                                        }\n" +
             "                                    }\n" +
             "                                    MINUS\n" +
-            "                                    expression:{\n" +
+            "                                    constant_expression:{\n" +
             "                                        INTEGER_LITERAL\n" +
             "                                    }\n" +
             "                                }\n" +
             "                                COMMA\n" +
             "                                expression:{\n" +
             "                                    MINUS\n" +
-            "                                    expression:{\n" +
+            "                                    constant_expression:{\n" +
             "                                        INTEGER_LITERAL\n" +
             "                                    }\n" +
             "                                }\n" +
@@ -124,14 +124,14 @@ public class TagParserTest extends BaseParserTest {
             "                    }\n" +
             "                }\n" +
             "                PLUS\n" +
-            "                expression:{\n" +
+            "                constant_expression:{\n" +
             "                    STRING_LITERAL_BEGIN\n" +
             "                    STRING_LITERAL\n" +
             "                    STRING_LITERAL_END\n" +
             "                }\n" +
             "            }\n" +
             "            COLON\n" +
-            "            expression:{\n" +
+            "            constant_expression:{\n" +
             "                STRING_LITERAL_BEGIN\n" +
             "                STRING_LITERAL\n" +
             "                STRING_LITERAL_END\n" +

@@ -39,28 +39,28 @@ public class ExpressionParserTest extends BaseParserTest {
             "        GT\n" +
             "        expression:{\n" +
             "            expression:{\n" +
-            "                expression:{\n" +
+            "                constant_expression:{\n" +
             "                    INTEGER_LITERAL\n" +
             "                }\n" +
             "                DIV\n" +
-            "                expression:{\n" +
+            "                constant_expression:{\n" +
             "                    INTEGER_LITERAL\n" +
             "                }\n" +
             "            }\n" +
             "            PLUS\n" +
-            "            expression:{\n" +
+            "            constant_expression:{\n" +
             "                INTEGER_LITERAL\n" +
             "            }\n" +
             "        }\n" +
             "    }\n" +
             "    QUESTION\n" +
-            "    expression:{\n" +
+            "    constant_expression:{\n" +
             "        STRING_LITERAL_BEGIN\n" +
             "        STRING_LITERAL\n" +
             "        STRING_LITERAL_END\n" +
             "    }\n" +
             "    COLON\n" +
-            "    expression:{\n" +
+            "    constant_expression:{\n" +
             "        STRING_LITERAL_BEGIN\n" +
             "        STRING_LITERAL\n" +
             "        STRING_LITERAL_END\n" +
@@ -72,7 +72,7 @@ public class ExpressionParserTest extends BaseParserTest {
 
     public static final String SIMPLE_DOT_EXPRESSION_EXPECT =
             "expression:{\n" +
-            "    expression:{\n" +
+            "    constant_expression:{\n" +
             "        INTEGER_LITERAL\n" +
             "    }\n" +
             "    PLUS\n" +
@@ -82,12 +82,12 @@ public class ExpressionParserTest extends BaseParserTest {
             "                PARAMETER_REF\n" +
             "            }\n" +
             "            DOT\n" +
-            "            expression:{\n" +
+            "            member_property_ref:{\n" +
             "                CAPTURED_IDENTIFIER\n" +
             "            }\n" +
             "        }\n" +
             "        DOT\n" +
-            "        expression:{\n" +
+            "        member_property_ref:{\n" +
             "            CAPTURED_IDENTIFIER\n" +
             "        }\n" +
             "    }\n" +
@@ -214,9 +214,9 @@ public class ExpressionParserTest extends BaseParserTest {
             "    expression:{\n" +
             "        PARAMETER_REF\n" +
             "    }\n" +
-            "    expression:{\n" +
+            "    bracket_property_ref:{\n" +
             "        LBRACK\n" +
-            "        expression:{\n" +
+            "        constant_expression:{\n" +
             "            INTEGER_LITERAL\n" +
             "        }\n" +
             "        RBRACK\n" +

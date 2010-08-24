@@ -75,16 +75,20 @@ public final class SoyElement extends IElementType {
 
     public static final SoyElement expression = new SoyElement(1800, "expression");
     public static final SoyElement constant_expression = new SoyElement(1801, "constant_expression");
-    public static final SoyElement parameter_ref = new SoyElement(1802, "parameter_ref");
-    public static final SoyElement member_property_ref = new SoyElement(1803, "member_property_ref");
-    public static final SoyElement bracket_property_ref = new SoyElement(1804, "bracket_property_ref");
-    public static final SoyElement keyword = new SoyElement(1805, "keyword");
+    public static final SoyElement global_expression = new SoyElement(1802, "global_expression");
+    public static final SoyElement parameter_def = new SoyElement(1803, "parameter_def");
+    public static final SoyElement parameter_ref = new SoyElement(1804, "parameter_ref");
+    public static final SoyElement member_property_ref = new SoyElement(1805, "member_property_ref");
+    public static final SoyElement bracket_property_ref = new SoyElement(1806, "bracket_property_ref");
+    public static final SoyElement keyword = new SoyElement(1807, "keyword");
 
     public static final SoyElement template_content = new SoyElement(2000, "template_content");
 
     public static final SoyElement ignored_text = new SoyElement(7000, "ignored_text");
     public static final SoyElement invalid_text = new SoyElement(7001, "invalid_text");
-    public static final SoyElement unexpected_symbol = new SoyElement(7002, "unexpected_symbol");
+    public static final SoyElement tag_error = new SoyElement(7002, "tag_error");
+
+    public static final SoyElement unexpected_symbol = new SoyElement(8000, "unexpected_symbol");
 
     static {
         for (Field field : SoyElement.class.getFields()) {

@@ -16,6 +16,8 @@
 
 package net.venaglia.nondairy.soylang.parser;
 
+import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.xml.XmlTokenType;
 import net.venaglia.nondairy.SoyTestUtil;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
@@ -45,7 +47,7 @@ public class ExpectedExpression {
     private static final String EXPECTED_EXPRESSION_BANNER =
             "-----[ %s ]-----------------------------------------------------------------------";
 
-    private static final Class<?> TOKEN_SOURCES[] = { SoyToken.class, SoyElement.class};
+    private static final Class<?> TOKEN_SOURCES[] = { SoyToken.class, SoyElement.class, XmlTokenType.class };
 
     static { Assert.assertTrue("No classes specified in TOKEN_SOURCES[]", TOKEN_SOURCES.length > 0); }
 
@@ -64,7 +66,7 @@ public class ExpectedExpression {
             } catch (NoSuchFieldException e) {
                 continue; // not field by this name, not it
             }
-            if (!field.getType().equals(tokenSource)) continue; // wrong type, not it
+            if (!IElementType.class.isAssignableFrom(field.getType())) continue; // wrong type, not it
             int modifiers = field.getModifiers();
             if (!Modifier.isPublic(modifiers)) continue; // not a public field, not it
             if (!Modifier.isStatic(modifiers)) continue; // not a static field, not it

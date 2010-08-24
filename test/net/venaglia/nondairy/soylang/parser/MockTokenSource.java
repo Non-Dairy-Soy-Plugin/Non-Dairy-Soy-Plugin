@@ -246,6 +246,12 @@ public class MockTokenSource extends TokenSource {
         }
 
         public void done(IElementType type) {
+            closeImpl("Closing a marker", type.toString());
+            event(type);
+            event(getTokenCount());
+        }
+
+        private void closeImpl(String action, String type) {
             StringBuilder buffer = new StringBuilder();
             int unclosedMarkers = 0;
             for (MockMarker m = this.next; m != null; m = m.next) {
@@ -254,14 +260,12 @@ public class MockTokenSource extends TokenSource {
                     unclosedMarkers++;
                 }
             }
-            String message = "Closing a marker while markers within are still open: " + type + "[" + getTokenCount() + "] at " + MockTokenSource.this + buffer;
+            String message = action + " while markers within are still open: " + type + "[" + getTokenCount() + "] at " + MockTokenSource.this + buffer;
             Assert.assertTrue(message, unclosedMarkers == 0);
 
-            Assert.assertTrue("Closing a marker that was already closed or discarded at " + MockTokenSource.this, open);
+            Assert.assertTrue(action + " that was already closed or discarded at " + MockTokenSource.this, open);
 //            Assert.assertTrue("Closing a marker that contains no tokens at " + MockTokenSource.this, getTokenCount() > 0);
             open = false;
-            event(type);
-            event(getTokenCount());
         }
 
         public void doneBefore(IElementType type, PsiBuilder.Marker before) {
@@ -273,6 +277,7 @@ public class MockTokenSource extends TokenSource {
         }
 
         public void error(String message) {
+            closeImpl("Applying an error to a marker", "");
             MockTokenSource.this.error(message);
         }
     }

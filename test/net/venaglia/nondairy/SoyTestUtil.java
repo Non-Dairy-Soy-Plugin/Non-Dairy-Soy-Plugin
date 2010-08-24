@@ -89,7 +89,7 @@ public class SoyTestUtil {
         return buffer.toString();
     }
 
-    public static CharSequence getTestSourceBuffer(String name) throws IOException {
+    public static String getTestSourceBuffer(String name) throws IOException {
         Reader in = new InputStreamReader(SoyTestUtil.class.getResourceAsStream("testSources/" + name));
         StringWriter out = new StringWriter(16384);
         char[] buffer = new char[4096];
