@@ -24,6 +24,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.xml.IXmlElementType;
 import net.venaglia.nondairy.i18n.I18N;
 import net.venaglia.nondairy.i18n.MessageBuffer;
+import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
 
 import java.util.Stack;
@@ -106,7 +107,13 @@ public class SoyStructureParser {
                                                tagTokenName),
                                            msg("syntax.error.unclosed.open.tag"));
             if (within != null) {
-                within.getTagMarker().precede().done(tag_pair);
+                SoyElement tagElement = within.getElement();
+                SoyElement tagPairElement = null;
+                if (tagElement.name().endsWith("_tag")) { // NON-NLS
+                    tagPairElement = SoyElement.valueOf(tagElement.name() + "_pair"); //NON-NLS
+                }
+                if (tagPairElement == null) tagPairElement = SoyElement.tag_pair;
+                within.getTagMarker().precede().done(tagPairElement);
             }
         } else if (SoyToken.TAG_SECTION_TOKENS.contains(tagToken)) {
             SectionTag section = SectionTag.getBySoyToken(tagToken);

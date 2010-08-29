@@ -34,7 +34,7 @@ import javax.swing.*;
 public class SoyFileType extends LanguageFileType {
 
     public static final SoyFileType INSTANCE = new SoyFileType();
-    public static final Icon SOY_ICON = IconLoader.getIcon("/fileTypes/soy.png");
+    public static final Icon SOY_ICON = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy.png");
     public static final IFileElementType FILE = new IFileElementType("Soy File Type", SoyLanguage.INSTANCE);
 
     private SoyFileType() {

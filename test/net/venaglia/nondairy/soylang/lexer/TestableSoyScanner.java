@@ -42,6 +42,7 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
         SoyToken.importParserValues(SoyParserSymbols.class);
         Set<SoyToken> inputTokensToSkip = new HashSet<SoyToken>();
         inputTokensToSkip.add(SoyToken.WHITESPACE);
+        inputTokensToSkip.add(SoyToken.DOC_COMMENT_WHITESPACE);
         inputTokensToSkip.add(SoyToken.COMMENT);
         inputTokensToSkip.add(SoyToken.IGNORED_TEXT);
         INPUT_TOKENS_TO_SKIP = Collections.unmodifiableSet(inputTokensToSkip);
@@ -60,6 +61,7 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
     }
 
     public Symbol next_token() throws IOException {
+        //noinspection SuspiciousMethodCalls
         do {
             lastSymbol = null;
             advance();
@@ -80,6 +82,9 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
         doReset = new Runnable() {
             public void run() {
                 _reset(buffer, initialState);
+                yychar = 0;
+                yycolumn = 0;
+                yyline = 0;
             }
         };
         doReset.run();
@@ -90,6 +95,9 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
         doReset = new Runnable() {
             public void run() {
                 _reset(buffer, start, end, initialState);
+                yychar = 0;
+                yycolumn = 0;
+                yyline = 0;
             }
         };
         doReset.run();
@@ -108,7 +116,7 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
     IElementType symbol(IElementType type) {
         IElementType symbolType = type instanceof SoyToken || dummyTokenForNonSoyTokens == null ? type : dummyTokenForNonSoyTokens;
         lastSymbol = symbolType instanceof SoyToken
-                     ? new SoySymbol((SoyToken)symbolType, yystate(), yycolumn + 1, yyline + 1, yychar, yylength())
+                     ? new SoySymbol((SoyToken)symbolType, yystate(), yyline + 1, yycolumn + 1, yychar, yylength())
                      : new SoySymbol(symbolType, yystate(), yyline + 1, yycolumn + 1, yychar, yylength());
         return symbolType;
     }

@@ -27,7 +27,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
-import net.venaglia.nondairy.soylang.elements.SoyASTElement;
+import net.venaglia.nondairy.soylang.elements.factory.SoyASTElementFactory;
 import net.venaglia.nondairy.soylang.lexer.SoyLexer;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
 import org.jetbrains.annotations.NotNull;
@@ -70,15 +70,7 @@ public class SoyParserDefinition implements ParserDefinition {
 
     @NotNull
     public PsiElement createElement(ASTNode node) {
-        IElementType type = node.getElementType();
-        PsiElement element;
-//        if (type == soy_file) {
-//        } else if (type instanceof SoyElement) {
-//        } else if (type instanceof SoyToken) {
-//        } else {
-            element = new SoyASTElement(node);
-//        }
-        return element;
+        return SoyASTElementFactory.createFor(node);
     }
 
     public PsiFile createFile(FileViewProvider viewProvider) {

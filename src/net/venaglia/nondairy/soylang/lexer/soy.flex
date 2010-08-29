@@ -63,7 +63,9 @@ WhiteSpace = {LineTerminator} | [ \t\f]
 Comment = {TraditionalComment} | {EndOfLineComment}
 
 TraditionalComment = "/*" [^*] ~"*/" | "/*" "*"+ "/"
+DocComment = "/**" ~[^*] ~"*/"
 EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
+BeginOfLineComment = ( [ \t]* "*" )? [ \t]+
 //DocumentationComment = "/*" "*"+ [^/*] ~"*/"
 CommentText = ( [^*\r\n]+ | !"*/" )+
 
@@ -511,17 +513,19 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
 <DOCS> {
   {LineTerminator}               { yybegin(DOCS_BOL); return symbol(DOC_COMMENT); }
-  [^*\r\n]+ | .                  { return symbol(DOC_COMMENT, yytext().toString()); }
+  [ \t\f]+                       { return symbol(DOC_COMMENT_WHITESPACE); }
+  [^* \r\n\t\f]+ ( [ \t\f]+ [^* \r\n\t\f]+ )* |
+  .                              { return symbol(DOC_COMMENT, yytext().toString()); }
   "*/"                           { yybegin(YYINITIAL); return symbol(DOC_COMMENT_END, yytext().toString()); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
 
 <DOCS_BOL> {
-  "@param" "?"?                  { yybegin(DOCS_IDENT); return symbol(DOC_COMMENT_TAG, yytext().toString());
-                                 }
+  "@param" "?"?                  { yybegin(DOCS_IDENT); return symbol(DOC_COMMENT_TAG, yytext().toString()); }
   {DocTag}                       { yybegin(DOCS); return symbol(DOC_COMMENT_TAG, yytext().toString()); }
-  [^@* \t\f\r\n]                 { yybegin(DOCS); yypushback(1); }
-  [ \t\f\r\n]+ | .               { return symbol(DOC_COMMENT, yytext().toString()); }
+  {BeginOfLineComment} |
+  {WhiteSpace}+                  { return symbol(DOC_COMMENT_WHITESPACE); }
+  .                              { yybegin(DOCS); yypushback(1); }
   "*/"                           { yybegin(DOCS); yypushback(2); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
@@ -529,7 +533,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 <DOCS_IDENT> {
   {Identifier}                   { yybegin(DOCS); return symbol(DOC_COMMENT_IDENTIFIER, yytext().toString()); }
   {LineTerminator}               { yybegin(DOCS_BOL); return symbol(DOC_COMMENT, yytext().toString()); }
-  [ \t\f]+                       { return symbol(DOC_COMMENT, yytext().toString()); }
+  [ \t\f]+                       { return symbol(DOC_COMMENT_WHITESPACE, yytext().toString()); }
   [^a-zA-Z_ \t\f\r\n]            { yybegin(DOCS); yypushback(1); }
   "*/"                           { yybegin(DOCS); yypushback(2); }
   <<EOF>>                        { yybegin(YYINITIAL); }
@@ -572,6 +576,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
 <HTML_INITIAL> {
   {EndOfLineComment} |
+  {DocComment} |
   {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
 
   "{" "{"?                       { return symbol(LBRACE_ERROR); }

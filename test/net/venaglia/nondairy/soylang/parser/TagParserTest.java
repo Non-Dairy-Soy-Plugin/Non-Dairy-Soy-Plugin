@@ -48,8 +48,8 @@ public class TagParserTest extends BaseParserTest {
             "{call .testTemplate/}";
 
     public static final String SIMPLE_UNARY_TAG_EXPECT =
-            "tag_pair:{\n" +
-            "    tag:{\n" +
+            "call_tag_pair:{\n" +
+            "    call_tag:{\n" +
             "        TAG_LBRACE\n" +
             "        tag_between_braces:{\n" +
             "            command_keyword:{\n" +
@@ -73,7 +73,7 @@ public class TagParserTest extends BaseParserTest {
             "        expression:{\n" +
             "            expression:{\n" +
             "                expression:{\n" +
-            "                    expression:{\n" +
+            "                    parameter_ref:{\n" +
             "                        PARAMETER_REF\n" +
             "                    }\n" +
             "                    DOT\n" +
@@ -98,7 +98,7 @@ public class TagParserTest extends BaseParserTest {
             "                            function_call_arg_list:{\n" +
             "                                expression:{\n" +
             "                                    expression:{\n" +
-            "                                        expression:{\n" +
+            "                                        parameter_ref:{\n" +
             "                                            PARAMETER_REF\n" +
             "                                        }\n" +
             "                                        DOT\n" +
@@ -148,7 +148,7 @@ public class TagParserTest extends BaseParserTest {
 
 //    public static final String SIMPLE_TAG_PAIR_EXPECT =
 //            "tag_pair:{\n" +
-//            "    template_def:{\n" +
+//            "    template_tag:{\n" +
 //            "        TAG_LBRACE\n" +
 //            "        tag_between_braces:{\n" +
 //            "            command_keyword:{\n" +

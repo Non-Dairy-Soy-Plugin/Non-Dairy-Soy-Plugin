@@ -68,3 +68,43 @@ Hello world
 
 {/template}
 
+/**
+ * Checking support for incomplete tags
+ */
+{template .incompleteTags1}
+
+    {
+
+{/template}
+
+/**
+ * Checking support for incomplete tags
+ */
+{template .incompleteTags2}
+
+    {call .foo data="
+    {}
+
+{/template}
+
+/**
+ * Checking support for incomplete tags
+ */
+{template .incompleteTags3}
+
+    {call .foo data="}
+    {}
+
+{/template}
+
+/**
+ * Checking support for incomplete tags
+ */
+{template .incompleteTags4}
+
+    {if}
+    {if //}
+    {if}
+
+{/template}
+

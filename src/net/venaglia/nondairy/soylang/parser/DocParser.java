@@ -46,32 +46,41 @@ public class DocParser {
     }
 
     public void parse() {
-        IElementType lastToken = null;
-        PsiBuilder.Marker lastMarker = null;
-        IElementType lastMarkerElementType = doc_comment_text;
+        PsiBuilder.Marker textMarker = source.mark();
         while (!source.eof()) {
             IElementType token = source.token();
             if (token == SoyToken.DOC_COMMENT_END) {
-                if (lastMarker != null) {
-                    lastMarker.done(lastMarkerElementType);
+                if (textMarker != null) {
+                    textMarker.done(doc_comment_text);
+                    textMarker = null;
                 }
                 source.advance();
                 break;
             } else if (!SoyToken.DOC_COMMENT_TOKENS.contains(token)) {
-                if (lastMarker != null) {
-                    lastMarker.done(lastMarkerElementType);
+                if (textMarker != null) {
+                    textMarker.done(doc_comment_text);
+                    textMarker = null;
                 }
                 source.error(I18N.msg("lexer.error.unexpected.token", token));
                 break;
-            }
-            if (token != lastToken && token == SoyToken.DOC_COMMENT_TAG) {
-                if (lastMarker != null) {
-                    lastMarker.done(lastMarkerElementType);
+            } else if (token == SoyToken.DOC_COMMENT_TAG) {
+                if (textMarker != null) {
+                    textMarker.done(doc_comment_text);
+                    textMarker = null;
                 }
-                lastMarker = source.mark();
+                source.advance();
+                if (!source.eof() && source.token() == SoyToken.DOC_COMMENT_IDENTIFIER) {
+                    source.advanceAndMark(doc_comment_param);
+                }
+                if (!source.eof()) {
+                    textMarker = source.mark();
+                }
+            } else {
+                source.advance();
             }
-            source.advance();
-            lastToken = token;
+        }
+        if (textMarker != null) {
+            textMarker.done(doc_comment_text);
         }
         done();
     }

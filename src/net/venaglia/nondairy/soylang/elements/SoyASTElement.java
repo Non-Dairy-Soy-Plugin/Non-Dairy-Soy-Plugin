@@ -16,9 +16,25 @@
 
 package net.venaglia.nondairy.soylang.elements;
 
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNamedElement;
+import com.intellij.psi.PsiReferenceBase;
+import com.intellij.util.IncorrectOperationException;
+import net.venaglia.nondairy.soylang.elements.path.ElementClassPredicate;
+import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
+import net.venaglia.nondairy.soylang.elements.path.PsiPath;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,5 +48,66 @@ public class SoyASTElement extends ASTWrapperPsiElement {
         super(node);
     }
 
-    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[" + getNode().getElementType() + "]";
+    }
+
+    public PsiElement setName(@NonNls String name) throws IncorrectOperationException {
+        throw new IncorrectOperationException("Rename is not implemented for " + getClass().getSimpleName());
+    }
+
+    protected class SoyASTElementReference extends PsiReferenceBase<SoyASTElement> {
+
+        private final PsiPath path;
+        private final ElementPredicate predicate;
+
+        @SuppressWarnings({ "unchecked" })
+        public SoyASTElementReference(@NotNull PsiPath path, @Nullable ElementPredicate predicate) {
+            super(SoyASTElement.this);
+            this.path = path;
+            this.predicate = predicate;
+        }
+
+        public SoyASTElementReference(PsiPath path, @Nullable ElementPredicate predicate, TextRange range) {
+            super(SoyASTElement.this, range);
+            this.path = path;
+            this.predicate = predicate;
+        }
+
+        @Override
+        public PsiElement resolve() {
+            PsiElementCollection elements = path.navigate(SoyASTElement.this);
+            if (predicate != null) {
+                elements = elements.applyPredicate(predicate);
+            }
+            return elements.oneOrNull();
+        }
+
+        @Override
+        public boolean isReferenceTo(PsiElement element) {
+            return (predicate == null || predicate.test(element)) &&
+                    resolve() == element;
+        }
+
+        @NotNull
+        @Override
+        public Object[] getVariants() {
+            PsiElementCollection elements = path.navigate(SoyASTElement.this);
+            Collection<Object> objects = new LinkedList<Object>();
+            for (PsiElement element : elements) {
+                buildLookupElements(element, objects);
+            }
+            return objects.toArray();
+        }
+
+        @Override
+        public boolean isSoft() {
+            return false;
+        }
+    }
+
+    protected void buildLookupElements(PsiElement element, Collection<? super LookupElement> buffer) {
+        buffer.add(LookupElementBuilder.create((PsiNamedElement)element));
+    }
 }

@@ -19,7 +19,10 @@ package net.venaglia.nondairy;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.fileTypes.FileTypeManager;
+import com.intellij.psi.ElementManipulators;
 import net.venaglia.nondairy.soylang.SoyFileType;
+import net.venaglia.nondairy.soylang.elements.SoyASTElement;
+import net.venaglia.nondairy.soylang.elements.SoyElementManipulator;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -37,6 +40,7 @@ public class NonDairyMain implements ApplicationComponent {
         ApplicationManager.getApplication().runWriteAction(new Runnable() {
             public void run() {
                 FileTypeManager.getInstance().registerFileType(SoyFileType.INSTANCE, "soy");
+                ElementManipulators.INSTANCE.addExplicitExtension(SoyASTElement.class, new SoyElementManipulator());
             }
         });
     }

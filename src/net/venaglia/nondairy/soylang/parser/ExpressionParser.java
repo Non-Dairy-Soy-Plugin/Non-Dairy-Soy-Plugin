@@ -123,6 +123,7 @@ class ExpressionParser {
             done();
         } else if (token == SoyToken.PARAMETER_REF) {
             prec = PREC_LITERAL;
+            expressionType = parameter_ref;
             source.advance();
             remainingValues = 0;
             done();
@@ -282,7 +283,7 @@ class ExpressionParser {
                     parser.remainingValues--;
                     done();
                 } else {
-                    source.advanceAndMarkBad(expression, I18N.msg("syntax.error.expected.colon"));
+                    source.advanceAndMarkBad(expression, I18N.msg("syntax.error.expected.colon.in.ternary"));
                     parser.done();
                     return parser.parent;
                 }

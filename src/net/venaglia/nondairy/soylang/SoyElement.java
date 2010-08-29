@@ -18,6 +18,15 @@ package net.venaglia.nondairy.soylang;
 
 import com.intellij.lang.Language;
 import com.intellij.psi.tree.IElementType;
+import net.venaglia.nondairy.soylang.elements.AbsoluteTemplateNameRef;
+import net.venaglia.nondairy.soylang.elements.CallParameterRefElement;
+import net.venaglia.nondairy.soylang.elements.NamespaceDefElement;
+import net.venaglia.nondairy.soylang.elements.NamespaceTagElement;
+import net.venaglia.nondairy.soylang.elements.ParameterDefElement;
+import net.venaglia.nondairy.soylang.elements.ParameterRefElement;
+import net.venaglia.nondairy.soylang.elements.LocalTemplateNameDef;
+import net.venaglia.nondairy.soylang.elements.LocalTemplateNameRef;
+import net.venaglia.nondairy.soylang.elements.factory.PsiElementClass;
 import org.jetbrains.annotations.NonNls;
 
 import java.lang.reflect.Field;
@@ -34,6 +43,7 @@ import java.util.TreeMap;
 public final class SoyElement extends IElementType {
 
     private static final SortedMap<Short,SoyElement> ALL_ELEMENTS_BY_VALUE = new TreeMap<Short,SoyElement>();
+    private static final SortedMap<String,SoyElement> ALL_ELEMENTS_BY_NAME = new TreeMap<String,SoyElement>();
 
     public static final SoyElement soy_file = new SoyElement(0, "soy_file");
 
@@ -44,17 +54,27 @@ public final class SoyElement extends IElementType {
     public static final SoyElement tag_content_html = new SoyElement(1004, "tag_content_html");
     public static final SoyElement tag_content_js = new SoyElement(1005, "tag_content_js");
     public static final SoyElement tag_and_doc_comment = new SoyElement(1006, "tag_and_doc_comment");
+    public static final SoyElement iterator_tag = new SoyElement(1007, "iterator_tag");
+    public static final SoyElement iterator_tag_pair = new SoyElement(1008, "iterator_tag_pair");
 
+    @PsiElementClass(NamespaceTagElement.class)
     public static final SoyElement namespace_def = new SoyElement(1101, "namespace_def");
+    @PsiElementClass(NamespaceDefElement.class)
     public static final SoyElement namespace_name = new SoyElement(1102, "namespace_name");
 
-    public static final SoyElement template_def = new SoyElement(1200, "template_def");
+    public static final SoyElement template_tag = new SoyElement(1200, "template_tag");
+    @PsiElementClass(LocalTemplateNameDef.class)
     public static final SoyElement template_name = new SoyElement(1201, "template_name");
+    @PsiElementClass(LocalTemplateNameRef.class)
     public static final SoyElement template_name_ref = new SoyElement(1202, "template_name_ref");
+    @PsiElementClass(AbsoluteTemplateNameRef.class)
+    public static final SoyElement template_name_ref_absolute = new SoyElement(1203, "template_name_ref_absolute");
+    public static final SoyElement template_tag_pair = new SoyElement(1204, "template_tag_pair");
 
     public static final SoyElement doc_comment = new SoyElement(1300, "doc_comment");
     public static final SoyElement doc_comment_text = new SoyElement(1301, "doc_comment_text");
     public static final SoyElement doc_comment_tag = new SoyElement(1302, "doc_comment_tag");
+    @PsiElementClass(ParameterDefElement.class)
     public static final SoyElement doc_comment_param = new SoyElement(1303, "doc_comment_param");
 
     public static final SoyElement attribute = new SoyElement(1400, "attribute");
@@ -76,13 +96,20 @@ public final class SoyElement extends IElementType {
     public static final SoyElement expression = new SoyElement(1800, "expression");
     public static final SoyElement constant_expression = new SoyElement(1801, "constant_expression");
     public static final SoyElement global_expression = new SoyElement(1802, "global_expression");
+    @PsiElementClass(ParameterDefElement.class)
     public static final SoyElement parameter_def = new SoyElement(1803, "parameter_def");
+    @PsiElementClass(ParameterRefElement.class)
     public static final SoyElement parameter_ref = new SoyElement(1804, "parameter_ref");
-    public static final SoyElement member_property_ref = new SoyElement(1805, "member_property_ref");
-    public static final SoyElement bracket_property_ref = new SoyElement(1806, "bracket_property_ref");
-    public static final SoyElement keyword = new SoyElement(1807, "keyword");
+    @PsiElementClass(CallParameterRefElement.class)
+    public static final SoyElement invocation_parameter_ref = new SoyElement(1805, "invocation_parameter_ref");
+    public static final SoyElement member_property_ref = new SoyElement(1806, "member_property_ref");
+    public static final SoyElement bracket_property_ref = new SoyElement(1807, "bracket_property_ref");
 
-    public static final SoyElement template_content = new SoyElement(2000, "template_content");
+    public static final SoyElement call_tag = new SoyElement(1900, "call_tag");
+    public static final SoyElement call_tag_pair = new SoyElement(1901, "call_tag_pair");
+    public static final SoyElement param_tag = new SoyElement(1902, "param_tag");
+
+    public static final SoyElement template_content = new SoyElement(4000, "template_content");
 
     public static final SoyElement ignored_text = new SoyElement(7000, "ignored_text");
     public static final SoyElement invalid_text = new SoyElement(7001, "invalid_text");
@@ -132,6 +159,7 @@ public final class SoyElement extends IElementType {
         this.value = (short)value;
         this.name = name;
         ALL_ELEMENTS_BY_VALUE.put(this.value, this);
+        ALL_ELEMENTS_BY_NAME.put(this.name, this);
     }
 
     public short value() {
@@ -158,5 +186,9 @@ public final class SoyElement extends IElementType {
     @Override
     public String toString() {
         return name + "." + value;
+    }
+
+    public static SoyElement valueOf(String name) {
+        return ALL_ELEMENTS_BY_NAME.get(name);
     }
 }

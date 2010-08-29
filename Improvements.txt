@@ -1,3 +1,11 @@
+ver 0.3
+* Comments in template content that begin with '/**' are now captured as comments
+* Code folding for templates
+* Structure view shows templates and parameters
+* Go to declaration is now supported for parameters and template names in the same file
+* Highlight usages in file now supported for parameters and templates
+* Now supporting rename refactoring to parameter and template names within a single file
+
 ver 0.2
 * Initial parser implementation completed
 * Open source release under Apache 2.0 license

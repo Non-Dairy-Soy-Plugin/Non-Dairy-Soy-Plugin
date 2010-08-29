@@ -33,7 +33,7 @@ public class ExpressionParserTest extends BaseParserTest {
     public static final String SIMPLE_EXPRESSION_EXPECT =
             "expression:{\n" +
             "    expression:{\n" +
-            "        expression:{\n" +
+            "        parameter_ref:{\n" +
             "            PARAMETER_REF\n" +
             "        }\n" +
             "        GT\n" +
@@ -78,7 +78,7 @@ public class ExpressionParserTest extends BaseParserTest {
             "    PLUS\n" +
             "    expression:{\n" +
             "        expression:{\n" +
-            "            expression:{\n" +
+            "            parameter_ref:{\n" +
             "                PARAMETER_REF\n" +
             "            }\n" +
             "            DOT\n" +
@@ -100,21 +100,21 @@ public class ExpressionParserTest extends BaseParserTest {
             "expression:{\n" +
             "    expression:{\n" +
             "        expression:{\n" +
-            "            expression:{\n" +
+            "            parameter_ref:{\n" +
             "                PARAMETER_REF\n" +
             "            }\n" +
             "            PLUS\n" +
-            "            expression:{\n" +
+            "            parameter_ref:{\n" +
             "                PARAMETER_REF\n" +
             "            }\n" +
             "        }\n" +
             "        PLUS\n" +
-            "        expression:{\n" +
+            "        parameter_ref:{\n" +
             "            PARAMETER_REF\n" +
             "        }\n" +
             "    }\n" +
             "    PLUS\n" +
-            "    expression:{\n" +
+            "    parameter_ref:{\n" +
             "        PARAMETER_REF\n" +
             "    }\n" +
             "}";
@@ -127,21 +127,21 @@ public class ExpressionParserTest extends BaseParserTest {
             "expression:{\n" +
             "    expression:{\n" +
             "        expression:{\n" +
-            "            expression:{\n" +
+            "            parameter_ref:{\n" +
             "                PARAMETER_REF\n" +
             "            }\n" +
             "            DIV\n" +
-            "            expression:{\n" +
+            "            parameter_ref:{\n" +
             "                PARAMETER_REF\n" +
             "            }\n" +
             "        }\n" +
             "        PLUS\n" +
-            "        expression:{\n" +
+            "        parameter_ref:{\n" +
             "            PARAMETER_REF\n" +
             "        }\n" +
             "    }\n" +
             "    GT\n" +
-            "    expression:{\n" +
+            "    parameter_ref:{\n" +
             "        PARAMETER_REF\n" +
             "    }\n" +
             "}";
@@ -151,21 +151,21 @@ public class ExpressionParserTest extends BaseParserTest {
 
     public static final String PRECEDENCE_EXPRESSION_EXPECT =
             "expression:{\n" +
-            "    expression:{\n" +
+            "    parameter_ref:{\n" +
             "        PARAMETER_REF\n" +
             "    }\n" +
             "    GT\n" +
             "    expression:{\n" +
-            "        expression:{\n" +
+            "        parameter_ref:{\n" +
             "            PARAMETER_REF\n" +
             "        }\n" +
             "        PLUS\n" +
             "        expression:{\n" +
-            "            expression:{\n" +
+            "            parameter_ref:{\n" +
             "                PARAMETER_REF\n" +
             "            }\n" +
             "            DIV\n" +
-            "            expression:{\n" +
+            "            parameter_ref:{\n" +
             "                PARAMETER_REF\n" +
             "            }\n" +
             "        }\n" +
@@ -183,25 +183,25 @@ public class ExpressionParserTest extends BaseParserTest {
             "            expression:{\n" +
             "                LPAREN\n" +
             "                expression:{\n" +
-            "                    expression:{\n" +
+            "                    parameter_ref:{\n" +
             "                        PARAMETER_REF\n" +
             "                    }\n" +
             "                    GT\n" +
-            "                    expression:{\n" +
+            "                    parameter_ref:{\n" +
             "                        PARAMETER_REF\n" +
             "                    }\n" +
             "                }\n" +
             "                RPAREN\n" +
             "            }\n" +
             "            PLUS\n" +
-            "            expression:{\n" +
+            "            parameter_ref:{\n" +
             "                PARAMETER_REF\n" +
             "            }\n" +
             "        }\n" +
             "        RPAREN\n" +
             "    }\n" +
             "    DIV\n" +
-            "    expression:{\n" +
+            "    parameter_ref:{\n" +
             "        PARAMETER_REF\n" +
             "    }\n" +
             "}";
@@ -211,7 +211,7 @@ public class ExpressionParserTest extends BaseParserTest {
 
     public static final String BRACKET_EXPRESSION_EXPECT =
             "expression:{\n" +
-            "    expression:{\n" +
+            "    parameter_ref:{\n" +
             "        PARAMETER_REF\n" +
             "    }\n" +
             "    bracket_property_ref:{\n" +

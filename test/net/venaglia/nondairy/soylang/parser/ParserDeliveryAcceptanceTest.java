@@ -22,7 +22,6 @@ import net.venaglia.nondairy.soylang.lexer.SoySymbol;
 import net.venaglia.nondairy.soylang.lexer.TestableSoyScanner;
 import org.jetbrains.annotations.NonNls;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -332,7 +331,7 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
                                                               permutationCount,
                                                               permutationCountTotal);
                     }
-                    if (permutationCountIndex < permutationCount.length) {
+                    if (permutationCountIndex + 1 < permutationCount.length) {
                         List<List<SoySymbol>> nextSymbolPermutationSet;
                         nextSymbolPermutationSet = buildNextSymbolPermutationSet(permutationCountIndex + 1);
                         if (nextSymbolPermutationSet == null) return null; // all done
