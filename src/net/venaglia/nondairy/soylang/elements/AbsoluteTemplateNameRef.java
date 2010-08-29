@@ -21,7 +21,7 @@ import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
-import net.venaglia.nondairy.soylang.elements.path.PsiPath;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -32,8 +32,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public class AbsoluteTemplateNameRef extends SoyASTElement {
 
-    private final PsiPath referencePath;
-    private final PsiPath namespaceReferencePath;
+    private final PsiElementPath referencePath;
+    private final PsiElementPath namespaceReferencePath;
     private final ElementPredicate templateNamePredicate;
 
     public AbsoluteTemplateNameRef(@NotNull ASTNode node) {
@@ -52,18 +52,18 @@ public class AbsoluteTemplateNameRef extends SoyASTElement {
                 return "[name=" + getName() + "]"; //NON-NLS
             }
         };
-        referencePath = new PsiPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
+        referencePath = new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
                                     new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
                                     new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
                                     new ElementTypePredicate(SoyElement.template_tag).onChildren(),
                                     new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
                                     new ElementTypePredicate(SoyElement.template_name).onChildren())
-                .or(    new PsiPath(new ElementTypePredicate(SoyElement.soy_file).onAncestors(),
+                .or(    new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onAncestors(),
                                     new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
                                     new ElementTypePredicate(SoyElement.template_tag).onChildren(),
                                     new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
                                     new ElementTypePredicate(SoyElement.template_name).onChildren()));
-        namespaceReferencePath = new PsiPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
+        namespaceReferencePath = new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
                                              new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
                                              new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
                                              new ElementTypePredicate(SoyElement.namespace_name).onChildren());

@@ -26,7 +26,7 @@ import com.intellij.psi.PsiReference;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
-import net.venaglia.nondairy.soylang.elements.path.PsiPath;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -37,8 +37,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public class CallParameterRefElement extends SoyASTElement implements PsiNamedElement {
 
-    private static final PsiPath PATH_TO_INVOKED_TEMPLATE_NAME =
-                    new PsiPath(new ElementTypePredicate(call_tag_pair).onFirstAncestor(),
+    private static final PsiElementPath PATH_TO_INVOKED_TEMPLATE_NAME =
+                    new PsiElementPath(new ElementTypePredicate(call_tag_pair).onFirstAncestor(),
                                 new ElementTypePredicate(call_tag).onChildren(),
                                 new ElementTypePredicate(tag_between_braces).onChildren(),
                                 new ElementTypePredicate(template_name_ref).onChildren());
@@ -78,7 +78,7 @@ public class CallParameterRefElement extends SoyASTElement implements PsiNamedEl
             // this call either points outside this file, or a template name is not specified
             return null;
         }
-        PsiPath pathToTemplateParameters =
+        PsiElementPath pathToTemplateParameters =
                 LocalTemplateNameRef.PATH_TO_TEMPLATE_NAMES.append(templateNamePredicate)
                                                            .append(ParameterRefElement.PATH_TO_PARAMETER_DEF);
         int prefix = getText().startsWith("$") ? 1 : 0;

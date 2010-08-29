@@ -25,10 +25,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.util.IncorrectOperationException;
-import net.venaglia.nondairy.soylang.elements.path.ElementClassPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
-import net.venaglia.nondairy.soylang.elements.path.PsiPath;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,17 +58,17 @@ public class SoyASTElement extends ASTWrapperPsiElement {
 
     protected class SoyASTElementReference extends PsiReferenceBase<SoyASTElement> {
 
-        private final PsiPath path;
+        private final PsiElementPath path;
         private final ElementPredicate predicate;
 
         @SuppressWarnings({ "unchecked" })
-        public SoyASTElementReference(@NotNull PsiPath path, @Nullable ElementPredicate predicate) {
+        public SoyASTElementReference(@NotNull PsiElementPath path, @Nullable ElementPredicate predicate) {
             super(SoyASTElement.this);
             this.path = path;
             this.predicate = predicate;
         }
 
-        public SoyASTElementReference(PsiPath path, @Nullable ElementPredicate predicate, TextRange range) {
+        public SoyASTElementReference(PsiElementPath path, @Nullable ElementPredicate predicate, TextRange range) {
             super(SoyASTElement.this, range);
             this.path = path;
             this.predicate = predicate;

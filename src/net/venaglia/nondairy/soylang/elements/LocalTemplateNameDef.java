@@ -30,7 +30,7 @@ import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.elements.path.ElementTextPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
-import net.venaglia.nondairy.soylang.elements.path.PsiPath;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,25 +47,25 @@ public class LocalTemplateNameDef extends SoyASTElement implements PsiNamedEleme
 
     public static final Icon SOY_TEMPLATE_ICON = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy-template.png");
 
-    private final PsiPath namespaceReferencePath;
-    private final PsiPath parameterDeclarationPath;
-    private final PsiPath privateAttributePath;
+    private final PsiElementPath namespaceReferencePath;
+    private final PsiElementPath parameterDeclarationPath;
+    private final PsiElementPath privateAttributePath;
 
     public LocalTemplateNameDef(@NotNull ASTNode node) {
         super(node);
-        namespaceReferencePath = new PsiPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
+        namespaceReferencePath = new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
                                              new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
                                              new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
                                              new ElementTypePredicate(SoyElement.namespace_name).onChildren());
-        parameterDeclarationPath = new PsiPath(new ElementTypePredicate(SoyElement.tag_and_doc_comment).onFirstAncestor(),
+        parameterDeclarationPath = new PsiElementPath(new ElementTypePredicate(SoyElement.tag_and_doc_comment).onFirstAncestor(),
                                                new ElementTypePredicate(SoyElement.doc_comment).onChildren(),
                                                new ElementTypePredicate(SoyElement.doc_comment_param).onChildren());
-        privateAttributePath = new PsiPath(new ElementTypePredicate(SoyElement.template_tag).onFirstAncestor(),
+        privateAttributePath = new PsiElementPath(new ElementTypePredicate(SoyElement.template_tag).onFirstAncestor(),
                                            new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
                                            new ElementTypePredicate(SoyElement.attribute).onChildren(),
                                            new ElementTypePredicate(SoyElement.attribute_key).onChildren(),
                                            new ElementTextPredicate("private"),
-                                           PsiPath.PARENT_ELEMENT,
+                                           PsiElementPath.PARENT_ELEMENT,
                                            new ElementTypePredicate(SoyElement.expression).onChildren(),
                                            new ElementTypePredicate(SoyElement.attribute_value).onChildren(),
                                            new ElementTextPredicate("true"));

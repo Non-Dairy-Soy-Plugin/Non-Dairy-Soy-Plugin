@@ -31,7 +31,7 @@ import java.util.LinkedList;
  * Date: Aug 26, 2010
  * Time: 7:28:11 AM
  */
-public class PsiPath_ {
+public class PsiElementPath {
 
     /**
      * Use this object when you wish to match any element in a PsiPath.
@@ -79,7 +79,7 @@ public class PsiPath_ {
     private String name;
     private boolean traceEnabled;
 
-    public PsiPath(ElementPredicate... elementReferencePath) {
+    public PsiElementPath(ElementPredicate... elementReferencePath) {
         this.elementReferencePath = elementReferencePath;
     }
 
@@ -152,39 +152,39 @@ public class PsiPath_ {
         return current;
     }
 
-    public PsiPath or(@NotNull PsiPath psiPath) {
+    public PsiElementPath or(@NotNull PsiElementPath psiPath) {
         return new OrPsiPath(this, psiPath);
     }
 
-    public PsiPath exclude(@NotNull PsiPath psiPath) {
+    public PsiElementPath exclude(@NotNull PsiElementPath psiPath) {
         return new ExcludePsiPath(psiPath);
     }
 
-    public PsiPath append(PsiPath next) {
+    public PsiElementPath append(PsiElementPath next) {
         return new AppendPsiPath(this, next);
     }
 
-    public PsiPath append(ElementPredicate... elementReferencePath) {
+    public PsiElementPath append(ElementPredicate... elementReferencePath) {
         if (elementReferencePath.length == 0) return this;
-        return append(new PsiPath(elementReferencePath));
+        return append(new PsiElementPath(elementReferencePath));
     }
 
-    public PsiPath trace(@NonNls String name) {
+    public PsiElementPath trace(@NonNls String name) {
         this.name = name;
         this.traceEnabled = true;
         return this;
     }
 
-    private static class OrPsiPath extends PsiPath {
+    private static class OrPsiPath extends PsiElementPath {
 
-        private final Collection<PsiPath> delegates;
+        private final Collection<PsiElementPath> delegates;
 
-        private OrPsiPath(PsiPath... delegates) {
-            this.delegates = new LinkedList<PsiPath>(Arrays.asList(delegates));
+        private OrPsiPath(PsiElementPath... delegates) {
+            this.delegates = new LinkedList<PsiElementPath>(Arrays.asList(delegates));
         }
 
         @Override
-        public PsiPath or(@NotNull PsiPath psiPath) {
+        public PsiElementPath or(@NotNull PsiElementPath psiPath) {
             delegates.add(psiPath);
             return this;
         }
@@ -193,27 +193,27 @@ public class PsiPath_ {
         @Override
         PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
             PsiElementCollection buffer = new PsiElementCollection();
-            for (PsiPath psiPath : delegates) {
+            for (PsiElementPath psiPath : delegates) {
                 buffer.addAll(psiPath.navigateImpl(start));
             }
             return buffer;
         }
     }
 
-    private class ExcludePsiPath extends PsiPath {
+    private class ExcludePsiPath extends PsiElementPath {
 
-        private final Collection<PsiPath> exclude;
+        private final Collection<PsiElementPath> exclude;
 
-        public ExcludePsiPath(@NotNull PsiPath exclude) {
-            this.exclude = new LinkedList<PsiPath>();
+        public ExcludePsiPath(@NotNull PsiElementPath exclude) {
+            this.exclude = new LinkedList<PsiElementPath>();
             this.exclude.add(exclude);
         }
 
         @NotNull
         @Override
         PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
-            PsiElementCollection buffer = PsiPath.this.navigateImpl(start);
-            for (PsiPath psiPath : exclude) {
+            PsiElementCollection buffer = PsiElementPath.this.navigateImpl(start);
+            for (PsiElementPath psiPath : exclude) {
                 traceMessage("## begin exclude...");
                 buffer.removeAll(psiPath.navigateImpl(start));
                 traceMessage("## end exclude.");
@@ -223,29 +223,29 @@ public class PsiPath_ {
         }
 
         @Override
-        public PsiPath or(@NotNull PsiPath psiPath) {
+        public PsiElementPath or(@NotNull PsiElementPath psiPath) {
             throw new UnsupportedOperationException("or() not supported after calling seq()");
         }
 
         @Override
-        public PsiPath exclude(@NotNull PsiPath psiPath) {
+        public PsiElementPath exclude(@NotNull PsiElementPath psiPath) {
             exclude.add(psiPath);
             return this;
         }
     }
 
-    private static class AppendPsiPath extends PsiPath {
+    private static class AppendPsiPath extends PsiElementPath {
 
-        private final Collection<PsiPath> seq;
+        private final Collection<PsiElementPath> seq;
 
-        public AppendPsiPath(@NotNull PsiPath start, @NotNull PsiPath next) {
-            seq = new LinkedList<PsiPath>();
+        public AppendPsiPath(@NotNull PsiElementPath start, @NotNull PsiElementPath next) {
+            seq = new LinkedList<PsiElementPath>();
             seq.add(start);
             seq.add(next);
         }
 
         @Override
-        public PsiPath append(@NotNull PsiPath next) {
+        public PsiElementPath append(@NotNull PsiElementPath next) {
             seq.add(next);
             return this;
         }
@@ -254,7 +254,7 @@ public class PsiPath_ {
         @Override
         PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
             PsiElementCollection buffer = new PsiElementCollection(start);
-            for (PsiPath path : seq) {
+            for (PsiElementPath path : seq) {
                 buffer = path.navigateImpl(buffer);
             }
             return buffer;

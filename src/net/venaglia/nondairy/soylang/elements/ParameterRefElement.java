@@ -25,7 +25,7 @@ import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReference;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
-import net.venaglia.nondairy.soylang.elements.path.PsiPath;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -36,15 +36,15 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ParameterRefElement extends SoyASTElement implements PsiNamedElement {
 
-    public static final PsiPath PATH_TO_PARAMETER_DEF =
-                    new PsiPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
+    public static final PsiElementPath PATH_TO_PARAMETER_DEF =
+                    new PsiElementPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
                                 new ElementTypePredicate(doc_comment).onChildren(),
                                 new ElementTypePredicate(doc_comment_param).onChildren())
-                .or(new PsiPath(new ElementTypePredicate(iterator_tag_pair).onAncestors(),
+                .or(new PsiElementPath(new ElementTypePredicate(iterator_tag_pair).onAncestors(),
                                 new ElementTypePredicate(iterator_tag).onChildren(),
                                 new ElementTypePredicate(tag_between_braces).onChildren(),
                                 new ElementTypePredicate(parameter_def).onChildren())
-           .exclude(new PsiPath(new ElementTypePredicate(tag_between_braces).onFirstAncestor(),
+           .exclude(new PsiElementPath(new ElementTypePredicate(tag_between_braces).onFirstAncestor(),
                                 new ElementTypePredicate(iterator_tag).onParent(),
                                 new ElementTypePredicate(tag_between_braces).onChildren(),
                                 new ElementTypePredicate(parameter_def).onChildren())));

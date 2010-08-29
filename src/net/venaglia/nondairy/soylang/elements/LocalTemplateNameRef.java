@@ -25,7 +25,7 @@ import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReference;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
-import net.venaglia.nondairy.soylang.elements.path.PsiPath;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,14 +37,14 @@ import org.jetbrains.annotations.Nullable;
  */
 public class LocalTemplateNameRef extends SoyASTElement implements PsiNamedElement {
 
-    public static final PsiPath PATH_TO_TEMPLATE_NAMES =
-                    new PsiPath(new ElementTypePredicate(soy_file).onFirstAncestor(),
+    public static final PsiElementPath PATH_TO_TEMPLATE_NAMES =
+                    new PsiElementPath(new ElementTypePredicate(soy_file).onFirstAncestor(),
                                 new ElementTypePredicate(tag_and_doc_comment).onChildren(),
                                 new ElementTypePredicate(template_tag_pair).onChildren(),
                                 new ElementTypePredicate(template_tag).onChildren(),
                                 new ElementTypePredicate(tag_between_braces).onChildren(),
                                 new ElementTypePredicate(template_name).onChildren())
-                .or(new PsiPath(new ElementTypePredicate(soy_file).onFirstAncestor(),
+                .or(new PsiElementPath(new ElementTypePredicate(soy_file).onFirstAncestor(),
                                 new ElementTypePredicate(template_tag_pair).onChildren(),
                                 new ElementTypePredicate(template_tag).onChildren(),
                                 new ElementTypePredicate(tag_between_braces).onChildren(),
