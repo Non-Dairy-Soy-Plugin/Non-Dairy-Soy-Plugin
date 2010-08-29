@@ -44,13 +44,13 @@ public class SoyASTElementFactory {
     static {
         Map<IElementType, ASTElementFactory<?>> factoriesByElement = new HashMap<IElementType, ASTElementFactory<?>>();
         for (Field field : SoyElement.class.getFields()) {
-            PsiElementClass psiElementClassAnnotation = field.getAnnotation(PsiElementClass.class);
+            ElementClass elementClassAnnotation = field.getAnnotation(ElementClass.class);
             int modifiers = field.getModifiers();
-            if (psiElementClassAnnotation != null && SoyElement.class.equals(field.getType()) &&
+            if (elementClassAnnotation != null && SoyElement.class.equals(field.getType()) &&
                 Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
                 try {
                     factoriesByElement.put((SoyElement)field.get(null),
-                                           buildFactory(psiElementClassAnnotation.value()));
+                                           buildFactory(elementClassAnnotation.value()));
                 } catch (Exception e) {
                     throw new RuntimeException(e); // shouldn't happen
                 }
