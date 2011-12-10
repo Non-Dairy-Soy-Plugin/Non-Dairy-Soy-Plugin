@@ -58,7 +58,7 @@ public class NamespaceDefElement extends SoyASTElement implements ItemPresentati
         return SOY_NAMESPACE_ICON;
     }
 
-    @Override
+//    @Override
     public TextAttributesKey getTextAttributesKey() {
         return null;
     }

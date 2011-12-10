@@ -48,12 +48,12 @@ public class SoyASTElementFactory {
             int modifiers = field.getModifiers();
             if (elementClassAnnotation != null && SoyElement.class.equals(field.getType()) &&
                 Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
-                try {
-                    factoriesByElement.put((SoyElement)field.get(null),
-                                           buildFactory(elementClassAnnotation.value()));
-                } catch (Exception e) {
-                    throw new RuntimeException(e); // shouldn't happen
-                }
+//                try {
+//                    factoriesByElement.put((SoyElement)field.get(null),
+//                                           buildFactory(elementClassAnnotation.value()));
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e); // shouldn't happen
+//                }
             }
         }
         FACTORIES_BY_ELEMENT = Collections.unmodifiableMap(factoriesByElement);

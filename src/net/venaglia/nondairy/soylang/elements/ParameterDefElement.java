@@ -72,7 +72,7 @@ public class ParameterDefElement extends SoyASTElement implements PsiNamedElemen
         return getNode().getElementType() == SoyElement.doc_comment_param ? SOY_PARAM_ICON : null;
     }
 
-    @Override
+//    @Override
     public TextAttributesKey getTextAttributesKey() {
         return null;
     }

@@ -23,6 +23,7 @@ import net.venaglia.nondairy.soylang.lexer.cupparser.SoyParser;
 import net.venaglia.nondairy.soylang.lexer.cupparser.SoyParserSymbols;
 import java_cup.runtime.ComplexSymbolFactory;
 import java_cup.runtime.Symbol;
+import org.jetbrains.annotations.NonNls;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -64,7 +65,7 @@ public class SoyScannerTest {
         return testableSoyScanner;
     }
 
-    public static TestableSoyScanner buildScanner(CharSequence testSource, String initialState) throws Exception {
+    public static TestableSoyScanner buildScanner(CharSequence testSource, @NonNls String initialState) throws Exception {
         return buildScanner(testSource, (Integer)SoyScanner.class.getField(initialState).get(null));
     }
 
@@ -111,6 +112,14 @@ public class SoyScannerTest {
             hashBuffer.append(entry.getValue());
         }
         // todo: assert token results are consistent
+    }
+
+    @Test
+    public void testJiveSources() throws Exception {
+        TestableSoyScanner scanner = buildScanner("grouped_external.soy");
+        tallyTokens(scanner, false);
+        scanner = buildScanner("oauth.soy");
+        tallyTokens(scanner, false);
     }
 
     private Map<SoyToken,Integer> tallyTokens(TestableSoyScanner scanner, boolean expectErrors) {

@@ -17,8 +17,10 @@
 package net.venaglia.nondairy.soylang.parser;
 
 import com.intellij.lang.PsiBuilder;
+import com.intellij.lang.WhitespacesAndCommentsBinder;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.soylang.lexer.SoySymbol;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 
 import java.util.Deque;
@@ -279,6 +281,22 @@ public class MockTokenSource extends TokenSource {
         public void error(String message) {
             closeImpl("Applying an error to a marker", "");
             MockTokenSource.this.error(message);
+        }
+
+        @Override
+        public void collapse(IElementType type) {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void errorBefore(String message, PsiBuilder.Marker before) {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void setCustomEdgeTokenBinders(@Nullable WhitespacesAndCommentsBinder left,
+                                              @Nullable WhitespacesAndCommentsBinder right) {
+            //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 }

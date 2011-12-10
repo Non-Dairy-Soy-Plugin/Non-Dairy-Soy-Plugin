@@ -17,7 +17,10 @@
 package net.venaglia.nondairy.soylang.parser;
 
 import net.venaglia.nondairy.SoyTestUtil;
+import org.jetbrains.annotations.NonNls;
 import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,26 +37,92 @@ public class SoyStructureParserTest extends BaseParserTest {
 
     @Test
     public void testMinimal() throws Exception {
-        testParseSequence(SoyTestUtil.getTestSourceBuffer("minimal.soy"), "YYINITIAL", MockParseMetaToken.ASSERT_NO_ERRORS);
+        testNoErrorsImpl("minimal.soy");
     }
 
     @Test
     public void testExample() throws Exception {
-        testParseSequence(SoyTestUtil.getTestSourceBuffer("example.soy"), "YYINITIAL", MockParseMetaToken.ASSERT_NO_ERRORS);
+        testNoErrorsImpl("example.soy");
     }
 
     @Test
     public void testFeatures() throws Exception {
-        testParseSequence(SoyTestUtil.getTestSourceBuffer("features.soy"), "YYINITIAL", MockParseMetaToken.ASSERT_NO_ERRORS);
+        testNoErrorsImpl("features.soy");
     }
 
     @Test
     public void testEdgeCases() throws Exception {
-        testParseSequence(SoyTestUtil.getTestSourceBuffer("edge-cases.soy"), "YYINITIAL", MockParseMetaToken.ASSERT_NO_ERRORS);
+        testNoErrorsImpl("edge-cases.soy");
+    }
+
+    @Test
+    public void testJiveSources() throws Exception {
+        testNoErrorsImpl("grouped_external.soy");
+        testNoErrorsImpl("oauth.soy");
     }
 
     @Test
     public void testErrorCases() throws Exception {
-        testParseSequence(SoyTestUtil.getTestSourceBuffer("error-cases.soy"), "YYINITIAL");
+        testParseSequence(SoyTestUtil.getTestSourceBuffer("error-cases.soy"), "YYINITIAL", "error-cases.soy");
+    }
+
+    @Test
+    public void testInMultipleThreads() throws Exception {
+        @NonNls
+        String[] sources = {"example.soy","features.soy","edge-cases.soy","grouped_external.soy","oauth.soy"};
+        SoyTestRunner[] threads = new SoyTestRunner[sources.length];
+        for (int i = 0; i < threads.length; i++) {
+            @NonNls String threadNameFormat = "soy test %d: %s";
+            String name = String.format(threadNameFormat, i, sources[i]);
+            threads[i] = new SoyTestRunner(TimeUnit.SECONDS, 15, sources[i], name);
+        }
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        for (Thread thread : threads) {
+            thread.join();
+        }
+        for (SoyTestRunner thread : threads) {
+            thread.representFail();
+        }
+    }
+
+    private void testNoErrorsImpl(@NonNls String resourceName) throws Exception {
+        testParseSequence(SoyTestUtil.getTestSourceBuffer(resourceName), "YYINITIAL", MockParseMetaToken.ASSERT_NO_ERRORS, resourceName);
+    }
+
+    private class SoyTestRunner extends Thread {
+
+        private final long millis;
+        private final String source;
+
+        private Exception fail = null;
+
+        public SoyTestRunner(TimeUnit unit,
+                             int duration,
+                             String source,
+                             String name) {
+            super(name);
+            this.source = source;
+            millis = unit.toMillis(duration);
+        }
+
+        @Override
+        public void run() {
+            long end = System.currentTimeMillis() + millis;
+            try {
+                do {
+                    testNoErrorsImpl(source);
+                } while (System.currentTimeMillis() < end);
+            } catch (Exception e) {
+                fail = e;
+            }
+        }
+
+        public void representFail() throws Exception {
+            if (fail != null) {
+                throw fail;
+            }
+        }
     }
 }

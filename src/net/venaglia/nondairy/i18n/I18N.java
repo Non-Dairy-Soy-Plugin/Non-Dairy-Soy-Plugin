@@ -35,7 +35,8 @@ import java.util.ResourceBundle;
 public class I18N {
 
     @NonNls
-    private static final String RESOURCE_BUNDLE_NAME = "nondairy";
+    static final String RESOURCE_BUNDLE_NAME = "nondairy";
+
     private static final I18N INSTANCE = new I18N();
 
     private Map<String,String> valuesByKey;
@@ -63,9 +64,5 @@ public class I18N {
         String message = INSTANCE.valuesByKey.get(key);
         if (message == null) return message;
         return MessageFormat.format(message, args);
-    }
-
-    public static void main(String[] args) {
-
     }
 }

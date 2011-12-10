@@ -38,20 +38,6 @@ public abstract class TokenSource {
         if (errorMarker != null) errorMarker.done(markerType);
     }
 
-    public void fastForwardAndMarkBad(IElementType endToken, IElementType markerType, String errorMessage) {
-        PsiBuilder.Marker errorMarker = mark();
-        error(errorMessage);
-        while (!eof()) {
-            IElementType token = token();
-            advance();
-            if (token == endToken) {
-                errorMarker.done(markerType);
-                return;
-            }
-        }
-        errorMarker.done(markerType);
-    }
-
     public abstract PsiBuilder.Marker mark();
 
     public abstract IElementType token();

@@ -118,9 +118,4 @@ public class LocalTemplateNameDef extends SoyASTElement implements PsiNamedEleme
         icon.setIcon(isPrivate() ? Icons.PRIVATE_ICON : Icons.PUBLIC_ICON, 1);
         return icon;
     }
-
-    @Override
-    public TextAttributesKey getTextAttributesKey() {
-        return null;
-    }
 }

@@ -19,6 +19,7 @@ package net.venaglia.nondairy.soylang;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.FileViewProvider;
+import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.soylang.elements.NamespaceDefElement;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
@@ -62,6 +63,7 @@ public class SoyFile extends PsiFileBase {
     }
 
     public NamespaceDefElement getNamespaceElement() {
-        return (NamespaceDefElement)namespaceNamePath.navigate(this).oneOrNull();
+        PsiElement element = namespaceNamePath.navigate(this).oneOrNull();
+        return element instanceof NamespaceDefElement ? (NamespaceDefElement)element : null;
     }
 }

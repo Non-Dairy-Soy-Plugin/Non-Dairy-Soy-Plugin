@@ -36,10 +36,13 @@ public class SoyParser implements PsiParser {
 
     @NotNull
     public ASTNode parse(IElementType root, PsiBuilder builder) {
-        builder.enforceCommentTokens(TokenSet.create(SoyToken.COMMENT));
-        PsiBuilder.Marker file = builder.mark();
-        new SoyStructureParser(new PsiBuilderTokenSource(builder)).parse();
-        file.done(root);
-        return builder.getTreeBuilt();
+        synchronized (SoyParser.class) {
+            builder.setDebugMode(true);
+            builder.enforceCommentTokens(TokenSet.create(SoyToken.COMMENT));
+//            PsiBuilder.Marker file = builder.mark();
+            new SoyStructureParser(new PsiBuilderTokenSource(builder)).parse();
+//            file.done(root);
+            return builder.getTreeBuilt();
+        }
     }
 }

@@ -208,6 +208,7 @@ class ExpressionParser {
             token = source.token();
             if (token != SoyToken.RPAREN) {
                 source.error(I18N.msg("syntax.error.invalid.function.parameter.list"));
+                beginCall.drop();
             } else {
                 source.advance();
                 beginCall.done(function_call_args);
@@ -232,11 +233,6 @@ class ExpressionParser {
         while (parser.parent != null && parser.parent.prec >= prec && parser.parent.prec != PREC_PARENTHESIS) {
             parser.done();
             parser = parser.parent;
-        }
-
-        if (parser.prec == prec && prec == PREC_TERNARY && parser.remainingValues == remainingValues && remainingValues > 0) {
-            source.advance();
-            return parser;
         }
 
         PsiBuilder.Marker newMarker = parser.exprMarker.precede();

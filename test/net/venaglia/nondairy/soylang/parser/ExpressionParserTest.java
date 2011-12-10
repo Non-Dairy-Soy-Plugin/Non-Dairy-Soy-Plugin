@@ -230,47 +230,47 @@ public class ExpressionParserTest extends BaseParserTest {
 
     @Test
     public void testSimpleExpression() throws Exception {
-        testParseSequence(SIMPLE_EXPRESSION_SOURCE, SIMPLE_EXPRESSION_EXPECT, "SOY_TAG");
+        testParseSequence(SIMPLE_EXPRESSION_SOURCE, SIMPLE_EXPRESSION_EXPECT, "SOY_TAG", null);
     }
 
     @Test
     public void testSimpleDotExpression() throws Exception {
-        testParseSequence(SIMPLE_DOT_EXPRESSION_SOURCE, SIMPLE_DOT_EXPRESSION_EXPECT, "SOY_TAG");
+        testParseSequence(SIMPLE_DOT_EXPRESSION_SOURCE, SIMPLE_DOT_EXPRESSION_EXPECT, "SOY_TAG", null);
     }
 
     @Test
     public void testBinaryExpression1() throws Exception {
-        testParseSequence(BINARY_EXPRESSION_SOURCE_1, BINARY_EXPRESSION_EXPECT_1, "SOY_TAG");
+        testParseSequence(BINARY_EXPRESSION_SOURCE_1, BINARY_EXPRESSION_EXPECT_1, "SOY_TAG", null);
     }
 
     @Test
     public void testBinaryExpression2() throws Exception {
-        testParseSequence(BINARY_EXPRESSION_SOURCE_2, BINARY_EXPRESSION_EXPECT_2, "SOY_TAG");
+        testParseSequence(BINARY_EXPRESSION_SOURCE_2, BINARY_EXPRESSION_EXPECT_2, "SOY_TAG", null);
     }
 
     @Test
     public void testPrecedenceExpression() throws Exception {
-        testParseSequence(PRECEDENCE_EXPRESSION_SOURCE, PRECEDENCE_EXPRESSION_EXPECT, "SOY_TAG");
+        testParseSequence(PRECEDENCE_EXPRESSION_SOURCE, PRECEDENCE_EXPRESSION_EXPECT, "SOY_TAG", null);
     }
 
     @Test
     public void testParenthesisExpression() throws Exception {
-        testParseSequence(PARENTHESIS_EXPRESSION_SOURCE, PARENTHESIS_EXPRESSION_EXPECT, "SOY_TAG");
+        testParseSequence(PARENTHESIS_EXPRESSION_SOURCE, PARENTHESIS_EXPRESSION_EXPECT, "SOY_TAG", null);
     }
 
     @Test
     public void testBracketExpression() throws Exception {
-        testParseSequence(BRACKET_EXPRESSION_SOURCE, BRACKET_EXPRESSION_EXPECT, "SOY_TAG");
+        testParseSequence(BRACKET_EXPRESSION_SOURCE, BRACKET_EXPRESSION_EXPECT, "SOY_TAG", null);
     }
 
     @Test
     public void testMissingOperand() throws Exception {
-        testParseSequence("4 * }", "SOY_TAG");
+        testParseSequence("4 * }", "SOY_TAG", null);
     }
 
     @Test
     public void testMissingParenthesis() throws Exception {
-        testParseSequence("(4 * 5 }", "SOY_TAG");
+        testParseSequence("(4 * 5 }", "SOY_TAG", null);
     }
 
 //    @Test

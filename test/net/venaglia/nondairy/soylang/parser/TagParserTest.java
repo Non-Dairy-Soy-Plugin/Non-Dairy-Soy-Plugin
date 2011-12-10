@@ -16,6 +16,7 @@
 
 package net.venaglia.nondairy.soylang.parser;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -141,38 +142,44 @@ public class TagParserTest extends BaseParserTest {
             "    TAG_RBRACE\n" +
             "}";
 
-//    public static final String SIMPLE_TAG_PAIR_SOURCE =
-//            "{template .testTemplate}\n" +
-//            "<h1>Hello World</h1>\n" +
-//            "{/template}";
+    public static final String SIMPLE_TAG_PAIR_SOURCE =
+            "{template .testTemplate}\n" +
+            "<h1>Hello World</h1>\n" +
+            "{/template}";
 
-//    public static final String SIMPLE_TAG_PAIR_EXPECT =
-//            "tag_pair:{\n" +
-//            "    template_tag:{\n" +
-//            "        TAG_LBRACE\n" +
-//            "        tag_between_braces:{\n" +
-//            "            command_keyword:{\n" +
-//            "                TEMPLATE\n" +
-//            "            }\n" +
-//            "            template_name:{\n" +
-//            "                TEMPLATE_IDENTIFIER\n" +
-//            "            }\n" +
-//            "        }\n" +
-//            "        TAG_RBRACE\n" +
-//            "    }\n" +
-//            "    template_content:{\n" +
-//            "        TEMPLATE_TEXT*7\n" +
-//            "    }\n" +
-//            "    tag:{\n" +
-//            "        TAG_END_LBRACE\n" +
-//            "        tag_between_braces:{\n" +
-//            "            command_keyword:{\n" +
-//            "                TEMPLATE\n" +
-//            "            }\n" +
-//            "        }\n" +
-//            "        TAG_RBRACE\n" +
-//            "    }\n" +
-//            "}";
+    public static final String SIMPLE_TAG_PAIR_EXPECT =
+            "tag_pair:{\n" +
+            "    template_tag:{\n" +
+            "        TAG_LBRACE\n" +
+            "        tag_between_braces:{\n" +
+            "            command_keyword:{\n" +
+            "                TEMPLATE\n" +
+            "            }\n" +
+            "            template_name:{\n" +
+            "                TEMPLATE_IDENTIFIER\n" +
+            "            }\n" +
+            "        }\n" +
+            "        TAG_RBRACE\n" +
+            "    }\n" +
+            "    template_content:{\n" +
+            "        XML_START_TAG_START\n" +
+            "        XML_TAG_NAME\n" +
+            "        XML_TAG_END\n" +
+            "        XML_DATA_CHARACTERS\n" +
+            "        XML_END_TAG_START\n" +
+            "        XML_TAG_NAME\n" +
+            "        XML_TAG_END" +
+            "    }\n" +
+            "    tag:{\n" +
+            "        TAG_END_LBRACE\n" +
+            "        tag_between_braces:{\n" +
+            "            command_keyword:{\n" +
+            "                TEMPLATE\n" +
+            "            }\n" +
+            "        }\n" +
+            "        TAG_RBRACE\n" +
+            "    }\n" +
+            "}";
 
     @Override
     protected void parseImpl(TokenSource tokenSource) {
@@ -181,37 +188,38 @@ public class TagParserTest extends BaseParserTest {
 
     @Test
     public void testSimpleTag() throws Exception {
-        testParseSequence(SIMPLE_TAG_SOURCE, SIMPLE_TAG_EXPECT, "YYINITIAL");
+        testParseSequence(SIMPLE_TAG_SOURCE, SIMPLE_TAG_EXPECT, "YYINITIAL", null);
     }
 
     @Test
     public void testSimpleUnaryTag() throws Exception {
-        testParseSequence(SIMPLE_UNARY_TAG_SOURCE, SIMPLE_UNARY_TAG_EXPECT, "HTML_INITIAL");
+        testParseSequence(SIMPLE_UNARY_TAG_SOURCE, SIMPLE_UNARY_TAG_EXPECT, "HTML_INITIAL", null);
     }
 
     @Test
     public void testExpressionTag() throws Exception {
-        testParseSequence(EXPRESSION_TAG_SOURCE, EXPRESSION_TAG_EXPECT, "HTML_INITIAL");
+        testParseSequence(EXPRESSION_TAG_SOURCE, EXPRESSION_TAG_EXPECT, "HTML_INITIAL", null);
     }
 
-//    @Test
-//    public void testSimpleTagPair() throws Exception {
-//        testParseSequence(SIMPLE_TAG_PAIR_SOURCE, SIMPLE_TAG_PAIR_EXPECT, "YYINITIAL");
-//    }
+    @Test
+    @Ignore("This is two tags, not one -- need to refactor it somewhere else")
+    public void testSimpleTagPair() throws Exception {
+        testParseSequence(SIMPLE_TAG_PAIR_SOURCE, SIMPLE_TAG_PAIR_EXPECT, "YYINITIAL", null);
+    }
 
     @Test
     public void testUnclosedTag() throws Exception {
-        testParseSequence("{template .foo", "YYINITIAL");
+        testParseSequence("{template .foo", "YYINITIAL", null);
     }
 
     @Test
     public void testUnclosedPrintImplicitTag() throws Exception {
-        testParseSequence("{$broken", "HTML_INITIAL");
+        testParseSequence("{$broken", "HTML_INITIAL", null);
     }
 
     @Test
     public void testUnclosedTagPair() throws Exception {
-        testParseSequence("{template .foo}", "YYINITIAL");
+        testParseSequence("{template .foo}", "YYINITIAL", null);
     }
 
 }

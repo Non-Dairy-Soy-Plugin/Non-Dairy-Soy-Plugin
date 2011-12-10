@@ -19,9 +19,10 @@
     <description>
         A plugin to help with the development of Closure Templates (soy files).
 
-        This plugin is still early in development, and updates are subject to
-        my available free time. For now, this initial version provides better
-        functionality than adding a custom language.
+        This plugin is still under development, and updates are subject to
+        my available free time. For now, this initial version provides a few
+        basic language features such as code folding, use highlighting, go to
+        declaration, and structure view.
 
         Use at your own risk! ...after all, this is my first plugin.
     </description>
@@ -53,5 +54,6 @@
         <lang.parserDefinition language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyParserDefinition"/>
         <lang.commenter language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyCommenter"/>
         <lang.psiStructureViewFactory language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyStructureViewFactory"/>
+        <lang.findUsagesProvider language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFindUsagesProvider"/>
     </extensions>
 </idea-plugin>

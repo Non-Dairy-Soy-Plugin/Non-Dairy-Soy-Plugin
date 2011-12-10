@@ -22,6 +22,7 @@ import net.venaglia.nondairy.soylang.lexer.SoySymbol;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
 import net.venaglia.nondairy.soylang.lexer.TestableSoyScanner;
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.rules.TestName;
@@ -47,7 +48,7 @@ public abstract class BaseParserTest {
     private static final String TEST_INTERMEDIATE_HEADER =
             "-----[ %s ]------------------------------------------------------------------------";
 
-    private SoyToken nextSoyToken(Iterator<Object> iterator) {
+    private SoyToken nextSoyToken(Iterator<?> iterator) {
         while (iterator.hasNext()) {
             Object obj = iterator.next();
             if (obj instanceof SoyToken) return (SoyToken)obj;
@@ -60,9 +61,11 @@ public abstract class BaseParserTest {
         String msg = "Token from expected sequence does not follow token from source.";
         Iterator<Object> iterator = expectedSequence.iterator();
         for (SoySymbol symbol : testableSoyScanner) {
-            IElementType expect = symbol.getToken();
-            IElementType source = nextSoyToken(iterator);
-            Assert.assertEquals(msg, source, expect);
+            IElementType source = symbol.getToken();
+            if (source instanceof SoyToken) {
+                IElementType expect = nextSoyToken(iterator);
+                Assert.assertEquals(msg, expect, source);
+            }
         }
         IElementType token = nextSoyToken(iterator);
         if (token != null) {
@@ -72,7 +75,8 @@ public abstract class BaseParserTest {
 
     protected MockTokenSource buildTestSource(CharSequence source,
                                               @NonNls String initialState,
-                                              final Deque<Object> expectedSequence) throws Exception {
+                                              final Deque<Object> expectedSequence,
+                                              String resourceName) throws Exception {
         TestableSoyScanner scanner = SoyScannerTest.buildScanner(source, initialState);
         if (expectedSequence != null) {
             validateLexerAgainstExpectedSequence(scanner, expectedSequence);
@@ -105,14 +109,14 @@ public abstract class BaseParserTest {
         println(header.substring(0, 78));
     }
 
-    protected void testParseSequence(CharSequence source, CharSequence expectSource, @NonNls String initialState) throws Exception {
+    protected void testParseSequence(CharSequence source, CharSequence expectSource, @NonNls String initialState, @NonNls @Nullable String resourceName) throws Exception {
         String header = String.format(TEST_BEGIN_HEADER, getClass().getSimpleName(), name.getMethodName());
         printTestHeader(header);
         println();
         println(source);
         println();
         Deque<Object> expectedSequence = ExpectedExpression.getExpectedSequence(expectSource);
-        MockTokenSource tokenSource = buildTestSource(source, initialState, expectedSequence);
+        MockTokenSource tokenSource = buildTestSource(source, initialState, expectedSequence, resourceName);
         while (tokenSource != null) {
             int permutationSequence = tokenSource.getPermutationSequence();
             parseImpl(tokenSource);
@@ -135,13 +139,14 @@ public abstract class BaseParserTest {
         }
     }
 
-    protected void testParseSequence(CharSequence source, @NonNls String initialState) throws Exception {
-        testParseSequence(source, initialState, (EventDelegate)null);
+    protected void testParseSequence(CharSequence source, @NonNls String initialState, @NonNls @Nullable String resourceName) throws Exception {
+        testParseSequence(source, initialState, (EventDelegate)null, resourceName);
     }
 
     protected void testParseSequence(CharSequence source,
                                      @NonNls String initialState,
-                                     final EventDelegate eventDelegate) throws Exception {
+                                     final EventDelegate eventDelegate,
+                                     @Nullable String resourceName) throws Exception {
         String header = String.format(TEST_BEGIN_HEADER, getClass().getSimpleName(), name.getMethodName());
         printTestHeader(header);
         EventDelegate superDelegate = new EventDelegate() {
@@ -150,7 +155,7 @@ public abstract class BaseParserTest {
                 if (eventDelegate != null) eventDelegate.event(value, mockTokenSource);
             }
         };
-        MockTokenSource tokenSource = buildTestSource(source, initialState, null).setEventDelegate(superDelegate);
+        MockTokenSource tokenSource = buildTestSource(source, initialState, null, resourceName).setEventDelegate(superDelegate);
         while (tokenSource != null) {
             int permutationSequence = tokenSource.getPermutationSequence();
             header = String.format(TEST_INTERMEDIATE_HEADER, "Running permutation " + permutationSequence);

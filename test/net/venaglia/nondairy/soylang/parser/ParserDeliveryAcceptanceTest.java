@@ -19,13 +19,18 @@ package net.venaglia.nondairy.soylang.parser;
 import net.venaglia.nondairy.SoyTestUtil;
 import net.venaglia.nondairy.soylang.lexer.SoyScannerTest;
 import net.venaglia.nondairy.soylang.lexer.SoySymbol;
-import net.venaglia.nondairy.soylang.lexer.TestableSoyScanner;
+import net.venaglia.nondairy.soylang.parser.permutations.PermutationProducer;
+import net.venaglia.nondairy.soylang.parser.permutations.Permutator;
+import net.venaglia.nondairy.soylang.parser.permutations.impl.ASyncPermutator;
+import net.venaglia.nondairy.soylang.parser.permutations.impl.TemplatesOneCharacterAtATime;
 import org.jetbrains.annotations.NonNls;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
@@ -189,23 +194,74 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
     @Override
     protected MockTokenSource buildTestSource(CharSequence source,
                                               @NonNls String initialState,
-                                              Deque<Object> expectedSequence) throws Exception {
+                                              Deque<Object> expectedSequence,
+                                              String resourceName) throws Exception {
         Assert.assertNull(expectedSequence);
-        TestableSoyScanner scanner = SoyScannerTest.buildScanner(source, initialState);
-        List<List<SoySymbol>> groupedSymbols = groupSymbols(scanner.iterator());
-        int symbolCount = 0;
-        for (List<SoySymbol> symbolGroup : groupedSymbols) symbolCount += symbolGroup.size();
-        int[] permutationCount = countPermutations(groupedSymbols);
-        int permutationCountTotal = 0;
-        for (int c : permutationCount) {
-            permutationCountTotal += c;
+//        TestableSoyScanner scanner = SoyScannerTest.buildScanner(source, initialState);
+//        List<List<SoySymbol>> groupedSymbols = groupSymbols(scanner.iterator());
+//        int symbolCount = 0;
+//        for (List<SoySymbol> symbolGroup : groupedSymbols) symbolCount += symbolGroup.size();
+//        int[] permutationCount = countPermutations(groupedSymbols);
+//        int permutationCountTotal = 0;
+//        for (int c : permutationCount) {
+//            permutationCountTotal += c;
+//        }
+//        permutationCountTotal *= 2;
+//        System.out.printf("Preparing permutable source from %d symbols [%d chars] with %d permutations.%n",
+//                          symbolCount,
+//                          source.length(),
+//                          permutationCountTotal);
+//        return buildPermutableMockTokenSource(source, groupedSymbols, 0, 0, permutationCount, permutationCountTotal);
+        PermutationProducer producer = permutate(source, initialState, resourceName);
+        producer.next();
+        return buildPermutableMockTokenSource(source, producer);
+    }
+
+    private PermutationProducer permutate(CharSequence source, @NonNls String initialState, String resourceName) {
+        Collection<Permutator> permutators = new LinkedList<Permutator>();
+//        permutators.add(new AllSymbolOmittingPermutator());
+//        permutators.add(new HeadSymbolOmittingPermutator());
+//        permutators.add(new TailSymbolOmittingPermutator());
+//        permutators.add(new SingleSymbolOmittingPermutator());
+        permutators.add(new TemplatesOneCharacterAtATime());
+//        permutators.add(new PrintTagsOneCharacterAtATime());
+        ASyncPermutator permutator = new ASyncPermutator(permutators, resourceName);
+        permutator.permutate(source, initialState);
+        return permutator;
+    }
+
+    public static void _main(String[] args) {
+        String source =
+                "{namespace example.soy}\n" +
+                "\n" +
+                "/**\n" +
+                " * An example template doc comment\n" +
+                " * @param required Need this parameter\n" +
+                " * @param? optional Sometimes need this one\n" +
+                " */\n" +
+                "{template .nondairy private=\"true\"}\n" +
+                "    {if length($required) >= 100}\n" +
+                "        Last Item: {$required[length($required) - 1]}<br>\n" +
+                "    {/if}\n" +
+                "\n" +
+                "    {foreach $i in $required}\n" +
+                "        Hello {$i|escapeHtml}\n" +
+                "    {ifempty}\n" +
+                "        {$optional|insertWordBreaks:8}\n" +
+                "    {/foreach}\n" +
+                "{/template}" +
+                "/** eof */";
+        ParserDeliveryAcceptanceTest test = new ParserDeliveryAcceptanceTest();
+        PermutationProducer producer = test.permutate(source, "YYINITIAL",null);
+        int count = 0;
+        while (producer.hasNext()) {
+            producer.next();
+            count++;
+            System.out.println(producer.getPermutatorName() + " - " + producer.getSeq());
+            System.out.println(producer.getModifiedSource());
+            System.out.println("--------------------------------------------------------------------");
         }
-        permutationCountTotal *= 2;
-        System.out.printf("Preparing permutable source from %d symbols [%d chars] with %d permutations.%n",
-                          symbolCount,
-                          source.length(),
-                          permutationCountTotal);
-        return buildPermutableMockTokenSource(source, groupedSymbols, 0, 0, permutationCount, permutationCountTotal);
+        System.out.printf("Produced %d iterations%n", count);
     }
 
     @Override
@@ -215,7 +271,7 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
 
     private void testPermutatedParse(String resourceName) throws Exception {
         try {
-            testParseSequence(SoyTestUtil.getTestSourceBuffer(resourceName), "YYINITIAL");
+            testParseSequence(SoyTestUtil.getTestSourceBuffer(resourceName), "YYINITIAL", resourceName);
         } catch (AssertionError e) {
             if (failState == FailState.RETRY_VERBOSE) throw e;
             failState = FailState.FAIL;
@@ -234,6 +290,7 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
     }
 
     @Test
+    @Ignore("This test takes several minutes")
     public void testFeatures() throws Exception {
         testPermutatedParse("features.soy");
     }
@@ -246,6 +303,11 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
     @Test
     public void testErrorCases() throws Exception {
         testPermutatedParse("error-cases.soy");
+    }
+
+    private PermutableMockTokenSource2 buildPermutableMockTokenSource(CharSequence originalSource,
+                                                                      PermutationProducer producer) {
+        return new PermutableMockTokenSource2(originalSource, producer);
     }
 
     private PermutableMockTokenSource buildPermutableMockTokenSource(CharSequence originalSource,
@@ -275,6 +337,42 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
                                              permutationCountIndex,
                                              permutationCount,
                                              permutationCountTotal);
+    }
+
+    private class PermutableMockTokenSource2 extends MockTokenSource {
+
+        private final PermutationProducer producer;
+        private final CharSequence originalSource;
+
+        PermutableMockTokenSource2(CharSequence originalSource,
+                                   PermutationProducer producer) {
+            super(producer.getModifiedSource(), producer.getIterator());
+            this.producer = producer;
+            this.originalSource = originalSource;
+        }
+
+        @Override
+        public int getPermutationSequence() {
+            return producer.getSeq();
+        }
+
+        @Override
+        public MockTokenSource getNextTokenSourcePermutation() {
+            switch (failState) {
+                case FAIL:
+                    failState = FailState.RETRY_VERBOSE;
+                    System.out.printf("Failed ParserDeliveryAcceptanceTest on permutation %d%n",
+                                      getPermutationSequence());
+                    return new PermutableMockTokenSource2(originalSource, producer);
+                case PASS:
+                    if (producer.hasNext()) {
+                        producer.next();
+                        return new PermutableMockTokenSource2(originalSource, producer);
+                    }
+                    break;
+            }
+            return null;
+        }
     }
 
     private class PermutableMockTokenSource extends MockTokenSource {

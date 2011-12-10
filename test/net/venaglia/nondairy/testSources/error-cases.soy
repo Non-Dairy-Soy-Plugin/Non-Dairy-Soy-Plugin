@@ -21,7 +21,7 @@
  * keep them from resurfacing.
  */
 
-{namespace edge.cases.soy}
+{namespace edge.cases.soy autoescape="contextual"}
 
 {namespace edge.cases.soy2}
 
@@ -105,6 +105,16 @@ Hello world
     {if}
     {if //}
     {if}
+
+{/template}
+
+/**
+ * Checking support for incomplete tags
+ */
+{template .incompleteTags5}
+
+    {for $i in range(
+    {/for}
 
 {/template}
 
