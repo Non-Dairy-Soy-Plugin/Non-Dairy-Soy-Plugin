@@ -1,0 +1,125 @@
+<!--
+  ~ Copyright 2011 Ed Venaglia
+  ~
+  ~    Licensed under the Apache License, Version 2.0 (the "License");
+  ~    you may not use this file except in compliance with the License.
+  ~    You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~    Unless required by applicable law or agreed to in writing, software
+  ~    distributed under the License is distributed on an "AS IS" BASIS,
+  ~    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~    See the License for the specific language governing permissions and
+  ~    limitations under the License.
+  -->
+<html>
+<head>
+    <title>Replay of a PSI tree as it was built</title>
+    <style type="text/css">
+        body {
+          font-family: Arial, sans-serif;
+        }
+        .instructions {
+          font-size: 10px;
+          color: #999;
+          float: right;
+        }
+        #frames > * {
+          display: none;
+        }
+        #frames > .visible {
+          display: inherit;
+        }
+        #frames div {
+          padding-left: 12px;
+          font-size: 12px;
+          color: #333;
+        }
+        #frames div .mouseover {
+          padding: 4px;
+        }
+        .node {
+          position: relative;
+        }
+        .mouseover {
+          position: absolute;
+          top: 0px;
+          right: 0;
+          width: 64px;
+          overflow: hidden;
+          height: 14px;
+          border: 1px none transparent;
+        }
+        .mouseover > * {
+          visibility: hidden;
+        }
+        .mouseover:hover, .mouseover.hover {
+          top: -4px;
+          overflow: visible;
+          height: auto;
+          width: 100%;
+          border: 1px solid #333;
+          background-color: #ffe;
+          z-index: 2;
+        }
+        .mouseover:hover > *, .mouseover.hover > * {
+          visibility: visible;
+        }
+        .mouseover .label {
+          position: absolute;
+          top: 0;
+          right: 0;
+          visibility: visible;
+          line-height: 14px;
+        }
+        .mouseover:hover .label, .mouseover.hover .label {
+          visibility: hidden;
+        }
+        .info { color: #006; }
+        .warn { color: #630; }
+        .verb { color: #393; }
+        .seq { color: #000; font-weight: bold; }
+        .source { color: #33C; }
+        .name { color: #000; font-weight: bold }
+        .type { color: #C3C; }
+        .text { color: #33C; }
+        .node-open > .name { color: #930; }
+        .timestamp { color: #000; font-size: 9px; padding-top: 64px; }
+    </style>
+    <script type="text/javascript">
+        var visible = null;
+        function update() {
+          if (visible) visible.className = "";
+          var sel = document.getElementById("seq");
+          var val = sel.options[sel.selectedIndex].value;
+          visible = document.getElementById(val);
+          if (visible) visible.className = "visible";
+        }
+        function keyDown(code) {
+          var sel = document.getElementById("seq");
+          switch(code) {
+            case 37: // left arrow
+              sel.selectedIndex = Math.max(0, sel.selectedIndex - 1);
+              update();
+              break;
+            case 39: // right arrow
+              sel.selectedIndex = Math.min(sel.options.length - 1, sel.selectedIndex + 1);
+              update();
+              break;
+          }
+        }
+    </script>
+</head>
+<body onload="update();" onkeydown="keyDown(event.keyCode);">
+<select id="seq" onChange="update();" onClick="update();">
+${options}
+</select>
+<div class="instructions">Use left and right arrow keys to navigate back and forth</div>
+<hr/>
+<div id="frames">
+${tree}
+</div>
+<div class="timestamp">Report created at ${timestamp}: </div>
+</body>
+</html>
