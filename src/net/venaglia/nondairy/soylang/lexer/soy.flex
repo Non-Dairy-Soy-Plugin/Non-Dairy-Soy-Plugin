@@ -287,7 +287,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
 <NAMESPACE_TAG> {
   {WhiteSpace}+                  { return symbol(WHITESPACE); }
-  {Identifier} {ParameterDotRef}* { yybegin(CLOSE_TAG);
+  {Identifier} {ParameterDotRef}* { yybegin(SOY_TAG);
                                     if (currentNamespace == null) currentNamespace = yytext().toString();
                                     return symbol(NAMESPACE_IDENTIFIER, yytext().toString());
                                   }

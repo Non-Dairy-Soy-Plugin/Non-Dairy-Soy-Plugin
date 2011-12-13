@@ -18,6 +18,7 @@ package net.venaglia.nondairy.soylang.parser;
 
 import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
+import org.jetbrains.annotations.NonNls;
 
 /**
  * Created by IntelliJ IDEA.
@@ -36,7 +37,7 @@ public class PsiBuilderTokenSource extends TokenSource {
         this.builder.setDebugMode(DEBUG_PSI_BUILDER);
     }
 
-    public PsiBuilder.Marker mark() {
+    public PsiBuilder.Marker mark(@NonNls Object name) {
         return builder.mark();
     }
 

@@ -26,8 +26,8 @@ import java.util.NoSuchElementException;
 
 /**
  * Utility class that contains integers as a set of ranges. While this set may
- * report an enormous size, it is not likely that it will consume a large
- * amount of memeory if the values are mostly consecutive.
+ * report an enormous size, it is not likely that it will not consume a large
+ * amount of memory if the values are mostly consecutive.
  */
 public class RangeBasedIntegerSet implements Iterable<Integer>
 {

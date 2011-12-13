@@ -59,13 +59,13 @@ class ExpressionParser {
     ExpressionParser(TokenSource source) {
         this.parent = null;
         this.source = source;
-        this.exprMarker = source.mark();
+        this.exprMarker = source.mark("exprMarker");
     }
 
     ExpressionParser(ExpressionParser parent) {
         this.parent = parent;
         this.source = parent.source;
-        this.exprMarker = source.mark();
+        this.exprMarker = source.mark("exprMarker");
     }
 
     private void done() {
@@ -160,8 +160,8 @@ class ExpressionParser {
             done();
         } else if (token == SoyToken.CAPTURED_FUNCTION_IDENTIFIER) {
             prec = PREC_FUNCTION;
-            PsiBuilder.Marker beginFunction = source.mark();
-            source.advanceAndMark(function_call_name);
+            PsiBuilder.Marker beginFunction = source.mark("beginFunction");
+            source.advanceAndMark(function_call_name, "function_call_name");
             if (!source.eof()) parseFunctionArgs(null);
             beginFunction.done(function_call);
             remainingValues = 0;
@@ -178,10 +178,10 @@ class ExpressionParser {
     int parseFunctionArgs(IElementType closeWith) {
         IElementType token = source.token();
         if (token != SoyToken.LPAREN) {
-            source.advanceAndMarkBad(unexpected_symbol);
+            source.advanceAndMarkBad(unexpected_symbol, "unexpected_symbol");
             return -1;
         }
-        PsiBuilder.Marker beginCall = source.mark();
+        PsiBuilder.Marker beginCall = source.mark("beginCall");
         source.advance();
         if (source.eof()) {
             beginCall.drop();
@@ -189,7 +189,7 @@ class ExpressionParser {
         }
 
         int argCount = 0;
-        PsiBuilder.Marker beginArgList = source.mark();
+        PsiBuilder.Marker beginArgList = source.mark("beginArgList");
         if (parseSingleExpression()) argCount++;
         while (!source.eof()) {
             token = source.token();
@@ -279,7 +279,7 @@ class ExpressionParser {
                     parser.remainingValues--;
                     done();
                 } else {
-                    source.advanceAndMarkBad(expression, I18N.msg("syntax.error.expected.colon.in.ternary"));
+                    source.advanceAndMarkBad(expression, "expression", I18N.msg("syntax.error.expected.colon.in.ternary"));
                     parser.done();
                     return parser.parent;
                 }

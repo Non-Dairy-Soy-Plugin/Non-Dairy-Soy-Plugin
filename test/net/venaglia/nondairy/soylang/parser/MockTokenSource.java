@@ -20,6 +20,7 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.WhitespacesAndCommentsBinder;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.soylang.lexer.SoySymbol;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 
@@ -93,7 +94,7 @@ public class MockTokenSource extends TokenSource {
     }
 
     @Override
-    public PsiBuilder.Marker mark() {
+    public PsiBuilder.Marker mark(@NonNls Object name) {
         return new MockMarker(seq);
     }
 

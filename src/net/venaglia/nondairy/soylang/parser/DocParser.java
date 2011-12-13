@@ -42,11 +42,11 @@ public class DocParser {
             throw new AssertionError("Cannot begin parsing a tag unless the lexer is at a '/**'");
         }
         source.advance();
-        docMarker = source.mark();
+        docMarker = source.mark("docMarker");
     }
 
     public void parse() {
-        PsiBuilder.Marker textMarker = source.mark();
+        PsiBuilder.Marker textMarker = source.mark("textMarker");
         while (!source.eof()) {
             IElementType token = source.token();
             if (token == SoyToken.DOC_COMMENT_END) {
@@ -70,10 +70,10 @@ public class DocParser {
                 }
                 source.advance();
                 if (!source.eof() && source.token() == SoyToken.DOC_COMMENT_IDENTIFIER) {
-                    source.advanceAndMark(doc_comment_param);
+                    source.advanceAndMark(doc_comment_param, "doc_comment_param");
                 }
                 if (!source.eof()) {
-                    textMarker = source.mark();
+                    textMarker = source.mark("textMarker");
                 }
             } else {
                 source.advance();

@@ -28,7 +28,7 @@
     </description>
     <version>0.3 (alpha)</version>
     <vendor>Ed Venaglia</vendor>
-    <idea-version since-build="95.66"/>
+    <idea-version since-build="111.1"/>
 
     <application-components>
         <!-- Add your application components here -->
@@ -45,15 +45,18 @@
         <!-- Add your actions here -->
     </actions>
 
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.platform</depends>
+
     <extensions defaultExtensionNs="com.intellij">
         <fileTypeFactory implementation="net.venaglia.nondairy.soylang.SoyFileTypeFactory"/>
         <syntaxHighlighter key="soy" implementationClass="net.venaglia.nondairy.soylang.SoySyntaxHighlighter"/>
         <colorSettingsPage implementation="net.venaglia.nondairy.soylang.SoyColorsAndFontsPage"/>
-        <lang.foldingBuilder language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFoldingBuilder"/>
+        <!--<lang.foldingBuilder language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFoldingBuilder"/>-->
         <lang.braceMatcher language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyBraceMatcher"/>
         <lang.parserDefinition language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyParserDefinition"/>
         <lang.commenter language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyCommenter"/>
-        <lang.psiStructureViewFactory language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyStructureViewFactory"/>
+        <!--<lang.psiStructureViewFactory language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyStructureViewFactory"/>-->
         <lang.findUsagesProvider language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFindUsagesProvider"/>
     </extensions>
 </idea-plugin>

@@ -1,3 +1,10 @@
+ver 0.3.1
+* Updated to support IntelliJ 11
+* Removed structure analyzer and code-folding components to fix stack traces
+* Attributes on {namespace} tag no longer appear as syntax errors
+* Added diagnostic system property to generate debug output regarding parser results
+* Soy file icon is now 16x16 like it should be
+
 ver 0.3
 * Comments in template content that begin with '/**' are now captured as comments
 * Code folding for templates

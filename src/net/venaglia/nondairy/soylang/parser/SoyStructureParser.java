@@ -51,7 +51,7 @@ public class SoyStructureParser {
      * @see net.venaglia.nondairy.soylang.lexer.SoyScanner#YYINITIAL
      */
     public void parse() {
-        PsiBuilder.Marker marker = source.mark();
+        PsiBuilder.Marker marker = source.mark("marker");
         PsiBuilder.Marker docBeginMarker = null;
         while (!source.eof()) {
             IElementType token = source.token();
@@ -70,7 +70,7 @@ public class SoyStructureParser {
                 if (docBeginMarker != null) {
                     docBeginMarker.drop();
                 }
-                docBeginMarker = source.mark();
+                docBeginMarker = source.mark("docBeginMarker");
                 new DocParser(source).parse();
             } else if (token instanceof IXmlElementType) {
                 new TemplateTextParser(source).parse();
@@ -82,7 +82,7 @@ public class SoyStructureParser {
                 if (token == SoyToken.IGNORED_TEXT || token == SoyToken.TEMPLATE_TEXT || token == SoyToken.LITERAL_TEXT) {
                     source.advance();
                 } else {
-                    source.advanceAndMarkBad(unexpected_symbol, I18N.msg("lexer.error.unexpected.token", token));
+                    source.advanceAndMarkBad(unexpected_symbol, "unexpected_symbol", I18N.msg("lexer.error.unexpected.token", token));
                 }
             }
         }
@@ -113,7 +113,8 @@ public class SoyStructureParser {
                     tagPairElement = SoyElement.valueOf(tagElement.name() + "_pair"); //NON-NLS
                 }
                 if (tagPairElement == null) tagPairElement = SoyElement.tag_pair;
-                within.getTagMarker().precede().done(tagPairElement);
+                // This line was the culprit!!!
+//                within.getTagMarker().precede().done(tagPairElement);
             }
         } else if (SoyToken.TAG_SECTION_TOKENS.contains(tagToken)) {
             SectionTag section = SectionTag.getBySoyToken(tagToken);

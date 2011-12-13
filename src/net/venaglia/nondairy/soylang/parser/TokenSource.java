@@ -19,6 +19,7 @@ package net.venaglia.nondairy.soylang.parser;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.i18n.I18N;
+import org.jetbrains.annotations.NonNls;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,7 +30,7 @@ import net.venaglia.nondairy.i18n.I18N;
 public abstract class TokenSource {
 
     public void fastForward(IElementType endToken, IElementType markerType) {
-        PsiBuilder.Marker errorMarker = markerType == null ? null : mark();
+        PsiBuilder.Marker errorMarker = markerType == null ? null : mark("errorMarker");
         while (!eof()) {
             IElementType token = token();
             advance();
@@ -38,7 +39,7 @@ public abstract class TokenSource {
         if (errorMarker != null) errorMarker.done(markerType);
     }
 
-    public abstract PsiBuilder.Marker mark();
+    public abstract PsiBuilder.Marker mark(@NonNls Object name);
 
     public abstract IElementType token();
 
@@ -48,21 +49,21 @@ public abstract class TokenSource {
 
     public abstract void advance();
 
-    public void advanceAndMark(IElementType type) {
-        PsiBuilder.Marker marker = mark();
+    public void advanceAndMark(IElementType type, @NonNls Object name) {
+        PsiBuilder.Marker marker = mark(name);
         advance();
         marker.done(type);
     }
 
-    public void advanceAndMarkBad(IElementType type) {
-        PsiBuilder.Marker marker = mark();
+    public void advanceAndMarkBad(IElementType type, @NonNls Object name) {
+        PsiBuilder.Marker marker = mark(name);
         errorBadToken();
         advance();
         marker.done(type);
     }
 
-    public void advanceAndMarkBad(IElementType type, String message) {
-        PsiBuilder.Marker marker = mark();
+    public void advanceAndMarkBad(IElementType type, @NonNls Object name, String message) {
+        PsiBuilder.Marker marker = mark(name);
         error(message);
         advance();
         marker.done(type);

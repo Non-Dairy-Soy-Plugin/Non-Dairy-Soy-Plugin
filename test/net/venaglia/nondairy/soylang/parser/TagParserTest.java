@@ -45,6 +45,36 @@ public class TagParserTest extends BaseParserTest {
             "    TAG_RBRACE\n" +
             "}";
 
+    public static final String ATTRIBUTE_TAG_SOURCE =
+            "{namespace test.namespace autoescape=\"contextual\"}";
+
+    public static final String ATTRIBUTE_TAG_EXPECT =
+            "namespace_def:{\n" +
+            "    TAG_LBRACE\n" +
+            "    tag_between_braces:{\n" +
+            "        command_keyword:{\n" +
+            "            NAMESPACE\n" +
+            "        }\n" +
+            "        namespace_name:{\n" +
+            "            NAMESPACE_IDENTIFIER\n" +
+            "        }\n" +
+            "        attribute:{\n" +
+            "            attribute_key:{\n" +
+            "                CAPTURED_IDENTIFIER\n" +
+            "            }\n" +
+            "            EQ\n" +
+            "            expression:{\n" +
+            "                STRING_LITERAL_BEGIN\n" +
+            "                attribute_value:{\n" +
+            "                    STRING_LITERAL\n" +
+            "                }\n" +
+            "                STRING_LITERAL_END\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "    TAG_RBRACE\n" +
+            "}";
+
     public static final String SIMPLE_UNARY_TAG_SOURCE =
             "{call .testTemplate/}";
 
@@ -189,6 +219,11 @@ public class TagParserTest extends BaseParserTest {
     @Test
     public void testSimpleTag() throws Exception {
         testParseSequence(SIMPLE_TAG_SOURCE, SIMPLE_TAG_EXPECT, "YYINITIAL", null);
+    }
+
+    @Test
+    public void testAttributeTag() throws Exception {
+        testParseSequence(ATTRIBUTE_TAG_SOURCE, ATTRIBUTE_TAG_EXPECT, "YYINITIAL", null);
     }
 
     @Test

@@ -220,6 +220,8 @@ non_content_tag    ::= print_tag:tag
 
 namespace_def      ::= TAG_LBRACE NAMESPACE NAMESPACE_IDENTIFIER:id TAG_RBRACE
                        {: RESULT = new NamespaceDeclaration(id); :}
+                   |   TAG_LBRACE NAMESPACE NAMESPACE_IDENTIFIER:id  attribute_list:att TAG_RBRACE
+                       {: RESULT = new NamespaceDeclaration(id, att); :}
                    |   TAG_LBRACE NAMESPACE RBRACE_ERROR
                        {: RESULT = new NamespaceDeclaration(null); :}
                    ;

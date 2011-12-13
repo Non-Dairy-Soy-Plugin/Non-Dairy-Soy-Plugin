@@ -41,13 +41,13 @@ public class TemplateTextParser {
     }
 
     public void parse() {
-        PsiBuilder.Marker htmlMarker = source.mark();
+        PsiBuilder.Marker htmlMarker = source.mark("htmlMarker");
         PsiBuilder.Marker htmlTagMarker = null;
         IElementType token = source.token();
         while (!source.eof() && token instanceof IXmlElementType) {
             if (token == XML_START_TAG_START || token == XML_END_TAG_START) {
                 if (htmlTagMarker != null) htmlTagMarker.drop();
-                htmlTagMarker = source.mark();
+                htmlTagMarker = source.mark("htmlTagMarker");
             }
             source.advance();
             if (token == XML_TAG_END) {
