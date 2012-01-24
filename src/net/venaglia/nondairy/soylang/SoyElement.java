@@ -18,14 +18,18 @@ package net.venaglia.nondairy.soylang;
 
 import com.intellij.lang.Language;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import net.venaglia.nondairy.soylang.elements.AbsoluteTemplateNameRef;
 import net.venaglia.nondairy.soylang.elements.CallParameterRefElement;
+import net.venaglia.nondairy.soylang.elements.FunctionCallElement;
+import net.venaglia.nondairy.soylang.elements.MemberPropertyRefElement;
 import net.venaglia.nondairy.soylang.elements.NamespaceDefElement;
 import net.venaglia.nondairy.soylang.elements.NamespaceTagElement;
 import net.venaglia.nondairy.soylang.elements.ParameterDefElement;
 import net.venaglia.nondairy.soylang.elements.ParameterRefElement;
 import net.venaglia.nondairy.soylang.elements.LocalTemplateNameDef;
 import net.venaglia.nondairy.soylang.elements.LocalTemplateNameRef;
+import net.venaglia.nondairy.soylang.elements.SoyCommandTag;
 import net.venaglia.nondairy.soylang.elements.factory.ElementClass;
 import org.jetbrains.annotations.NonNls;
 
@@ -57,11 +61,15 @@ public final class SoyElement extends IElementType {
     public static final SoyElement iterator_tag = new SoyElement(1007, "iterator_tag");
     public static final SoyElement iterator_tag_pair = new SoyElement(1008, "iterator_tag_pair");
 
+    public static final SoyElement package_def = new SoyElement(1151, "package_def");
+    public static final SoyElement package_name = new SoyElement(1152, "package_name");
+
     @ElementClass(NamespaceTagElement.class)
     public static final SoyElement namespace_def = new SoyElement(1101, "namespace_def");
     @ElementClass(NamespaceDefElement.class)
     public static final SoyElement namespace_name = new SoyElement(1102, "namespace_name");
 
+    @ElementClass(SoyCommandTag.class)
     public static final SoyElement template_tag = new SoyElement(1200, "template_tag");
     @ElementClass(LocalTemplateNameDef.class)
     public static final SoyElement template_name = new SoyElement(1201, "template_name");
@@ -89,6 +97,7 @@ public final class SoyElement extends IElementType {
     public static final SoyElement command_keyword = new SoyElement(1600, "command_keyword");
 
     public static final SoyElement function_call = new SoyElement(1700, "function_call");
+    @ElementClass(FunctionCallElement.class)
     public static final SoyElement function_call_name = new SoyElement(1701, "function_call_name");
     public static final SoyElement function_call_args = new SoyElement(1702, "function_call_args");
     public static final SoyElement function_call_arg_list = new SoyElement(1703, "function_call_arg_list");
@@ -102,7 +111,9 @@ public final class SoyElement extends IElementType {
     public static final SoyElement parameter_ref = new SoyElement(1804, "parameter_ref");
     @ElementClass(CallParameterRefElement.class)
     public static final SoyElement invocation_parameter_ref = new SoyElement(1805, "invocation_parameter_ref");
+    @ElementClass(MemberPropertyRefElement.class)
     public static final SoyElement member_property_ref = new SoyElement(1806, "member_property_ref");
+    @ElementClass(MemberPropertyRefElement.ForBracketedStringLiteral.class)
     public static final SoyElement bracket_property_ref = new SoyElement(1807, "bracket_property_ref");
 
     public static final SoyElement call_tag = new SoyElement(1900, "call_tag");
@@ -116,6 +127,13 @@ public final class SoyElement extends IElementType {
     public static final SoyElement tag_error = new SoyElement(7002, "tag_error");
 
     public static final SoyElement unexpected_symbol = new SoyElement(8000, "unexpected_symbol");
+
+    public static final TokenSet PARAMETER_NAME_TOKENS = TokenSet.create(doc_comment_param, parameter_ref, parameter_def, invocation_parameter_ref);
+    public static final TokenSet FUNCTION_NAME_TOKENS = TokenSet.create(function_call_name);
+    public static final TokenSet TEMPLATE_NAME_TOKENS = TokenSet.create(template_name, template_name_ref, template_name_ref_absolute);
+    public static final TokenSet PROPERTY_NAME_TOKENS = TokenSet.create(member_property_ref, bracket_property_ref);
+
+    public static final TokenSet ALL_FIND_USAGE_TOKENS = TokenSet.orSet(PARAMETER_NAME_TOKENS, FUNCTION_NAME_TOKENS, TEMPLATE_NAME_TOKENS, PROPERTY_NAME_TOKENS);
 
     static {
         for (Field field : SoyElement.class.getFields()) {

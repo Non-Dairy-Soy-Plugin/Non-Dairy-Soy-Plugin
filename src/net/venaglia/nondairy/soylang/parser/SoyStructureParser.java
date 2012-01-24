@@ -26,7 +26,11 @@ import net.venaglia.nondairy.i18n.I18N;
 import net.venaglia.nondairy.i18n.MessageBuffer;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
+import net.venaglia.nondairy.util.Visitor;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Stack;
 
 /**
@@ -41,6 +45,18 @@ public class SoyStructureParser {
     private Stack<TagParser> unclosedTagParsers = new Stack<TagParser>();
     private PsiBuilder.Marker docBeginMarker = null;
 
+    private static final Visitor<TagParser> CAPTURE_TAG_PAIR_VISITOR = new Visitor<TagParser>() {
+        @Override
+        public void visit(TagParser within) {
+            SoyElement tagElement = within.getElement();
+            SoyElement tagPairElement = null;
+            if (tagElement.name().endsWith("_tag")) { // NON-NLS
+                tagPairElement = SoyElement.valueOf(tagElement.name() + "_pair"); //NON-NLS
+            }
+            if (tagPairElement == null) tagPairElement = SoyElement.tag_pair;
+            within.getTagMarker().precede().done(tagPairElement);
+        }
+    };
 
     public SoyStructureParser(TokenSource source) {
         this.source = source;
@@ -66,7 +82,7 @@ public class SoyStructureParser {
                     this.docBeginMarker = docBeginMarker;
                     docBeginMarker = null;
                 }
-            } else if (SoyToken.DOC_COMMENT == token) {
+            } else if (SoyToken.DOC_COMMENT == token || SoyToken.DOC_COMMENT_BEGIN == token) {
                 if (docBeginMarker != null) {
                     docBeginMarker.drop();
                 }
@@ -101,26 +117,18 @@ public class SoyStructureParser {
         SoyToken tagToken = (SoyToken)type;
         String tagTokenName = tagToken.name().toLowerCase();
         if (tagParser.isCloseTag()) {
-            TagParser within = findInStack(tagToken,
-                                           tagParser,
-                                           msg("syntax.error.unexpected.close.tag",
-                                               tagTokenName),
-                                           msg("syntax.error.unclosed.open.tag"));
-            if (within != null) {
-                SoyElement tagElement = within.getElement();
-                SoyElement tagPairElement = null;
-                if (tagElement.name().endsWith("_tag")) { // NON-NLS
-                    tagPairElement = SoyElement.valueOf(tagElement.name() + "_pair"); //NON-NLS
-                }
-                if (tagPairElement == null) tagPairElement = SoyElement.tag_pair;
-                // This line was the culprit!!!
-//                within.getTagMarker().precede().done(tagPairElement);
-            }
+            findInStack(Collections.singleton(tagToken),
+                        tagParser,
+                        CAPTURE_TAG_PAIR_VISITOR,
+                        msg("syntax.error.unexpected.close.tag",
+                            tagTokenName),
+                        msg("syntax.error.unclosed.open.tag"));
         } else if (SoyToken.TAG_SECTION_TOKENS.contains(tagToken)) {
             SectionTag section = SectionTag.getBySoyToken(tagToken);
-            String sectionTokenName = section.getContainerToken().name().toLowerCase();
-            TagParser within = findInStack(section.getContainerToken(),
+            String sectionTokenName = section.getContainerTokens().iterator().next().name();
+            TagParser within = findInStack(section.getContainerTokens(),
                                            tagParser,
+                                           null,
                                            msg("syntax.error.orphaned.section.tag",
                                                tagTokenName,
                                                sectionTokenName),
@@ -150,17 +158,21 @@ public class SoyStructureParser {
         }
     }
 
-    private TagParser findInStack(SoyToken type,
+    private TagParser findInStack(Collection<? extends IElementType> types,
                                   TagParser offendingTag,
+                                  @Nullable Visitor<TagParser> visitBeforeDone,
                                   MessageBuffer notInStack,
                                   MessageBuffer notAtTopOfStack) {
         if (unclosedTagParsers.isEmpty()) {
             processBadTag(offendingTag, notInStack.toString());
             return null;
         }
-        if (unclosedTagParsers.peek().getTagToken() == type) {
+        if (types.contains(unclosedTagParsers.peek().getTagToken())) {
             TagParser top = unclosedTagParsers.pop();
             if (unclosedTagParsers.isEmpty() && docBeginMarker != null) {
+                if (visitBeforeDone != null) {
+                    visitBeforeDone.visit(top);
+                }
                 docBeginMarker.done(tag_and_doc_comment);
                 docBeginMarker = null;
             }
@@ -168,7 +180,7 @@ public class SoyStructureParser {
         }
         boolean found = false;
         for (TagParser within : unclosedTagParsers) {
-            if (within.getTagToken() == type) {
+            if (types.contains(within.getTagToken())) {
                 found = true;
                 break;
             }
@@ -180,9 +192,12 @@ public class SoyStructureParser {
         TagParser last = null;
         while (!unclosedTagParsers.isEmpty()) {
             TagParser top = unclosedTagParsers.pop();
-            if (top.getTagToken() == type) {
+            if (types.contains(top.getTagToken())) {
                 processBadTag(last, notAtTopOfStack.toString());
                 if (unclosedTagParsers.isEmpty() && docBeginMarker != null) {
+                    if (visitBeforeDone != null) {
+                        visitBeforeDone.visit(top);
+                    }
                     docBeginMarker.done(tag_and_doc_comment);
                     docBeginMarker = null;
                 }

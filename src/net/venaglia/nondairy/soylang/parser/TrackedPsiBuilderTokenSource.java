@@ -30,6 +30,7 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,7 +50,6 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
 
     public TrackedPsiBuilderTokenSource(PsiBuilder builder) {
         super(builder);
-        loadTokenForTree();
     }
 
     private void loadTokenForTree() {
@@ -70,13 +70,13 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
         }
     }
 
-    private <T> T addToTree(T value) {
-        return addToTree(value, null);
+    private <T> T addToTree(T value, boolean immutable) {
+        return addToTree(value, null, immutable);
     }
 
-    private <T> T addToTree(T value, @Nullable String text) {
+    private <T> T addToTree(T value, @Nullable String text, boolean immutable) {
         if (tree.isEmpty() || tree.get(tree.size() - 1) != value) {
-            Node<T> node = new Node<T>(value, false);
+            Node<T> node = new Node<T>(value, immutable);
             node.setText(text);
         }
         return value;
@@ -86,21 +86,7 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
     public PsiBuilder.Marker mark(@NonNls Object name) {
         addTokenToTree();
         return new TrackedMarker(super.mark(name), String.valueOf(name));
-    }
-
-    @Override
-    public IElementType token() {
-        return super.token();
-    }
-
-    @Override
-    public String text() {
-        return super.text();
-    }
-
-    @Override
-    public boolean eof() {
-        return super.eof();
+//        return super.mark(name);
     }
 
     @Override
@@ -113,7 +99,7 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
     @Override
     public void error(String message) {
         super.error(message);
-        addToTree(message);
+        addToTree(message, true);
     }
 
     public List<Node<?>> getTree() {
@@ -428,6 +414,22 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
                 return String.format("%s<%s> \"%s\"", value, value.getClass().getSimpleName(), escape(text));
             }
         }
+
+        public void checkReadyForDone() {
+            List<Node<?>> undone = new LinkedList<Node<?>>();
+            for (int i = index, l = tree.size(); i < l; ++i) {
+                Node<?> n = tree.get(i);
+                if (n.immutable) continue;
+                if (n.dropped == null && n.done == null && n.error == null) {
+                    undone.add(n);
+                }
+            }
+            if (undone.isEmpty()) {
+                throw new RuntimeException("Node [" + this + "] is already marked done");
+            } else if (undone.size() > 1 || undone.get(0) != this) {
+                throw new RuntimeException("Node [" + this + "] cannot be marked done, it contains undone markers: " + undone);
+            }
+        }
     }
 
     @SuppressWarnings({ "HardCodedStringLiteral", "ConstantConditions" })
@@ -503,6 +505,7 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
 
         @Override
         public void done(IElementType type) {
+            node.checkReadyForDone();
             marker.done(type);
             node.markAsDone(type);
         }

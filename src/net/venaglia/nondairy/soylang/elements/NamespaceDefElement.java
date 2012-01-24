@@ -18,7 +18,6 @@ package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
-import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.util.IconLoader;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,10 +55,5 @@ public class NamespaceDefElement extends SoyASTElement implements ItemPresentati
     @Override
     public Icon getIcon(boolean open) {
         return SOY_NAMESPACE_ICON;
-    }
-
-//    @Override
-    public TextAttributesKey getTextAttributesKey() {
-        return null;
     }
 }

@@ -26,7 +26,7 @@
 
         Use at your own risk! ...after all, this is my first plugin.
     </description>
-    <version>0.3.1 (alpha)</version>
+    <version>0.3.2 (alpha)</version>
     <vendor>Ed Venaglia</vendor>
     <idea-version since-build="111.1"/>
 
@@ -52,11 +52,12 @@
         <fileTypeFactory implementation="net.venaglia.nondairy.soylang.SoyFileTypeFactory"/>
         <syntaxHighlighter key="soy" implementationClass="net.venaglia.nondairy.soylang.SoySyntaxHighlighter"/>
         <colorSettingsPage implementation="net.venaglia.nondairy.soylang.SoyColorsAndFontsPage"/>
-        <!--<lang.foldingBuilder language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFoldingBuilder"/>-->
+        <lang.foldingBuilder language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFoldingBuilder"/>
         <lang.braceMatcher language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyBraceMatcher"/>
         <lang.parserDefinition language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyParserDefinition"/>
         <lang.commenter language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyCommenter"/>
-        <!--<lang.psiStructureViewFactory language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyStructureViewFactory"/>-->
+        <lang.psiStructureViewFactory language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyStructureViewFactory"/>
         <lang.findUsagesProvider language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFindUsagesProvider"/>
+        <lang.namesValidator language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyNamesValidator"/>
     </extensions>
 </idea-plugin>

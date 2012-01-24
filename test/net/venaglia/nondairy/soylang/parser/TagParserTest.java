@@ -243,6 +243,11 @@ public class TagParserTest extends BaseParserTest {
     }
 
     @Test
+    public void testUnfinishedTag() throws Exception {
+        testParseSequence("{tem", "YYINITIAL", null);
+    }
+
+    @Test
     public void testUnclosedTag() throws Exception {
         testParseSequence("{template .foo", "YYINITIAL", null);
     }

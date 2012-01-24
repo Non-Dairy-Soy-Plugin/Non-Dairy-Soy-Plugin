@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2011 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,20 +14,14 @@
  *    limitations under the License.
  */
 
-package net.venaglia.nondairy.soylang.elements.path;
-
-import com.intellij.psi.PsiElement;
+package net.venaglia.nondairy.util;
 
 /**
  * Created by IntelliJ IDEA.
  * User: ed
- * Date: Aug 26, 2010
- * Time: 7:29:49 AM
- *
- * ElementPredicate implementations are used to filter elements when traversing
- * the AST.
-*/
-public interface ElementPredicate {
-
-    boolean test(PsiElement element);
+ * Date: 12/17/11
+ * Time: 12:43 PM
+ */
+public interface Visitor<E> {
+    void visit(E element);
 }

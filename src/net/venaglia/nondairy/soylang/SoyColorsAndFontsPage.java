@@ -56,6 +56,7 @@ public class SoyColorsAndFontsPage implements ColorSettingsPage {
             new AttributesDescriptor[]{
                     new AttributesDescriptor(I18N.msg("syntax.color_editor.category.command"), SoySyntaxHighlighter.SOY_COMMAND),
                     new AttributesDescriptor(I18N.msg("syntax.color_editor.category.keyword"), SoySyntaxHighlighter.SOY_KEYWORD),
+                    new AttributesDescriptor(I18N.msg("syntax.color_editor.category.special_char"), SoySyntaxHighlighter.SOY_SPECIAL_CHAR),
                     new AttributesDescriptor(I18N.msg("syntax.color_editor.category.namespace"), SoySyntaxHighlighter.SOY_NAMESPACE_ID),
                     new AttributesDescriptor(I18N.msg("syntax.color_editor.category.template.identifier"), SoySyntaxHighlighter.SOY_TEMPLATE_ID),
                     new AttributesDescriptor(I18N.msg("syntax.color_editor.category.template.content"), SoySyntaxHighlighter.SOY_TEMPLATE_CONTENT),
@@ -101,11 +102,11 @@ public class SoyColorsAndFontsPage implements ColorSettingsPage {
                 " */\n" +
                 "{template .nondairy autoescape=\"true\"}\n\n" +
                 "    {if length($required) >= 100}\n" +
-                "        Last Item: {$required[length($required) - 1]}<br>\n" +
+                "        Last Item: {$required[length($required) - 1]}<br>{sp}\n" +
                 "    {/if}\n" +
                 "\n" +
                 "    {foreach $i in $required}\n" +
-                "        Hello {$i|escapeHtml}\n" +
+                "        Hello {$i|escapeHtml}{\\n}\n" +
                 "    {ifempty \\} // <-- Illegal character\n" +
                 "        {$optional|insertWordBreaks:8}\n" +
                 "    {/foreach}\n" +

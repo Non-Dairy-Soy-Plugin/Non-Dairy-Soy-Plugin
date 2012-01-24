@@ -16,7 +16,12 @@
 
 package net.venaglia.nondairy.soylang;
 
-import com.intellij.lang.Commenter;
+import com.intellij.lang.ASTNode;
+import com.intellij.lang.CodeDocumentationAwareCommenterEx;
+import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.IElementType;
+import net.venaglia.nondairy.soylang.lexer.SoyToken;
 
 /**
  * Created by IntelliJ IDEA.
@@ -24,7 +29,7 @@ import com.intellij.lang.Commenter;
  * Date: Aug 10, 2010
  * Time: 8:43:42 PM
  */
-public class SoyCommenter implements Commenter {
+public class SoyCommenter implements CodeDocumentationAwareCommenterEx {
 
     public String getLineCommentPrefix() {
         return "//";
@@ -44,5 +49,54 @@ public class SoyCommenter implements Commenter {
 
     public String getCommentedBlockCommentSuffix() {
         return null;
+    }
+
+    @Override
+    public IElementType getLineCommentTokenType() {
+//        return SoyToken.LINE_COMMENT;
+        return null;
+    }
+
+    @Override
+    public IElementType getBlockCommentTokenType() {
+//        return SoyToken.COMMENT;
+        return null;
+    }
+
+    @Override
+    public IElementType getDocumentationCommentTokenType() {
+        return SoyToken.DOC_COMMENT_BEGIN;
+//        return null;
+    }
+
+    @Override
+    public String getDocumentationCommentPrefix() {
+        return "/**";  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public String getDocumentationCommentLinePrefix() {
+        return " *";  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public String getDocumentationCommentSuffix() {
+        return "*/";  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public boolean isDocumentationComment(PsiComment element) {
+        if (element == null) return false;
+        ASTNode node = element.getNode();
+        return node != null && SoyToken.DOC_COMMENT_TOKENS.contains(node.getElementType());
+    }
+
+    @Override
+    public boolean isDocumentationCommentText(PsiElement element) {
+        if (element == null || element.getNode() == null || element.getNode().getElementType() == null) return false;
+        IElementType type = element.getNode().getElementType();
+        return type == SoyToken.DOC_COMMENT ||
+               type == SoyToken.DOC_COMMENT_BEGIN ||
+               type == SoyToken.DOC_COMMENT_END;
     }
 }

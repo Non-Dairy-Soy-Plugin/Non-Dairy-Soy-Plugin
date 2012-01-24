@@ -18,6 +18,7 @@ package net.venaglia.nondairy.soylang.elements.path;
 
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -31,6 +32,9 @@ import java.util.List;
  * User: ed
  * Date: Aug 26, 2010
  * Time: 8:03:54 PM
+ *
+ * This class is used as a base class of the standard set of ElementPredicate
+ * definitions, providing methods to build traversal predicates.
  */
 public abstract class AbstractElementPredicate implements ElementPredicate {
 
@@ -149,11 +153,86 @@ public abstract class AbstractElementPredicate implements ElementPredicate {
         };
     }
 
+    public TraversalPredicate onPreviousSibling() {
+        return new AbstractTraversalPredicate("{.}s") {
+            @Override
+            public PsiElementCollection traverse(Collection<PsiElement> current) {
+                PsiElementCollection buffer = new PsiElementCollection();
+                for (PsiElement element : current) {
+                    PsiElement e = element.getPrevSibling();
+                    if (e != null) {
+                        buffer.add(e);
+                    }
+                }
+                return buffer;
+            }
+        };
+    }
+
+    public TraversalPredicate onPreviousSiblings(final boolean andSelf) {
+        return new AbstractTraversalPredicate(andSelf ? "{..s}" : "{..}s") {
+            @Override
+            public PsiElementCollection traverse(Collection<PsiElement> current) {
+                PsiElementCollection buffer = new PsiElementCollection();
+                for (PsiElement element : current) {
+                    for (PsiElement e = andSelf ? element : element.getPrevSibling();
+                         e != null;
+                         e = e.getPrevSibling()) {
+                        buffer.add(e);
+                    }
+                }
+                return buffer;
+            }
+        };
+    }
+
+    public TraversalPredicate onNextSibling() {
+        return new AbstractTraversalPredicate("s{.}") {
+            @Override
+            public PsiElementCollection traverse(Collection<PsiElement> current) {
+                PsiElementCollection buffer = new PsiElementCollection();
+                for (PsiElement element : current) {
+                    PsiElement e = element.getNextSibling();
+                    if (e != null) {
+                        buffer.add(e);
+                    }
+                }
+                return buffer;
+            }
+        };
+    }
+
+    public TraversalPredicate onNextSiblings(final boolean andSelf) {
+        return new AbstractTraversalPredicate(andSelf ? "{s..}" : "s{..}") {
+            @Override
+            public PsiElementCollection traverse(Collection<PsiElement> current) {
+                PsiElementCollection buffer = new PsiElementCollection();
+                for (PsiElement element : current) {
+                    for (PsiElement e = andSelf ? element : element.getNextSibling();
+                         e != null;
+                         e = e.getNextSibling()) {
+                        buffer.add(e);
+                    }
+                }
+                return buffer;
+            }
+        };
+    }
+
+    public TraversalPredicate onSelf() {
+        return new AbstractTraversalPredicate("{s}") {
+            @Override
+            public PsiElementCollection traverse(Collection<PsiElement> current) {
+                return new PsiElementCollection(current);
+            }
+        };
+    }
+
     private abstract class AbstractTraversalPredicate implements TraversalPredicate {
 
         private final String symbol;
 
-        public AbstractTraversalPredicate(@NotNull String symbol) {
+        public AbstractTraversalPredicate(@NotNull @NonNls String symbol) {
             this.symbol = symbol;
         }
 

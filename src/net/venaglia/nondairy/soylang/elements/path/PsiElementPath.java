@@ -45,6 +45,12 @@ public class PsiElementPath {
     public static final ElementPredicate ALL_CHILDREN;
 
     /**
+     * Use this object when you wish to reference the direct children in a
+     * PsiPath.
+     */
+    public static final ElementPredicate FIRST_CHILD;
+
+    /**
      * Use this object when you wish to reference the all descendant children
      * in a PsiPath.
      */
@@ -55,6 +61,12 @@ public class PsiElementPath {
      * PsiPath.
      */
     public static final ElementPredicate PARENT_ELEMENT;
+
+    /**
+     * Use this object when you wish to build a path that returns the original
+     * node.
+     */
+    public static final PsiElementPath SELF;
 
     static {
         AbstractElementPredicate any = new AbstractElementPredicate() {
@@ -70,14 +82,16 @@ public class PsiElementPath {
         };
         ANY = any;
         ALL_CHILDREN = any.onChildren();
+        FIRST_CHILD = any.onFirstChild();
         ALL_CHILDREN_DEEP = any.onDescendants();
         PARENT_ELEMENT = any.onParent();
+        SELF = new PsiElementPath(any);
     }
 
     private final ElementPredicate[] elementReferencePath;
 
-    private String name;
-    private boolean traceEnabled;
+    protected String name;
+    protected boolean traceEnabled;
 
     public PsiElementPath(ElementPredicate... elementReferencePath) {
         this.elementReferencePath = elementReferencePath;
@@ -87,35 +101,51 @@ public class PsiElementPath {
         return navigate(Collections.singleton(start));
     }
 
-    private static final ThreadLocal<Boolean> TRACE_ENABLED = new ThreadLocal<Boolean>() {
+    private static final ThreadLocal<Integer> TRACE_ENABLED = new ThreadLocal<Integer>() {
         @Override
-        protected Boolean initialValue() {
-            return false;
+        protected Integer initialValue() {
+            return 0;
         }
     };
+    private static final ThreadLocal<String> TRACE_NAME = new ThreadLocal<String>();
 
     public final @NotNull PsiElementCollection navigate(@NotNull Collection<PsiElement> start) {
-        final boolean traceEnabled = this.traceEnabled;
-        final boolean previousValue = TRACE_ENABLED.get();
+        final int previousValue = TRACE_ENABLED.get();
+        final boolean traceEnabled = this.traceEnabled || previousValue > 0;
+        String previousName = null;
         if (traceEnabled) {
-            TRACE_ENABLED.set(true);
-            traceMessage("## [ begin path: %s ]", name);
-        } else {
-            TRACE_ENABLED.set(false);
+            previousName = TRACE_NAME.get();
+            TRACE_NAME.set(getTraceName());
+            TRACE_ENABLED.set(previousValue + 1);
+            traceMessage("## [ begin path: %s ]", getTraceName());
         }
         try {
             return navigateImpl(start);
         } finally {
             if (traceEnabled) {
-                traceMessage("## [ end path: %s ]", name);
+                traceMessage("## [ end path: %s ]", getTraceName());
+                TRACE_NAME.set(previousName);
             }
             TRACE_ENABLED.set(previousValue);
         }
     }
 
+    private String getTraceName() {
+        if (name == null) {
+            String active = TRACE_NAME.get();
+            if (active != null) {
+                return active;
+            }
+        }
+        return name;
+    }
+    
     static void traceMessage(@NonNls String format, Object... args) {
-        if (!TRACE_ENABLED.get()) return;
-        System.out.println(String.format(format, args));
+        Integer depth = TRACE_ENABLED.get();
+        if (depth == 0) return;
+        String padding = "\t\t\t\t\t\t\t\t\t\t\t".substring(0, depth);
+        String msg = String.format(format, args);
+        System.out.println(padding + msg);
     }
 
     @NotNull PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
@@ -193,8 +223,19 @@ public class PsiElementPath {
         @Override
         PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
             PsiElementCollection buffer = new PsiElementCollection();
+            int seq = 0;
             for (PsiElementPath psiPath : delegates) {
-                buffer.addAll(psiPath.navigateImpl(start));
+                if (TRACE_ENABLED.get() > 0) {
+                    String previousName = TRACE_NAME.get();
+                    TRACE_NAME.set(previousName + " or[" + (seq++) + "]"); // NON-NLS
+                    try {
+                        buffer.addAll(psiPath.navigate(start));
+                    } finally {
+                        TRACE_NAME.set(previousName);
+                    }
+                } else {
+                    buffer.addAll(psiPath.navigateImpl(start));
+                }
             }
             return buffer;
         }
@@ -213,9 +254,20 @@ public class PsiElementPath {
         @Override
         PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
             PsiElementCollection buffer = PsiElementPath.this.navigateImpl(start);
+            int seq = 0;
             for (PsiElementPath psiPath : exclude) {
                 traceMessage("## begin exclude...");
-                buffer.removeAll(psiPath.navigateImpl(start));
+                if (TRACE_ENABLED.get() > 0) {
+                    String previousName = TRACE_NAME.get();
+                    TRACE_NAME.set(previousName + " exclude[" + (seq++) + "]"); // NON-NLS
+                    try {
+                        buffer.removeAll(psiPath.navigate(start));
+                    } finally {
+                        TRACE_NAME.set(previousName);
+                    }
+                } else {
+                    buffer.removeAll(psiPath.navigateImpl(start));
+                }
                 traceMessage("## end exclude.");
                 if (buffer.isEmpty()) return PsiElementCollection.EMPTY;
             }
@@ -254,8 +306,19 @@ public class PsiElementPath {
         @Override
         PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
             PsiElementCollection buffer = new PsiElementCollection(start);
-            for (PsiElementPath path : seq) {
-                buffer = path.navigateImpl(buffer);
+            int seq = 0;
+            for (PsiElementPath path : this.seq) {
+                if (TRACE_ENABLED.get() > 0) {
+                    String previousName = TRACE_NAME.get();
+                    TRACE_NAME.set(previousName + " chain[" + (seq++) + "]"); // NON-NLS
+                    try {
+                        buffer = path.navigate(buffer);
+                    } finally {
+                        TRACE_NAME.set(previousName);
+                    }
+                } else {
+                    buffer = path.navigateImpl(buffer);
+                }
             }
             return buffer;
         }

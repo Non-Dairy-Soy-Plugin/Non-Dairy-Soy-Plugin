@@ -1,2 +1,3 @@
 // line comments are not detected if they are not at the beginning of a line and there is non-whitespace anywhere before them.
-Icons are too big, should be 16x16, not 18x18
+template names do not resolve between files
+renaming a template only renames the definition, not the call

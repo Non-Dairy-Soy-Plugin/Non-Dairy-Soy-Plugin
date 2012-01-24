@@ -17,11 +17,7 @@
 package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.PsiElement;
-import net.venaglia.nondairy.soylang.SoyElement;
-import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
-import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
-import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
+import com.intellij.psi.PsiNamedElement;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -30,48 +26,27 @@ import org.jetbrains.annotations.NotNull;
  * Date: Aug 24, 2010
  * Time: 5:37:04 PM
  */
-public class AbsoluteTemplateNameRef extends SoyASTElement {
-
-    private final PsiElementPath referencePath;
-    private final PsiElementPath namespaceReferencePath;
-    private final ElementPredicate templateNamePredicate;
+public class AbsoluteTemplateNameRef extends SoyASTElement implements PsiNamedElement, TemplateMemberElement {
 
     public AbsoluteTemplateNameRef(@NotNull ASTNode node) {
         super(node);
-        templateNamePredicate = new ElementPredicate() {
-            @Override
-            public boolean test(PsiElement element) {
-                if ((element instanceof LocalTemplateNameDef)) {
-                    LocalTemplateNameDef def = (LocalTemplateNameDef)element;
-                    return getName().equals(def.getNamespace() + "." + def.getName());
-                }
-                return false;
-            }
-            @Override
-            public String toString() {
-                return "[name=" + getName() + "]"; //NON-NLS
-            }
-        };
-        referencePath = new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
-                                    new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_tag).onChildren(),
-                                    new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_name).onChildren())
-                .or(    new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onAncestors(),
-                                    new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_tag).onChildren(),
-                                    new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_name).onChildren()));
-        namespaceReferencePath = new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
-                                             new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
-                                             new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                                             new ElementTypePredicate(SoyElement.namespace_name).onChildren());
     }
 
     @Override
     @NotNull
     public String getName() {
         return getText();
+    }
+
+    @Override
+    public String getTemplateName() {
+        return getName();
+    }
+
+    @Override
+    public String getNamespace() {
+        String name = getName();
+        int index = name.indexOf('.');
+        return index > 1 ? name.substring(0, index - 1) : null;
     }
 }

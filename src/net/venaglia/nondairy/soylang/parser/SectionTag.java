@@ -20,8 +20,11 @@ import static net.venaglia.nondairy.soylang.lexer.SoyToken.*;
 
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,18 +44,22 @@ public class SectionTag {
         sectionTagsBySoyToken.put(CASE, new SectionTag(CASE, SWITCH, true, false));
         sectionTagsBySoyToken.put(DEFAULT, new SectionTag(DEFAULT, SWITCH, false, false));
         sectionTagsBySoyToken.put(IF_EMPTY, new SectionTag(IF_EMPTY, FOREACH, false, true));
-        sectionTagsBySoyToken.put(PARAM, new SectionTag(PARAM, CALL, true, false));
+        sectionTagsBySoyToken.put(PARAM, new SectionTag(PARAM, Arrays.asList(CALL, DELCALL), true, false));
         SECTION_TAGS_BY_SOY_TOKEN = Collections.unmodifiableMap(sectionTagsBySoyToken);
     }
 
     private final SoyToken token;
-    private final SoyToken containerToken;
+    private final List<SoyToken> containerTokens;
     private final boolean repeatable;
     private final boolean orderImportant;
 
     public SectionTag(SoyToken token, SoyToken containerToken, boolean repeatable, boolean orderImportant) {
+        this(token, Collections.singletonList(containerToken), repeatable, orderImportant);
+    }
+    
+    public SectionTag(SoyToken token, List<SoyToken> containerTokens, boolean repeatable, boolean orderImportant) {
         this.token = token;
-        this.containerToken = containerToken;
+        this.containerTokens = containerTokens;
         this.repeatable = repeatable;
         this.orderImportant = orderImportant;
     }
@@ -61,8 +68,8 @@ public class SectionTag {
         return token;
     }
 
-    public SoyToken getContainerToken() {
-        return containerToken;
+    public Collection<SoyToken> getContainerTokens() {
+        return containerTokens;
     }
 
     public boolean isRepeatable() {

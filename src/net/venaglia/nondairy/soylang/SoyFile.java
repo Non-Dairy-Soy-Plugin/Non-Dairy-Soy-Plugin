@@ -31,26 +31,30 @@ import org.jetbrains.annotations.NotNull;
  */
 public class SoyFile extends PsiFileBase {
 
-    private final PsiElementPath referencePath;
-    private final PsiElementPath namespaceNamePath;
+    private static final PsiElementPath REFERENCE_PATH =
+            new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                               new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_tag).onChildren(),
+                               new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_name).onChildren())
+        .or(new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_tag).onChildren(),
+                               new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_name).onChildren()))
+        .or(new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_tag).onChildren(),
+                               new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_name).onChildren()));
+    private static final PsiElementPath NAMESPACE_NAME_PATH =
+            new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                               new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
+                               new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                               new ElementTypePredicate(SoyElement.namespace_name).onChildren());
 
     public SoyFile(FileViewProvider viewProvider) {
         super(viewProvider, SoyLanguage.INSTANCE);
-        referencePath = new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
-                                    new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_tag).onChildren(),
-                                    new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_name).onChildren())
-                .or(    new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_tag).onChildren(),
-                                    new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                                    new ElementTypePredicate(SoyElement.template_name).onChildren()));
-        namespaceNamePath = new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
-                                        new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
-                                        new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                                        new ElementTypePredicate(SoyElement.namespace_name).onChildren());
     }
 
     @NotNull
@@ -59,11 +63,11 @@ public class SoyFile extends PsiFileBase {
     }
 
     public PsiElementCollection getTemplateElements() {
-        return referencePath.navigate(this);
+        return REFERENCE_PATH.navigate(this);
     }
 
     public NamespaceDefElement getNamespaceElement() {
-        PsiElement element = namespaceNamePath.navigate(this).oneOrNull();
+        PsiElement element = NAMESPACE_NAME_PATH.navigate(this).oneOrNull();
         return element instanceof NamespaceDefElement ? (NamespaceDefElement)element : null;
     }
 }

@@ -21,6 +21,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.soylang.SoyElement;
+import net.venaglia.nondairy.soylang.elements.IntermediateElement;
 import net.venaglia.nondairy.soylang.elements.SoyASTElement;
 
 import java.lang.reflect.Field;
@@ -48,19 +49,21 @@ public class SoyASTElementFactory {
             int modifiers = field.getModifiers();
             if (elementClassAnnotation != null && SoyElement.class.equals(field.getType()) &&
                 Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
-//                try {
-//                    factoriesByElement.put((SoyElement)field.get(null),
-//                                           buildFactory(elementClassAnnotation.value()));
-//                } catch (Exception e) {
-//                    throw new RuntimeException(e); // shouldn't happen
-//                }
+                try {
+                    factoriesByElement.put((SoyElement)field.get(null),
+                                           buildFactory(elementClassAnnotation));
+                } catch (Exception e) {
+                    throw new RuntimeException(e); // shouldn't happen
+                }
             }
         }
         FACTORIES_BY_ELEMENT = Collections.unmodifiableMap(factoriesByElement);
     }
 
-    private static <T extends PsiElementBase> ASTElementFactory<T> buildFactory(Class<T> cls) {
-        return new SimpleASTElementFactory<T>(cls);
+    @SuppressWarnings("unchecked")
+    private static <T extends PsiElementBase> ASTElementFactory<T> buildFactory(ElementClass elementClass) {
+        Class<?> cls = elementClass.value();
+        return new SimpleASTElementFactory<T>((Class<T>)cls);
     }
 
     public static PsiElement createFor(ASTNode node) {
@@ -68,6 +71,10 @@ public class SoyASTElementFactory {
         if (factory == null) {
             return new SoyASTElement(node);
         }
-        return factory.create(node);
+        PsiElementBase element = factory.create(node);
+        if (element instanceof IntermediateElement) {
+            return ((IntermediateElement)element).resolveFinalElement();
+        }
+        return element;
     }
 }

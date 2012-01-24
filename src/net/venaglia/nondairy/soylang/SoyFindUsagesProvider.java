@@ -6,10 +6,19 @@ import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
+import net.venaglia.nondairy.i18n.I18N;
+import net.venaglia.nondairy.soylang.elements.TemplateMemberElement;
 import net.venaglia.nondairy.soylang.lexer.SoyLexer;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,6 +27,20 @@ import org.jetbrains.annotations.NotNull;
  * Time: 7:08:59 PM
  */
 public class SoyFindUsagesProvider implements FindUsagesProvider {
+
+    private static final Map<IElementType,UsageType> USAGE_TYPES_BY_ELEMENT_TYPE;
+
+    static {
+        HashMap<IElementType, UsageType> map = new HashMap<IElementType, UsageType>();
+        for (UsageType ut : UsageType.values()) {
+            for (IElementType et : ut.tokens.getTypes()) {
+                if (!map.containsKey(et)) {
+                    map.put(et, ut);
+                }
+            }
+        }
+        USAGE_TYPES_BY_ELEMENT_TYPE = Collections.unmodifiableMap(map);
+    }
 
     public SoyFindUsagesProvider() {
     }
@@ -32,8 +55,7 @@ public class SoyFindUsagesProvider implements FindUsagesProvider {
 
     @Override
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
-        ASTNode node = psiElement.getNode();
-        return node != null && SoyToken.NAME_TOKENS.contains(node.getElementType());
+        return getUsageType(psiElement) != UsageType.UNSUPPORTED;
     }
 
     @Override
@@ -41,27 +63,135 @@ public class SoyFindUsagesProvider implements FindUsagesProvider {
         return null;
     }
 
+    @Nullable
+    static String getDefault(@NotNull PsiElement element) {
+        if (element instanceof PsiNamedElement) {
+            String text = ((PsiNamedElement)element).getName();
+            if (text != null) {
+                return text;
+            }
+        }
+        return element.getText();
+    }
+
     @NotNull
     @Override
-    public String getType(@NotNull PsiElement element) {
-        return "";
+    public String getType(@NotNull PsiElement psiElement) {
+        return defaultString(getUsageType(psiElement).getType());
     }
 
     @NotNull
     @Override
     public String getDescriptiveName(@NotNull PsiElement element) {
-        return getNodeText(element, true);
+        return defaultString(getUsageType(element).getDescriptiveName(element));
     }
 
     @NotNull
     @Override
     public String getNodeText(@NotNull PsiElement element, boolean useFullName) {
-        if (element instanceof PsiNamedElement) {
-            final String name = ((PsiNamedElement)element).getName();
-            if (name != null) {
-                return name;
+        return defaultString(getUsageType(element).getNodeText(element, useFullName));
+    }
+
+    @NotNull
+    private UsageType getUsageType(@NotNull PsiElement element) {
+        ASTNode node = element.getNode();
+        UsageType usageType = node == null ? null : USAGE_TYPES_BY_ELEMENT_TYPE.get(node.getElementType());
+        return usageType == null ? UsageType.UNSUPPORTED :  usageType;
+    }
+
+    @NotNull
+    private String defaultString (@Nullable String value) {
+        return value == null ? "" : value;
+    }
+    
+    enum UsageType {
+        PARAMETER(SoyElement.PARAMETER_NAME_TOKENS, "find.usage.type.variable") {
+            @Override
+            @Nullable
+            String getShortName(@NotNull PsiElement element) {
+                String text = getDefault(element);
+                if (text != null) {
+                    return text.startsWith("$") ? text.substring(1) : text;
+                }
+                return null;
             }
+
+            @Override
+            @Nullable
+            String getFullName(@NotNull PsiElement element) {
+                if (element instanceof TemplateMemberElement) {
+                    TemplateMemberElement tme = (TemplateMemberElement)element;
+                    return tme.getTemplateName() + "$" + getShortName(element);
+                }
+                return super.getFullName(element);
+            }
+        },
+        FUNCTION(SoyElement.FUNCTION_NAME_TOKENS, "find.usage.type.function"),
+        TEMPLATE_ABSOLUTE(TokenSet.create(SoyElement.template_name_ref_absolute),
+                          "find.usage.type.template"),
+        TEMPLATE_LOCAL(TokenSet.create(SoyElement.template_name,
+                                       SoyElement.template_name_ref),
+                       "find.usage.type.template") {
+            @Override
+            String getFullName(@NotNull PsiElement element) {
+                if (element instanceof TemplateMemberElement) {
+                    return ((TemplateMemberElement)element).getTemplateName();
+                }
+                return super.getFullName(element);
+            }
+        },
+        PROPERTY(SoyElement.PROPERTY_NAME_TOKENS, "find.usage.type.property"),
+        UNSUPPORTED(TokenSet.EMPTY, null) {
+            @Override
+            @Nullable
+            String getType() {
+                return null;
+            }
+
+            @Override
+            @Nullable
+            String getDescriptiveName(@NotNull PsiElement element) {
+                return null;
+            }
+
+            @Override
+            @Nullable
+            String getNodeText(@NotNull PsiElement element, boolean useFullName) {
+                return null;
+            }
+        };
+
+        private final TokenSet tokens;
+        private final String i18nKey;
+
+        UsageType(TokenSet tokens, @NonNls String i18nKey) {
+            this.tokens = tokens;
+            this.i18nKey = i18nKey;
         }
-        return "";
+
+        @Nullable
+        String getType() {
+            return I18N.msg(i18nKey);
+        }
+        
+        @Nullable
+        String getDescriptiveName(@NotNull PsiElement element) {
+            return getFullName(element);
+        }
+
+        @Nullable
+        String getNodeText(@NotNull PsiElement element, boolean useFullName) {
+            return useFullName ? getFullName(element) : getShortName(element);
+        }
+
+        @Nullable
+        String getShortName(@NotNull PsiElement element) {
+            return getDefault(element);
+        }
+
+        @Nullable
+        String getFullName(@NotNull PsiElement element) {
+            return getDefault(element);
+        }
     }
 }

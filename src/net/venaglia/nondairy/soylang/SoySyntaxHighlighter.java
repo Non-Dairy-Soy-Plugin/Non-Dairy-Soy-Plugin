@@ -95,7 +95,8 @@ public class SoySyntaxHighlighter extends SyntaxHighlighterBase {
 
         keys1.put(SoyToken.IGNORED_TEXT, SOY_IGNORE);
         keys1.put(SoyToken.DIRECTIVE_IDENTIFIER, SOY_DIRECTIVE_IDENTIFIER);
-        keys1.put(SoyToken.COMMENT, SyntaxHighlighterColors.LINE_COMMENT);
+        keys1.put(SoyToken.COMMENT, SyntaxHighlighterColors.JAVA_BLOCK_COMMENT);
+        keys1.put(SoyToken.LINE_COMMENT, SyntaxHighlighterColors.LINE_COMMENT);
         keys1.put(SoyToken.STRING_LITERAL, SOY_STRING);
         keys1.put(SoyToken.STRING_LITERAL_ESCAPE, SOY_STRING_ESCAPE);
         keys1.put(SoyToken.PARAMETER_REF, SOY_TEMPLATE_PARAMETER);

@@ -44,10 +44,12 @@ public final class SoyToken extends IElementType {
 
     public static final SoyToken COMMENT = new SoyToken(100, "COMMENT");
     public static final SoyToken DOC_COMMENT = new SoyToken(101, "DOC_COMMENT");
+    public static final SoyToken DOC_COMMENT_BEGIN = new SoyToken(106, "DOC_COMMENT_BEGIN");
     public static final SoyToken DOC_COMMENT_WHITESPACE = new SoyToken(102, "DOC_COMMENT_WHITESPACE");
     public static final SoyToken DOC_COMMENT_TAG = new SoyToken(103, "DOC_COMMENT_TAG");
     public static final SoyToken DOC_COMMENT_IDENTIFIER = new SoyToken(104, "DOC_COMMENT_IDENTIFIER");
     public static final SoyToken DOC_COMMENT_END = new SoyToken(105, "DOC_COMMENT_END");
+    public static final SoyToken LINE_COMMENT = new SoyToken(107, "LINE_COMMENT");
 
     // everything not in braces or doc comments
 //    public static final SoyToken TEMPLATE_TEXT = new SoyToken(150, "TEMPLATE_TEXT", Language.findLanguageByID("HTML")); //NON-NLS
@@ -59,6 +61,7 @@ public final class SoyToken extends IElementType {
 
     // identifier tokens
     public static final SoyToken PARAMETER_REF = new SoyToken(200, "PARAMETER_REF");
+    public static final SoyToken PACKAGE_IDENTIFIER = new SoyToken(206, "PACKAGE_IDENTIFIER");
     public static final SoyToken NAMESPACE_IDENTIFIER = new SoyToken(201, "NAMESPACE_IDENTIFIER");
     public static final SoyToken TEMPLATE_IDENTIFIER = new SoyToken(202, "TEMPLATE_IDENTIFIER");
     public static final SoyToken CAPTURED_IDENTIFIER = new SoyToken(203, "CAPTURED_IDENTIFIER");
@@ -67,6 +70,7 @@ public final class SoyToken extends IElementType {
 
     // command tag pairs
     public static final SoyToken TEMPLATE = new SoyToken(300, "TEMPLATE");
+    public static final SoyToken DELTEMPLATE = new SoyToken(309, "DELTEMPLATE");
     public static final SoyToken LITERAL = new SoyToken(301, "LITERAL");
     public static final SoyToken MSG = new SoyToken(302, "MSG");
     public static final SoyToken IF = new SoyToken(303, "IF");
@@ -74,9 +78,11 @@ public final class SoyToken extends IElementType {
     public static final SoyToken FOREACH = new SoyToken(305, "FOREACH");
     public static final SoyToken FOR = new SoyToken(306, "FOR");
     public static final SoyToken CALL = new SoyToken(307, "CALL");
+    public static final SoyToken DELCALL = new SoyToken(310, "DELCALL");
     public static final SoyToken PARAM = new SoyToken(308, "PARAM");
 
     // commands
+    public static final SoyToken DELPACKAGE = new SoyToken(409, "DELPACKAGE");
     public static final SoyToken NAMESPACE = new SoyToken(400, "NAMESPACE");
     public static final SoyToken PRINT = new SoyToken(401, "PRINT");
     public static final SoyToken PRINT_IMPLICIT = new SoyToken(402, "PRINT_IMPLICIT");
@@ -193,6 +199,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken COMMA = new SoyToken(919, "COMMA");
 
     // errors
+    public static final SoyToken DUPLICATE_DELPACKAGE_DECLARATION = new SoyToken(1008, "DUPLICATE_DELPACKAGE_DECLARATION");
     public static final SoyToken DUPLICATE_NAMESPACE_DECLARATION = new SoyToken(1000, "DUPLICATE_NAMESPACE_DECLARATION");
     public static final SoyToken BAD_STRING_ESCAPE = new SoyToken(1001, "BAD_STRING_ESCAPE");
     public static final SoyToken UNTERMINATED_STRING_LITERAL = new SoyToken(1002, "UNTERMINATED_STRING_LITERAL");
@@ -212,7 +219,7 @@ public final class SoyToken extends IElementType {
 
     public static final TokenSet WHITESPACE_TOKENS = TokenSet.create(WHITESPACE, DOC_COMMENT_WHITESPACE, XmlTokenType.TAG_WHITE_SPACE);
     public static final TokenSet COMMENT_TOKENS = TokenSet.orSet(fromValueRange(100, 149), XmlTokenType.COMMENTS);
-    public static final TokenSet DOC_COMMENT_TOKENS = fromValueRange(100, 149, COMMENT);
+    public static final TokenSet DOC_COMMENT_TOKENS = fromValueRange(100, 149, LINE_COMMENT, COMMENT);
     public static final TokenSet STRING_LITERAL_TOKENS = or(fromValueRange(STRING_LITERAL_BEGIN, STRING_LITERAL_END),
                                                             STRING_PARAMETER_REF,
                                                             BAD_STRING_ESCAPE);

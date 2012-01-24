@@ -139,20 +139,24 @@ class TagParser {
                     if (SoyToken.COMMAND_TOKENS.contains(token)) {
                         parser = parser.parseInitial();
                     } else {
-                        source.advanceAndMarkBad(token, "token");
+                        source.advanceAndMarkBad(token, "token", I18N.msg("syntax.error.expected.command"));
                     }
                     break;
                 case NAME:
                     if (SoyToken.NAME_TOKENS.contains(token)) {
                         parser = parser.parseName();
                     } else {
-                        source.advanceAndMarkBad(token, "token");
+                        source.advanceAndMarkBad(token, "token", I18N.msg("syntax.error.expected.name"));
                     }
                     break;
                 case EXPRESSION:
                     notExpect(TagDataType.EXPRESSION);
                     if (!SoyToken.EXPRESSION_TOKENS.contains(token)) {
-                        source.advanceAndMarkBad(token, "token");
+                        if (tagToken == SoyToken.IF || tagToken == SoyToken.ELSE_IF) {
+                            source.advanceAndMarkBad(token, "token", I18N.msg("syntax.error.expected.boolean_expression"));
+                        } else {
+                            source.advanceAndMarkBad(token, "token", I18N.msg("syntax.error.expected.expression"));
+                        }
                         break;
                     }
                     new ExpressionParser(source).parse();
@@ -284,7 +288,7 @@ class TagParser {
                 beginDirective = source.mark("beginDirective");
                 source.advanceAndMark(directive_key, "directive_key");
             } else {
-                source.advanceAndMarkBad(directive_key, "directive_key");
+                source.advanceAndMarkBad(directive_key, "directive_key", I18N.msg("syntax.error.expected.directive"));
                 beginPipe.drop();
                 return;
             }
@@ -343,11 +347,15 @@ class TagParser {
         if (isExpecting(TagDataType.COMMAND)) {
             notExpect(TagDataType.COMMAND);
             IElementType token = source.token();
-            if (token == SoyToken.NAMESPACE) {
+            if (token == SoyToken.DELPACKAGE) {
+                nowExpect(TagDataType.NAME);
+                source.advanceAndMark(command_keyword, "command_keyword");
+                element = package_def;
+            } else if (token == SoyToken.NAMESPACE) {
                 nowExpect(TagDataType.NAME, TagDataType.ATTRIBUTES);
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = namespace_def;
-            } else if (token == SoyToken.TEMPLATE) {
+            } else if (token == SoyToken.TEMPLATE ||  token == SoyToken.DELTEMPLATE) {
                 nowExpect(TagDataType.NAME, TagDataType.ATTRIBUTES);
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = template_tag;
@@ -387,7 +395,7 @@ class TagParser {
                     parseIteratorTag(true);
                     requiresCloseTag = true;
                 }
-            } else if (token == SoyToken.CALL) {
+            } else if (token == SoyToken.CALL || token == SoyToken.DELCALL) {
                 source.advanceAndMark(command_keyword, "command_keyword");
                 if (!isCloseTag) {
                     element = call_tag;
@@ -508,7 +516,9 @@ class TagParser {
         if (isExpecting(TagDataType.NAME)) {
             notExpect(TagDataType.NAME);
             IElementType token = source.token();
-            if (token == SoyToken.NAMESPACE_IDENTIFIER) {
+            if (token == SoyToken.PACKAGE_IDENTIFIER) {
+                source.advanceAndMark(package_name, "package_name");
+            } else if (token == SoyToken.NAMESPACE_IDENTIFIER) {
                 source.advanceAndMark(namespace_name, "namespace_name");
             } else if (token == SoyToken.TEMPLATE_IDENTIFIER) {
                 SoyElement type = element == template_tag

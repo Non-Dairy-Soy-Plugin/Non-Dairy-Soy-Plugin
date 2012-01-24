@@ -37,26 +37,32 @@ public class PsiBuilderTokenSource extends TokenSource {
         this.builder.setDebugMode(DEBUG_PSI_BUILDER);
     }
 
+    @Override
     public PsiBuilder.Marker mark(@NonNls Object name) {
         return builder.mark();
     }
 
+    @Override
     public IElementType token() {
         return builder.getTokenType();
     }
 
+    @Override
     public String text() {
         return builder.getTokenText();
     }
 
+    @Override
     public boolean eof() {
         return builder.eof();
     }
 
+    @Override
     public void advance() {
         builder.advanceLexer();
     }
 
+    @Override
     public void error(String message) {
         builder.error(message);
     }

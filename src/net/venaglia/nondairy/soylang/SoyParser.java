@@ -43,28 +43,34 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SoyParser implements PsiParser {
 
     @NonNls
+    public static final String PARANOID_PROPERTY = "net.venaglia.nondairy.parser.paranoid";
+    @NonNls
     public static final String DEBUG_FILE_PROPERTY = "net.venaglia.nondairy.parser.debugFile";
 
+    private static final boolean PARANOID
+            = Boolean.valueOf(System.getProperty(PARANOID_PROPERTY,
+                                                 Boolean.toString(false)));
     private static final AtomicReference<String> LOG_TO_FILE
             = new AtomicReference<String>(System.getProperty(DEBUG_FILE_PROPERTY));
 
     @NotNull
     public ASTNode parse(IElementType root, PsiBuilder builder) {
         String logToFile = LOG_TO_FILE.getAndSet(null);
-//        builder.setDebugMode(true);
-        builder.enforceCommentTokens(TokenSet.create(SoyToken.COMMENT));
-        if (logToFile != null) {
+        if (PARANOID) {
+            builder.setDebugMode(true);
+        }
+        builder.enforceCommentTokens(TokenSet.create(SoyToken.COMMENT, SoyToken.LINE_COMMENT));
+        if (logToFile != null || PARANOID) {
             TrackedPsiBuilderTokenSource tokenSource = new TrackedPsiBuilderTokenSource(builder);
             PsiBuilder.Marker file = builder.mark();
             new SoyStructureParser(tokenSource).parse();
             file.done(root);
             try {
-                ASTNode tree = builder.getTreeBuilt();
-                logTree(tokenSource, logToFile);
-                return tree;
-            } catch (RuntimeException e) {
-                logTree(tokenSource, logToFile);
-                throw e;
+                return builder.getTreeBuilt();
+            } finally {
+                if (logToFile != null) {
+                    logTree(tokenSource, logToFile);
+                }
             }
         }
 
@@ -75,7 +81,7 @@ public class SoyParser implements PsiParser {
     }
 
     @SuppressWarnings("HardCodedStringLiteral")
-    private void logTree(TrackedPsiBuilderTokenSource tokenSource, String fileName) {
+    public static void logTree(TrackedPsiBuilderTokenSource tokenSource, String fileName) {
         PrintWriter out = null;
         try {
             out = new PrintWriter(new File(fileName));

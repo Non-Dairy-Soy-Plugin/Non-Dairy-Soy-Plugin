@@ -18,11 +18,16 @@ package net.venaglia.nondairy.soylang.structure;
 
 import com.intellij.ide.structureView.StructureViewTreeElement;
 import com.intellij.ide.structureView.impl.common.PsiTreeElementBase;
+import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.soylang.SoyFile;
+import net.venaglia.nondairy.soylang.elements.LocalTemplateNameDef;
+import net.venaglia.nondairy.soylang.elements.NamespaceDefElement;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementMapper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -42,7 +47,21 @@ public class SoyRootTreeElement extends PsiTreeElementBase<SoyFile> {
     @NotNull
     @Override
     public Collection<StructureViewTreeElement> getChildrenBase() {
-        return Collections.<StructureViewTreeElement>singleton(new SoyNamespaceTreeElement(file));
+        List<StructureViewTreeElement> elements = new LinkedList<StructureViewTreeElement>();
+        NamespaceDefElement namespaceElement = file.getNamespaceElement();
+        if (namespaceElement != null) {
+            SoyNamespaceTreeElement soyNamespaceTreeElement = new SoyNamespaceTreeElement(namespaceElement);
+            elements.add(soyNamespaceTreeElement);
+        }
+        elements.addAll(
+                file.getTemplateElements().map(new PsiElementMapper<StructureViewTreeElement>() {
+                    @Override
+                    public StructureViewTreeElement map(PsiElement element) {
+                        return new SoyTemplateTreeElement((LocalTemplateNameDef)element);
+                    }
+                })
+        );
+        return elements;
     }
 
     @Override

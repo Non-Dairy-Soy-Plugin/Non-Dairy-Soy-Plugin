@@ -21,6 +21,7 @@ import com.intellij.lang.WhitespacesAndCommentsBinder;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.soylang.lexer.SoySymbol;
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 
@@ -95,7 +96,7 @@ public class MockTokenSource extends TokenSource {
 
     @Override
     public PsiBuilder.Marker mark(@NonNls Object name) {
-        return new MockMarker(seq);
+        return new MockMarker(seq, current);
     }
 
     @Override
@@ -189,14 +190,16 @@ public class MockTokenSource extends TokenSource {
 
         private final StackTraceElement caller;
         private final int startSeq;
+        private final SoySymbol symbol;
 
         private boolean open = true;
         private MockMarker prev;
         private MockMarker next;
 
-        public MockMarker(int startSeq) {
+        public MockMarker(int startSeq, SoySymbol symbol) {
             caller = get2Back();
             this.startSeq = startSeq;
+            this.symbol = symbol;
             if (firstProducedMarker == null) {
                 firstProducedMarker = this;
                 lastProducedMarker = this;
@@ -207,12 +210,16 @@ public class MockTokenSource extends TokenSource {
             }
         }
 
-        private MockMarker(MockMarker precede) {
+        private MockMarker(@NotNull MockMarker precede) {
             caller = get2Back();
             startSeq = precede.startSeq;
+            symbol = precede.symbol;
             next = precede;
             prev = precede.prev;
             precede.prev = this;
+            if (prev != null) {
+                prev.next = this;
+            }
         }
 
         public int getTokenCount() {
@@ -259,7 +266,7 @@ public class MockTokenSource extends TokenSource {
             int unclosedMarkers = 0;
             for (MockMarker m = this.next; m != null; m = m.next) {
                 if (m.open) {
-                    buffer.append("\n\tUnclosed marker created at ").append(m.caller);
+                    buffer.append("\n\tUnclosed marker created at ").append(m.caller).append(" : ").append(symbol);
                     unclosedMarkers++;
                 }
             }
@@ -286,18 +293,23 @@ public class MockTokenSource extends TokenSource {
 
         @Override
         public void collapse(IElementType type) {
-            //To change body of implemented methods use File | Settings | File Templates.
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public void errorBefore(String message, PsiBuilder.Marker before) {
-            //To change body of implemented methods use File | Settings | File Templates.
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public void setCustomEdgeTokenBinders(@Nullable WhitespacesAndCommentsBinder left,
                                               @Nullable WhitespacesAndCommentsBinder right) {
-            //To change body of implemented methods use File | Settings | File Templates.
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String toString() {
+            return "TokenSource @ " + (symbol == null ? "[EOF]" : symbol.toString());
         }
     }
 }

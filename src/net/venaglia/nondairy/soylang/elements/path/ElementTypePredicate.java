@@ -21,6 +21,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
 * Created by IntelliJ IDEA.
 * User: ed
@@ -29,20 +34,37 @@ import org.jetbrains.annotations.NotNull;
 */
 public class ElementTypePredicate extends AbstractElementPredicate {
 
-    private final IElementType type;
+    private final Set<IElementType> types;
 
     public ElementTypePredicate(@NotNull IElementType type) {
-        this.type = type;
+        this.types = Collections.singleton(type);
+    }
+
+    public ElementTypePredicate(@NotNull IElementType type, IElementType... types) {
+        this.types = new HashSet<IElementType>();
+        this.types.add(type);
+        this.types.addAll(Arrays.asList(types));
     }
 
     @Override
     public boolean test(PsiElement element) {
         ASTNode node = element.getNode();
-        return node != null && node.getElementType() == type;
+        return node != null && types.contains(node.getElementType());
     }
 
     @Override
     public String toString() {
-        return "." + type;
+        if (types.size() == 1) {
+            return "." + types.iterator().next();
+        } else {
+            StringBuilder buffer = new StringBuilder(64);
+            buffer.append("[ ");
+            for (IElementType type : types) {
+                if (buffer.length() > 2) buffer.append(" | ");
+                buffer.append('.').append(type);
+            }
+            buffer.append(" ]");
+            return buffer.toString();
+        }
     }
 }

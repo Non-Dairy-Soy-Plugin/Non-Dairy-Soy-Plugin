@@ -37,18 +37,18 @@ terminal String                        TEMPLATE_TEXT, IGNORED_TEXT, LITERAL_TEXT
 terminal String                        TAG_LBRACE, TAG_RBRACE, TAG_END_LBRACE, TAG_END_RBRACE;
 
 // lexicographical structures
-terminal String                        WHITESPACE, COMMENT;
-terminal String                        DOC_COMMENT, DOC_COMMENT_WHITESPACE, DOC_COMMENT_TAG, DOC_COMMENT_IDENTIFIER, DOC_COMMENT_END;
+terminal String                        WHITESPACE, COMMENT, LINE_COMMENT;
+terminal String                        DOC_COMMENT, DOC_COMMENT_WHITESPACE, DOC_COMMENT_TAG, DOC_COMMENT_IDENTIFIER, DOC_COMMENT_BEGIN, DOC_COMMENT_END;
 
 // identifier tokens
-terminal String                        PARAMETER_REF, STRING_PARAMETER_REF, NAMESPACE_IDENTIFIER, TEMPLATE_IDENTIFIER;
+terminal String                        PARAMETER_REF, STRING_PARAMETER_REF, PACKAGE_IDENTIFIER, NAMESPACE_IDENTIFIER, TEMPLATE_IDENTIFIER;
 terminal String                        CAPTURED_IDENTIFIER, CAPTURED_FUNCTION_IDENTIFIER;
 
 // command tag pairs
-terminal SoySymbol                     TEMPLATE, LITERAL, MSG, IF, SWITCH, FOREACH, FOR, CALL, PARAM;
+terminal SoySymbol                     TEMPLATE, DELTEMPLATE, LITERAL, MSG, IF, SWITCH, FOREACH, FOR, CALL, DELCALL, PARAM;
 
 // commands
-terminal SoySymbol                     NAMESPACE, PRINT, PRINT_IMPLICIT, ELSE_IF, ELSE, CASE, DEFAULT, IF_EMPTY, CSS;
+terminal SoySymbol                     DELPACKAGE, NAMESPACE, PRINT, PRINT_IMPLICIT, ELSE_IF, ELSE, CASE, DEFAULT, IF_EMPTY, CSS;
 
 // special characters
 terminal SoySymbol                     SP_LITERAL, NIL_LITERAL, CR_LITERAL, LF_LITERAL, TAB_LITERAL, LB_LITERAL, RB_LITERAL;
@@ -88,7 +88,7 @@ terminal SoySymbol                     EQ, EQEQ, GT, LT, NOT, AND, OR, QUESTION,
 terminal SoySymbol                     MINUS, MULT, DIV, MOD, PIPE, DOT, COMMA;
 
 // errors
-terminal SoySymbol           DUPLICATE_NAMESPACE_DECLARATION, BAD_STRING_ESCAPE;
+terminal SoySymbol           DUPLICATE_DELPACKAGE_DECLARATION, DUPLICATE_NAMESPACE_DECLARATION, BAD_STRING_ESCAPE;
 terminal SoySymbol           UNTERMINATED_STRING_LITERAL, UNTERMINATED_TEMPLATE;
 terminal SoySymbol           LBRACE_ERROR, RBRACE_ERROR, ILLEGAL_TAG_DECLARATION, ILLEGAL_CLOSE_TAG;
 terminal SoySymbol           UNEXPECTED_EOF_IN_LITERAL_BLOCK, UNEXPECTED_EOF_IN_TAG_DECLARATION;
@@ -179,6 +179,7 @@ skip_element_list  ::= skip_element_list skip_element
                    |   skip_element
                    ;
 skip_element       ::= COMMENT
+                   |   LINE_COMMENT
                    |   IGNORED_TEXT
                    ;
 
@@ -190,6 +191,8 @@ content_sequence   ::= content_element:e
 content_element    ::= TEMPLATE_TEXT:t
                        {: RESULT = ContentWrapper.create(new CapturedText(t)); :}
                    |   COMMENT:c
+                       {: RESULT = ContentWrapper.create(new Comment(c)); :}
+                   |   LINE_COMMENT:c
                        {: RESULT = ContentWrapper.create(new Comment(c)); :}
                    |   content_tag:tag
                        {: RESULT = tag; :}
@@ -236,11 +239,15 @@ template_doc_comment ::= template_doc_buffer:buf DOC_COMMENT_END
                    ;
 template_doc_buffer ::= template_doc_buffer:buf DOC_COMMENT:doc
                        {: buf.append(doc); RESULT = buf; :}
+                   | template_doc_buffer:buf DOC_COMMENT_BEGIN:doc
+                       {: buf.append(doc); RESULT = buf; :}
                    | template_doc_buffer:buf DOC_COMMENT_TAG:doc
                        {: buf.append(doc); RESULT = buf; :}
                    | template_doc_buffer:buf DOC_COMMENT_IDENTIFIER:doc
                        {: buf.append(doc); RESULT = buf; :}
                    | DOC_COMMENT:doc
+                       {: SoyDocCommentBuffer buf = new SoyDocCommentBuffer(); buf.append(doc); RESULT = buf; :}
+                   | DOC_COMMENT_BEGIN:doc
                        {: SoyDocCommentBuffer buf = new SoyDocCommentBuffer(); buf.append(doc); RESULT = buf; :}
                    ;
 template_tag       ::= begin_template_tag:b content_sequence:c end_template_tag:e

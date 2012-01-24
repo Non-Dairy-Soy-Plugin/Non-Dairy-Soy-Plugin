@@ -18,14 +18,17 @@ package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
-import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.util.IconLoader;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.ResolveState;
+import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.ui.RowIcon;
-import com.intellij.util.Icons;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.PlatformIcons;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.elements.path.ElementTextPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
@@ -43,32 +46,38 @@ import javax.swing.*;
  * Date: Aug 24, 2010
  * Time: 5:36:22 PM
  */
-public class LocalTemplateNameDef extends SoyASTElement implements PsiNamedElement, ItemPresentation {
+public class LocalTemplateNameDef extends SoyASTElement implements PsiNamedElement, ItemPresentation, TemplateMemberElement {
 
     public static final Icon SOY_TEMPLATE_ICON = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy-template.png");
 
-    private final PsiElementPath namespaceReferencePath;
-    private final PsiElementPath parameterDeclarationPath;
-    private final PsiElementPath privateAttributePath;
+    public static final Icon SOY_DELTEMPLATE_ICON = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy-deltemplate.png");
 
+    private static final PsiElementPath NAMESPACE_REFERENCE_PATH =
+            new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
+                               new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
+                               new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                               new ElementTypePredicate(SoyElement.namespace_name).onChildren());
+    private static final PsiElementPath PARAMETER_DECLARATION_PATH =
+            new PsiElementPath(new ElementTypePredicate(SoyElement.tag_and_doc_comment).onFirstAncestor(),
+                               new ElementTypePredicate(SoyElement.doc_comment).onChildren(),
+                               new ElementTypePredicate(SoyElement.doc_comment_param).onChildren());
+    private static final PsiElementPath PRIVATE_ATTRIBUTE_PATH =
+            new PsiElementPath(new ElementTypePredicate(SoyElement.template_tag).onFirstAncestor(),
+                               new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                               new ElementTypePredicate(SoyElement.attribute).onChildren(),
+                               new ElementTypePredicate(SoyElement.attribute_key).onChildren(),
+                               new ElementTextPredicate("private"),
+                               PsiElementPath.PARENT_ELEMENT,
+                               new ElementTypePredicate(SoyElement.expression).onChildren(),
+                               new ElementTypePredicate(SoyElement.attribute_value).onChildren(),
+                               new ElementTextPredicate("true"));
+    private static final PsiElementPath DELTEMPLATE_PATH =
+            new PsiElementPath(PsiElementPath.PARENT_ELEMENT,
+                               new ElementTypePredicate(SoyElement.command_keyword).onFirstChild(),
+                               new ElementTextPredicate("deltemplate"));
+    
     public LocalTemplateNameDef(@NotNull ASTNode node) {
         super(node);
-        namespaceReferencePath = new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
-                                             new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
-                                             new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                                             new ElementTypePredicate(SoyElement.namespace_name).onChildren());
-        parameterDeclarationPath = new PsiElementPath(new ElementTypePredicate(SoyElement.tag_and_doc_comment).onFirstAncestor(),
-                                               new ElementTypePredicate(SoyElement.doc_comment).onChildren(),
-                                               new ElementTypePredicate(SoyElement.doc_comment_param).onChildren());
-        privateAttributePath = new PsiElementPath(new ElementTypePredicate(SoyElement.template_tag).onFirstAncestor(),
-                                           new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                                           new ElementTypePredicate(SoyElement.attribute).onChildren(),
-                                           new ElementTypePredicate(SoyElement.attribute_key).onChildren(),
-                                           new ElementTextPredicate("private"),
-                                           PsiElementPath.PARENT_ELEMENT,
-                                           new ElementTypePredicate(SoyElement.expression).onChildren(),
-                                           new ElementTypePredicate(SoyElement.attribute_value).onChildren(),
-                                           new ElementTextPredicate("true"));
     }
 
     @Override
@@ -83,27 +92,58 @@ public class LocalTemplateNameDef extends SoyASTElement implements PsiNamedEleme
 
     @Override
     public PsiElement setName(@NonNls @NotNull String name) throws IncorrectOperationException {
-        if (getText().startsWith(".")) name = "." + name;
-        return ElementManipulators.getManipulator(this).handleContentChange(this, getTextRange().shiftRight(0 - getTextOffset()), name);
+        if (getText().startsWith(".") ^ name.startsWith(".")) {
+            name = name.startsWith(".") ? name.substring(1) : "." + name;
+        }
+        TextRange range = getTextRange().shiftRight(0 - getTextOffset());
+        return ElementManipulators.getManipulator(this).handleContentChange(this, range, name);
+    }
+    @Override
+    public boolean processDeclarations(@NotNull PsiScopeProcessor processor,
+                                       @NotNull ResolveState state,
+                                       PsiElement lastParent,
+                                       @NotNull PsiElement place) {
+        return processor.execute(this, state);
     }
 
+    @Override
+    public String getTemplateName() {
+        String namespace = getNamespace();
+        return namespace == null ? getName() : namespace + "." + getName();
+    }
+
+    @Override
     @Nullable
     public String getNamespace() {
-        PsiElement namespace = namespaceReferencePath.navigate(this).oneOrNull();
+        PsiElement namespace = NAMESPACE_REFERENCE_PATH.navigate(this).oneOrNull();
         return namespace == null ? null : ((NamespaceDefElement)namespace).getName();
     }
 
+    @Override
+    public PsiReference getReference() {
+        return new SoyASTElementReference(this);
+    }
+
     private boolean isPrivate() {
-        return privateAttributePath.navigate(this).oneOrNull() != null;
+        return PRIVATE_ATTRIBUTE_PATH.navigate(this).oneOrNull() != null;
     }
 
     public PsiElementCollection getParameterDeclarations() {
-        return parameterDeclarationPath.navigate(this);
+        return PARAMETER_DECLARATION_PATH.navigate(this);
     }
 
     @Override
     public String getPresentableText() {
-        return getText();
+        String namespace = getNamespace();
+        String name = getText();
+        boolean dotted = name.startsWith(".");
+        if ((namespace == null || namespace.length() == 0) && dotted) {
+            return name.substring(1);
+        }
+        if (dotted) {
+            return namespace + name;
+        }
+        return namespace + "." + name;
     }
 
     @Override
@@ -113,9 +153,10 @@ public class LocalTemplateNameDef extends SoyASTElement implements PsiNamedEleme
 
     @Override
     public Icon getIcon(boolean open) {
+        boolean isDelegate = !DELTEMPLATE_PATH.navigate(this).isEmpty();
         RowIcon icon = new RowIcon(2);
-        icon.setIcon(SOY_TEMPLATE_ICON, 0);
-        icon.setIcon(isPrivate() ? Icons.PRIVATE_ICON : Icons.PUBLIC_ICON, 1);
+        icon.setIcon(isDelegate ? SOY_DELTEMPLATE_ICON : SOY_TEMPLATE_ICON, 0);
+        icon.setIcon(isPrivate() ? PlatformIcons.PRIVATE_ICON : PlatformIcons.PUBLIC_ICON, 1);
         return icon;
     }
 }

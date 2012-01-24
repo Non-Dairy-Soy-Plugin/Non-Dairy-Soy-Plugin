@@ -1,3 +1,17 @@
+ver 0.?
+
+
+ver 0.3.2
+* Structure view is back, with improved presentation and better icons
+* String literals in expressions now show an error if using double quotes
+* File icon is now the right size
+* Template and parameter names now resolve properly
+* Colors & Fonts now support customization for special characters
+* Attributes in the namespace tag no longer show as an error
+* Added support for delpackage, deltemplate and delcall commands
+* Improved several parse errors to be more helpful
+* Fixed several exceptions with parsing
+
 ver 0.3.1
 * Updated to support IntelliJ 11
 * Removed structure analyzer and code-folding components to fix stack traces

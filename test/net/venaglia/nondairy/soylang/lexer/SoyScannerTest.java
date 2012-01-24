@@ -114,14 +114,6 @@ public class SoyScannerTest {
         // todo: assert token results are consistent
     }
 
-    @Test
-    public void testJiveSources() throws Exception {
-        TestableSoyScanner scanner = buildScanner("grouped_external.soy");
-        tallyTokens(scanner, false);
-        scanner = buildScanner("oauth.soy");
-        tallyTokens(scanner, false);
-    }
-
     private Map<SoyToken,Integer> tallyTokens(TestableSoyScanner scanner, boolean expectErrors) {
         List<SoySymbol> tokens = new LinkedList<SoySymbol>();
         Map<SoyToken,Integer> tokenCounts = new HashMap<SoyToken,Integer>();

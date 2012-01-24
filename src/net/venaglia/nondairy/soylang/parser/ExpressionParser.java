@@ -22,6 +22,8 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.i18n.I18N;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
+import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -30,6 +32,14 @@ import net.venaglia.nondairy.soylang.lexer.SoyToken;
  * Time: 11:24:19 PM
  */
 class ExpressionParser {
+
+    @NonNls
+    private static final String EXPRESSION_PARSER_ENABLED_PROPERTY
+            = "net.venaglia.nondairy.parser.expressions.enabled";
+
+    private static final boolean EXPRESSION_PARSER_ENABLED
+            = Boolean.valueOf(System.getProperty(EXPRESSION_PARSER_ENABLED_PROPERTY,
+                                                 String.valueOf(true)));
 
     // Precedence ordering
 
@@ -55,6 +65,8 @@ class ExpressionParser {
     private int prec = PREC_UNSPECIFIED;
     private int remainingValues = -1;
     private boolean markerIsDone = false;
+    private ExpressionType apparentType = ExpressionType.NONE;
+    private ExpressionType expectingType = ExpressionType.ANY;
 
     ExpressionParser(TokenSource source) {
         this.parent = null;
@@ -66,17 +78,40 @@ class ExpressionParser {
         this.parent = parent;
         this.source = parent.source;
         this.exprMarker = source.mark("exprMarker");
+        this.expectingType = parent.expectingType;
+    }
+
+    public ExpressionParser expecting(ExpressionType expectingType) {
+        this.expectingType = expectingType;
+        return this;
     }
 
     private void done() {
+        done(null);
+    }
+
+    private void done(@Nullable String errorMsg) {
         if (!markerIsDone) {
-            if (parent != null) parent.remainingValues -= 1;
+            if (parent != null) {
+                parent.remainingValues -= 1;
+                parent.apparentType = parent.apparentType.or(apparentType);
+            }
             if (remainingValues > 0) {
                 source.error(I18N.msg("syntax.error.expected.expression"));
                 remainingValues = 0;
             }
             if (exprMarker != null) {
-                exprMarker.done(expressionType);
+                if (errorMsg != null) {
+                    exprMarker.error(errorMsg);
+//                } else if (!apparentType.isAssignableTo(expectingType)) {
+//                    PsiBuilder.Marker wrapper = exprMarker.precede();
+//                    exprMarker.error(I18N.msg("syntax.error.inconvertable.expression",
+//                                              apparentType.getLabel(),
+//                                              expectingType.getLabel()));
+//                    wrapper.done(expressionType);
+                } else {
+                    exprMarker.done(expressionType);
+                }
             }
             markerIsDone = true;
         }
@@ -84,20 +119,31 @@ class ExpressionParser {
 
     void parse() {
         ExpressionParser parser = this;
-        boolean advanceOnExit = false;
+        int parenCount = 0;
         while (!source.eof() && parser != null) {
             IElementType token = source.token();
-            if (token == SoyToken.RPAREN || token == SoyToken.RBRACK || token == SoyToken.COMMA) {
-//                advanceOnExit = parser.prec != PREC_PARENTHESIS;
+            if (EXPRESSION_PARSER_ENABLED) {
+                if (token == SoyToken.RPAREN || token == SoyToken.RBRACK || token == SoyToken.COMMA) {
+                    break;
+                }
+                switch (parser.prec) {
+                    case PREC_UNSPECIFIED:
+                        parser = parser.parseInitial(token);
+                        break;
+                    default:
+                        parser = parseResume(parser, token);
+                        break;
+                }
+            } else if (SoyToken.EXPRESSION_TOKENS.contains(token)) {
+                parser.prec = -1;
+                if (token == SoyToken.LPAREN) {
+                    parenCount++;
+                } else if (token == SoyToken.RPAREN) {
+                    if (--parenCount < 0) break;
+                }
+                source.advance();
+            } else {
                 break;
-            }
-            switch (parser.prec) {
-                case PREC_UNSPECIFIED:
-                    parser = parser.parseInitial(token);
-                    break;
-                default:
-                    parser = parseResume(parser, token);
-                    break;
             }
         }
         while (parser != null) {
@@ -105,22 +151,37 @@ class ExpressionParser {
             if (parser == this) break;
             parser = parser.parent;
         }
-        if (advanceOnExit) source.advance();
+    }
+
+    private void markAsConstantExpressionAndAdvance() {
+        prec = PREC_LITERAL;
+        expressionType = constant_expression;
+        source.advance();
+        remainingValues = 0;
+        done();
     }
 
     private ExpressionParser parseInitial(IElementType token) {
-        if (token == SoyToken.NULL_LITERAL || token == SoyToken.BOOLEAN_LITERAL || token == SoyToken.INTEGER_LITERAL || token == SoyToken.FLOATING_POINT_LITERAL) {
-            prec = PREC_LITERAL;
-            expressionType = constant_expression;
-            source.advance();
-            remainingValues = 0;
-            done();
+        if (token == SoyToken.NULL_LITERAL) {
+            markAsConstantExpressionAndAdvance();
+        } else if (token == SoyToken.BOOLEAN_LITERAL) {
+            apparentType = apparentType.or(ExpressionType.BOOLEAN);
+            markAsConstantExpressionAndAdvance();
+        } else if (token == SoyToken.INTEGER_LITERAL || token == SoyToken.FLOATING_POINT_LITERAL) {
+            apparentType = apparentType.or(ExpressionType.NUMBER);
+            markAsConstantExpressionAndAdvance();
         } else if (token == SoyToken.STRING_LITERAL_BEGIN) {
+            apparentType = apparentType.or(ExpressionType.STRING);
+            char delim = source.text().charAt(0);
             prec = PREC_LITERAL;
             expressionType = constant_expression;
             source.fastForward(SoyToken.STRING_LITERAL_END, null);
             remainingValues = 0;
-            done();
+            if (delim == '"') {
+                done(I18N.msg("syntax.error.string.literal.double.quotes"));
+            } else {
+                done();
+            }
         } else if (token == SoyToken.PARAMETER_REF) {
             prec = PREC_LITERAL;
             expressionType = parameter_ref;
@@ -130,21 +191,27 @@ class ExpressionParser {
         } else if (token == SoyToken.LPAREN) {
             prec = PREC_PARENTHESIS;
             source.advance();
-            new ExpressionParser(source).parse();
+            ExpressionParser innerParser = new ExpressionParser(source);
+            innerParser.expecting(expectingType).parse();
+            apparentType = apparentType.or(innerParser.apparentType);
             if (!source.eof() && source.token() == SoyToken.RPAREN) source.advance();
             remainingValues = 0;
         } else if (token == SoyToken.LBRACK) {
             prec = PREC_PARENTHESIS;
             expressionType = bracket_property_ref;
             source.advance();
-            new ExpressionParser(source).parse();
+            ExpressionParser innerParser = new ExpressionParser(source);
+            innerParser.expecting(expectingType).parse();
+            apparentType = apparentType.or(innerParser.apparentType);
             if (!source.eof() && source.token() == SoyToken.RBRACK) source.advance();
             remainingValues = 0;
         } else if (token == SoyToken.MINUS) {
+            apparentType = apparentType.or(ExpressionType.NUMBER);
             prec = PREC_UMINUS_NOT;
             source.advance();
             remainingValues = 1;
         } else if (token == SoyToken.NOT) {
+            apparentType = apparentType.or(ExpressionType.BOOLEAN);
             prec = PREC_UMINUS_NOT;
             source.advance();
             remainingValues = 1;
@@ -175,7 +242,7 @@ class ExpressionParser {
         return remainingValues == 0 ? this : new ExpressionParser(this);
     }
 
-    int parseFunctionArgs(IElementType closeWith) {
+    int parseFunctionArgs(@Nullable IElementType closeWith) {
         IElementType token = source.token();
         if (token != SoyToken.LPAREN) {
             source.advanceAndMarkBad(unexpected_symbol, "unexpected_symbol");
@@ -222,8 +289,9 @@ class ExpressionParser {
     }
 
     private boolean parseSingleExpression() {
-        ExpressionParser expressionParser = new ExpressionParser(source);
+        ExpressionParser expressionParser = new ExpressionParser(source).expecting(expectingType);
         expressionParser.parse();
+        apparentType = apparentType.or(expressionParser.expectingType);
         return expressionParser.prec != PREC_UNSPECIFIED;
     }
 
@@ -269,13 +337,17 @@ class ExpressionParser {
         } else if (token == SoyToken.QUESTION) {
             parser = parser.push(PREC_TERNARY, 2);
             if (!source.eof()) {
-                new ExpressionParser(source).parse();
+                ExpressionParser leftParser = new ExpressionParser(source);
+                leftParser.expecting(expectingType).parse();
+                apparentType = leftParser.apparentType;
             }
             if (!source.eof()) {
                 if (source.token() == SoyToken.COLON) {
                     parser.remainingValues = 1;
                     source.advance();
-                    new ExpressionParser(source).parse();
+                    ExpressionParser rightParser = new ExpressionParser(source);
+                    rightParser.expecting(expectingType).parse();
+                    apparentType.or(rightParser.apparentType);
                     parser.remainingValues--;
                     done();
                 } else {

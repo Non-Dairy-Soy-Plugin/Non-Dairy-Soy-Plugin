@@ -18,22 +18,24 @@ package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.intellij.extapi.psi.PsiElementBase;
 import com.intellij.lang.ASTNode;
+import com.intellij.lang.Language;
+import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
-import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.impl.source.SourceTreeToPsiMap;
+import com.intellij.psi.impl.source.tree.CompositeElement;
+import com.intellij.psi.impl.source.tree.SharedImplUtil;
+import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.IncorrectOperationException;
-import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
-import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
-import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -41,10 +43,113 @@ import java.util.LinkedList;
  * Date: Jul 31, 2010
  * Time: 10:21:04 PM
  */
-public class SoyASTElement extends ASTWrapperPsiElement {
+public class SoyASTElement extends PsiElementBase implements PsiElement {
+
+    @NotNull
+    private final ASTNode node;
 
     public SoyASTElement(@NotNull ASTNode node) {
-        super(node);
+        this.node = node;
+    }
+
+    @Override
+    @NotNull
+    public ASTNode getNode() {
+        return node;
+    }
+
+    @Override
+    public PsiElement getParent() {
+        return SharedImplUtil.getParent(getNode());
+    }
+
+    @Override
+    @NotNull
+    public PsiElement[] getChildren() {
+        PsiElement psiChild = getFirstChild();
+        if (psiChild == null) return PsiElement.EMPTY_ARRAY;
+
+        List<PsiElement> result = new ArrayList<PsiElement>();
+        while (psiChild != null) {
+            if (psiChild.getNode() instanceof CompositeElement) {
+                result.add(psiChild);
+            }
+            psiChild = psiChild.getNextSibling();
+        }
+        return PsiUtilCore.toPsiElementArray(result);
+    }
+
+    @Override
+    public PsiElement getFirstChild() {
+        return SharedImplUtil.getFirstChild(getNode());
+    }
+
+    @Override
+    public PsiElement getLastChild() {
+        return SharedImplUtil.getLastChild(getNode());
+    }
+
+    @Override
+    public PsiElement getNextSibling() {
+        return SharedImplUtil.getNextSibling(getNode());
+    }
+
+    @Override
+    public PsiElement getPrevSibling() {
+        return SharedImplUtil.getPrevSibling(getNode());
+    }
+
+    @Override
+    public TextRange getTextRange() {
+        return getNode().getTextRange();
+    }
+
+    @Override
+    public int getStartOffsetInParent() {
+        return getNode().getStartOffset() - getNode().getTreeParent().getStartOffset();
+    }
+
+    @Override
+    public int getTextLength() {
+        return getNode().getTextLength();
+    }
+
+    @Override
+    public PsiElement findElementAt(int offset) {
+        ASTNode treeElement = getNode().findLeafElementAt(offset);
+        return SourceTreeToPsiMap.treeElementToPsi(treeElement);
+    }
+
+    @Override
+    public int getTextOffset() {
+        return getNode().getStartOffset();
+    }
+
+    @Override
+    public String getText() {
+        return getNode().getText();
+    }
+
+    @Override
+    @NotNull
+    public char[] textToCharArray() {
+        return getNode().getText().toCharArray();
+    }
+
+    @Override
+    public boolean textContains(char c) {
+        return getNode().textContains(c);
+    }
+
+    @Override
+    @NotNull
+    public Language getLanguage() {
+        return getNode().getElementType().getLanguage();
+    }
+
+    @Override
+    public ItemPresentation getPresentation() {
+        return (this instanceof ItemPresentation) ? (ItemPresentation)this : null;
     }
 
     @Override
@@ -56,57 +161,11 @@ public class SoyASTElement extends ASTWrapperPsiElement {
         throw new IncorrectOperationException("Rename is not implemented for " + getClass().getSimpleName());
     }
 
-    protected class SoyASTElementReference extends PsiReferenceBase<SoyASTElement> {
-
-        private final PsiElementPath path;
-        private final ElementPredicate predicate;
-
-        @SuppressWarnings({ "unchecked" })
-        public SoyASTElementReference(@NotNull PsiElementPath path, @Nullable ElementPredicate predicate) {
-            super(SoyASTElement.this);
-            this.path = path;
-            this.predicate = predicate;
-        }
-
-        public SoyASTElementReference(PsiElementPath path, @Nullable ElementPredicate predicate, TextRange range) {
-            super(SoyASTElement.this, range);
-            this.path = path;
-            this.predicate = predicate;
-        }
-
-        @Override
-        public PsiElement resolve() {
-            PsiElementCollection elements = path.navigate(SoyASTElement.this);
-            if (predicate != null) {
-                elements = elements.applyPredicate(predicate);
-            }
-            return elements.oneOrNull();
-        }
-
-        @Override
-        public boolean isReferenceTo(PsiElement element) {
-            return (predicate == null || predicate.test(element)) &&
-                    resolve() == element;
-        }
-
-        @NotNull
-        @Override
-        public Object[] getVariants() {
-            PsiElementCollection elements = path.navigate(SoyASTElement.this);
-            Collection<Object> objects = new LinkedList<Object>();
-            for (PsiElement element : elements) {
-                buildLookupElements(element, objects);
-            }
-            return objects.toArray();
-        }
-
-        @Override
-        public boolean isSoft() {
-            return false;
-        }
-    }
-
     protected void buildLookupElements(PsiElement element, Collection<? super LookupElement> buffer) {
         buffer.add(LookupElementBuilder.create((PsiNamedElement)element));
+    }
+
+    public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+        throw new IncorrectOperationException();
     }
 }

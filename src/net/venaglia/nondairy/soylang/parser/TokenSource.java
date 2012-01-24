@@ -20,6 +20,7 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.i18n.I18N;
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,7 +30,7 @@ import org.jetbrains.annotations.NonNls;
  */
 public abstract class TokenSource {
 
-    public void fastForward(IElementType endToken, IElementType markerType) {
+    public void fastForward(IElementType endToken, @Nullable IElementType markerType) {
         PsiBuilder.Marker errorMarker = markerType == null ? null : mark("errorMarker");
         while (!eof()) {
             IElementType token = token();
@@ -73,5 +74,23 @@ public abstract class TokenSource {
 
     public void errorBadToken() {
         error(I18N.msg("lexer.error.unexpected.token", token()));
+    }
+    
+    public interface Symbol {
+
+        @NonNls
+        static final String FORMAT_TO_STRING = "%s [line:%d|col:%d] <%s>";
+        
+        int getLine();
+
+        int getColumn();
+
+        int getLength();
+
+        @Nullable IElementType getToken();
+
+        @Nullable String getText();
+        
+        String toString();
     }
 }

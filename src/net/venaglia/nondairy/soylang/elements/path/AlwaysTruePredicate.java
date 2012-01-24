@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,13 +21,19 @@ import com.intellij.psi.PsiElement;
 /**
  * Created by IntelliJ IDEA.
  * User: ed
- * Date: Aug 26, 2010
- * Time: 7:29:49 AM
+ * Date: 1/22/12
+ * Time: 10:48 AM
  *
- * ElementPredicate implementations are used to filter elements when traversing
- * the AST.
-*/
-public interface ElementPredicate {
+ * A predicate that matches all elements
+ */
+public class AlwaysTruePredicate extends AbstractElementPredicate {
 
-    boolean test(PsiElement element);
+    public static final AlwaysTruePredicate INSTACE = new AlwaysTruePredicate();
+
+    private AlwaysTruePredicate() { }
+
+    @Override
+    public boolean test(PsiElement element) {
+        return true;
+    }
 }

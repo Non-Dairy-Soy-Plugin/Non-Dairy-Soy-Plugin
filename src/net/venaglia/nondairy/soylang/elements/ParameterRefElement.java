@@ -19,10 +19,10 @@ package net.venaglia.nondairy.soylang.elements;
 import static net.venaglia.nondairy.soylang.SoyElement.*;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReference;
+import net.venaglia.nondairy.soylang.elements.path.AlwaysTruePredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
@@ -34,20 +34,16 @@ import org.jetbrains.annotations.NotNull;
  * Date: Aug 24, 2010
  * Time: 5:24:32 PM
  */
-public class ParameterRefElement extends SoyASTElement implements PsiNamedElement {
+public class ParameterRefElement extends ParameterElement {
 
     public static final PsiElementPath PATH_TO_PARAMETER_DEF =
                     new PsiElementPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
-                                new ElementTypePredicate(doc_comment).onChildren(),
-                                new ElementTypePredicate(doc_comment_param).onChildren())
-                .or(new PsiElementPath(new ElementTypePredicate(iterator_tag_pair).onAncestors(),
-                                new ElementTypePredicate(iterator_tag).onChildren(),
-                                new ElementTypePredicate(tag_between_braces).onChildren(),
-                                new ElementTypePredicate(parameter_def).onChildren())
-           .exclude(new PsiElementPath(new ElementTypePredicate(tag_between_braces).onFirstAncestor(),
-                                new ElementTypePredicate(iterator_tag).onParent(),
-                                new ElementTypePredicate(tag_between_braces).onChildren(),
-                                new ElementTypePredicate(parameter_def).onChildren())));
+                                       new ElementTypePredicate(doc_comment).onChildren(),
+                                       new ElementTypePredicate(doc_comment_param).onChildren())
+                .or(new PsiElementPath(AlwaysTruePredicate.INSTACE.onAncestors(),
+                                       new ElementTypePredicate(iterator_tag).onPreviousSiblings(true),
+                                       new ElementTypePredicate(tag_between_braces).onChildren(),
+                                       new ElementTypePredicate(parameter_def).onChildren()));
 
     private final ElementPredicate parameterNamePredicate;
 
@@ -67,15 +63,6 @@ public class ParameterRefElement extends SoyASTElement implements PsiNamedElemen
 
     @Override
     public PsiReference getReference() {
-        int prefix = getText().startsWith("$") ? 1 : 0;
-        TextRange textRange = TextRange.from(prefix, getTextLength() - prefix);
-        return new SoyASTElementReference(PATH_TO_PARAMETER_DEF, parameterNamePredicate, textRange);
-    }
-
-    @Override
-    @NotNull
-    public String getName() {
-        String name = getText();
-        return name.startsWith("$") ? name.substring(1) : name;
+        return new SoyASTElementReference(this, PATH_TO_PARAMETER_DEF, parameterNamePredicate);
     }
 }

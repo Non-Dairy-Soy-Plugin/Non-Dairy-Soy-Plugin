@@ -18,10 +18,7 @@ package net.venaglia.nondairy.soylang.structure;
 
 import com.intellij.ide.structureView.StructureViewTreeElement;
 import com.intellij.ide.structureView.impl.common.PsiTreeElementBase;
-import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.soylang.elements.LocalTemplateNameDef;
-import net.venaglia.nondairy.soylang.elements.ParameterDefElement;
-import net.venaglia.nondairy.soylang.elements.path.PsiElementMapper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -42,14 +39,7 @@ public class SoyTemplateTreeElement extends PsiTreeElementBase<LocalTemplateName
     @NotNull
     @Override
     public Collection<StructureViewTreeElement> getChildrenBase() {
-        LocalTemplateNameDef templateNameDef = getElement();
-        if (templateNameDef == null) return Collections.emptySet();
-        return templateNameDef.getParameterDeclarations().map(new PsiElementMapper<StructureViewTreeElement>() {
-            @Override
-            public StructureViewTreeElement map(PsiElement element) {
-                return new SoyTemplateParameterTreeElement((ParameterDefElement)element);
-            }
-        });
+        return Collections.emptySet();
     }
 
     @Override

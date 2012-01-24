@@ -20,6 +20,7 @@ import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.soylang.lexer.cupparser.SoyParserSymbols;
 import java_cup.runtime.Scanner;
 import java_cup.runtime.Symbol;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -44,6 +45,7 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
         inputTokensToSkip.add(SoyToken.WHITESPACE);
         inputTokensToSkip.add(SoyToken.DOC_COMMENT_WHITESPACE);
         inputTokensToSkip.add(SoyToken.COMMENT);
+        inputTokensToSkip.add(SoyToken.LINE_COMMENT);
         inputTokensToSkip.add(SoyToken.IGNORED_TEXT);
         INPUT_TOKENS_TO_SKIP = Collections.unmodifiableSet(inputTokensToSkip);
     }
@@ -56,7 +58,7 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
         this(null);
     }
 
-    public TestableSoyScanner(SoyToken dummyTokenForNonSoyTokens) {
+    public TestableSoyScanner(@Nullable SoyToken dummyTokenForNonSoyTokens) {
         this.dummyTokenForNonSoyTokens = dummyTokenForNonSoyTokens;
     }
 

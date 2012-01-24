@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,20 +14,23 @@
  *    limitations under the License.
  */
 
-package net.venaglia.nondairy.soylang.elements.path;
+package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.psi.PsiElement;
 
 /**
  * Created by IntelliJ IDEA.
  * User: ed
- * Date: Aug 26, 2010
- * Time: 7:29:49 AM
+ * Date: 1/17/12
+ * Time: 8:00 PM
  *
- * ElementPredicate implementations are used to filter elements when traversing
- * the AST.
-*/
-public interface ElementPredicate {
+ * An interface that represents a PsiElement that is built when the tree is
+ * parsed, but needs further processing before being added to the tree.
+ */
+public interface IntermediateElement extends PsiElement {
 
-    boolean test(PsiElement element);
+    /**
+     * @return The final element that should be inserted into the tree.
+     */
+    PsiElement resolveFinalElement();
 }

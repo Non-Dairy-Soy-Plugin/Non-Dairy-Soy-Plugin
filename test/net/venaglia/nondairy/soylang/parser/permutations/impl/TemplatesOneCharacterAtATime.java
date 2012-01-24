@@ -28,7 +28,6 @@ import java.util.List;
  * User: ed
  * Date: 8/9/11
  * Time: 5:32 PM
- * To change this template use File | Settings | File Templates.
  */
 public class TemplatesOneCharacterAtATime extends CharacterOmittingPermutator {
 
@@ -45,7 +44,7 @@ public class TemplatesOneCharacterAtATime extends CharacterOmittingPermutator {
         endTemplate = findLastOf(allSymbols, endTemplate, 1, TEMPLATE, TAG_RBRACE, TAG_END_RBRACE);
         startTemplate = findLastOf(allSymbols, startTemplate, -1, TEMPLATE, TAG_LBRACE);
         endTemplate = findLastOf(allSymbols, endTemplate, 1, TEMPLATE, TAG_RBRACE, TAG_END_RBRACE);
-        int beginDoc = findNextOf(allSymbols, startTemplate, -1, DOC_COMMENT);
+        int beginDoc = findNextOf(allSymbols, startTemplate, -1, DOC_COMMENT_BEGIN, DOC_COMMENT);
         if (beginDoc >= 0) {
             int endDoc = findLastOf(allSymbols, beginDoc, 1, DOC_COMMENT_TOKENS.getTypes()) - 1;
             beginDoc = findLastOf(allSymbols, beginDoc, -1, DOC_COMMENT_TOKENS.getTypes());

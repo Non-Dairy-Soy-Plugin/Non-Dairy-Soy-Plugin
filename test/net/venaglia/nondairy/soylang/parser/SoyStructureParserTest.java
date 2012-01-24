@@ -56,9 +56,8 @@ public class SoyStructureParserTest extends BaseParserTest {
     }
 
     @Test
-    public void testJiveSources() throws Exception {
-        testNoErrorsImpl("grouped_external.soy");
-        testNoErrorsImpl("oauth.soy");
+    public void testDelegates() throws Exception {
+        testNoErrorsImpl("delegates.soy");
     }
 
     @Test
@@ -69,7 +68,7 @@ public class SoyStructureParserTest extends BaseParserTest {
     @Test
     public void testInMultipleThreads() throws Exception {
         @NonNls
-        String[] sources = {"example.soy","features.soy","edge-cases.soy","grouped_external.soy","oauth.soy"};
+        String[] sources = {"example.soy","features.soy","edge-cases.soy", "example.soy","features.soy","edge-cases.soy"};
         SoyTestRunner[] threads = new SoyTestRunner[sources.length];
         for (int i = 0; i < threads.length; i++) {
             @NonNls String threadNameFormat = "soy test %d: %s";

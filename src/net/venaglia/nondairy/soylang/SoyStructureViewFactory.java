@@ -40,7 +40,9 @@ public class SoyStructureViewFactory implements PsiStructureViewFactory {
     @Nullable
     public StructureViewBuilder getStructureViewBuilder(final PsiFile psiFile) {
         ASTNode node = psiFile.getNode();
-        if (node == null || node.getElementType() != SoyFileType.FILE) return null;
+        if (node == null || node.getElementType() != SoyFileType.FILE || !(psiFile instanceof SoyFile)) {
+            return null;
+        }
         return new TreeBasedStructureViewBuilder() {
             @NotNull
             @Override
@@ -49,7 +51,7 @@ public class SoyStructureViewFactory implements PsiStructureViewFactory {
                     @NotNull
                     @Override
                     public StructureViewTreeElement getRoot() {
-                        return new SoyRootTreeElement((SoyFile)getPsiFile());
+                        return new SoyRootTreeElement((SoyFile)psiFile);
                     }
                 };
             }
