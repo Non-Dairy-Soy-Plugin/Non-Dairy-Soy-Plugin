@@ -9,8 +9,7 @@ necessary to add or revise something.
  * Enhance the usability and maintainability of soy files
  * Leverage the most powerful features of IntelliJ IDEA to promote a superior
    developer experience
- * I18N support from day one; hopefully with language additions available
-   before beta release
+ * I18N support (still looking for translators)
  * Automated tests designed to ensure a quality release every time
 
 == FAQ ==
