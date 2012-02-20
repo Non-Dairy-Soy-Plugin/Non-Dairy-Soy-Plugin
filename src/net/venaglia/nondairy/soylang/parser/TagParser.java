@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -245,7 +245,11 @@ class TagParser {
                     beginValue.done(expression);
                 }
                 beginAttribute.done(attribute);
-                source.advanceAndMarkBad(unexpected_symbol, "unexpected_symbol");
+                if (token == SoyToken.UNTERMINATED_STRING_LITERAL) {
+                    source.advanceAndMarkBad(expression_error, "unterminated_string_literal", I18N.msg("syntax.error.unterminated.string.literal"));
+                } else {
+                    source.advanceAndMarkBad(unexpected_symbol, "unexpected_symbol");
+                }
                 return;
             } else {
                 if (beginValueInner == null) {
@@ -433,6 +437,7 @@ class TagParser {
                 nowExpect(TagDataType.EXPRESSION, TagDataType.DIRECTIVES);
                 source.advance();
             } else if (token == SoyToken.CSS) {
+                nowExpect(TagDataType.EXPRESSION, TagDataType.DIRECTIVES);
                 source.advanceAndMark(command_keyword, "command_keyword");
             } else if (SoyToken.NON_TAG_TOKENS.contains(token)) {
                 source.advanceAndMarkBad(invalid_text, "invalid_text");

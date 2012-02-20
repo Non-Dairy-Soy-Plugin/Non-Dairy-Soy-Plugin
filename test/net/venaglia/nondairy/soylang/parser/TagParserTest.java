@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -260,6 +260,16 @@ public class TagParserTest extends BaseParserTest {
     @Test
     public void testUnclosedTagPair() throws Exception {
         testParseSequence("{template .foo}", "YYINITIAL", null);
+    }
+
+    @Test
+    public void testTagCloseInAttributeValue() throws Exception {
+        testParseSequence("{template private=\"true}", "YYINITIAL", null);
+    }
+
+    @Test
+    public void testTagCloseInStringLiteral() throws Exception {
+        testParseSequence("{length($list) == 1 ? 'item' : 'items}", "HTML_INITIAL", null);
     }
 
 }

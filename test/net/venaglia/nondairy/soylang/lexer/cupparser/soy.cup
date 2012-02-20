@@ -1,5 +1,5 @@
 /*
-   Copyright 2010 Ed Venaglia
+   Copyright 2010 - 2012 Ed Venaglia
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -88,7 +88,8 @@ terminal SoySymbol                     EQ, EQEQ, GT, LT, NOT, AND, OR, QUESTION,
 terminal SoySymbol                     MINUS, MULT, DIV, MOD, PIPE, DOT, COMMA;
 
 // errors
-terminal SoySymbol           DUPLICATE_DELPACKAGE_DECLARATION, DUPLICATE_NAMESPACE_DECLARATION, BAD_STRING_ESCAPE;
+terminal SoySymbol           DUPLICATE_DELPACKAGE_DECLARATION, DUPLICATE_NAMESPACE_DECLARATION;
+terminal SoySymbol           BAD_STRING_ESCAPE, BRACE_IN_STRING;
 terminal SoySymbol           UNTERMINATED_STRING_LITERAL, UNTERMINATED_TEMPLATE;
 terminal SoySymbol           LBRACE_ERROR, RBRACE_ERROR, ILLEGAL_TAG_DECLARATION, ILLEGAL_CLOSE_TAG;
 terminal SoySymbol           UNEXPECTED_EOF_IN_LITERAL_BLOCK, UNEXPECTED_EOF_IN_TAG_DECLARATION;
@@ -637,10 +638,14 @@ string_literal_buf ::= string_literal_buf:buf STRING_LITERAL:s
                        {: buf.append(s); RESULT = buf; :}
                    |   string_literal_buf:buf STRING_LITERAL_ESCAPE:s
                        {: buf.append(s); RESULT = buf; :}
+                   |   string_literal_buf:buf BRACE_IN_STRING:s
+                       {: buf.append(s); RESULT = buf; :}
                    |   STRING_LITERAL:s
                        {: RESULT = new StringBuilder(s); :}
                    |   STRING_LITERAL_ESCAPE:s
                        {: RESULT = new StringBuilder(s); :}
+                   |   BRACE_IN_STRING:s
+                       {: RESULT = new StringBuilder("{"); :}
                    ;
 
 binary_operator    ::= PLUS

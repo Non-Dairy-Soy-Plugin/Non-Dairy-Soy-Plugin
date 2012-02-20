@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
+ * IntelliJ syntax highlighter implementation for soy files.
  */
 public class SoySyntaxHighlighter extends SyntaxHighlighterBase {
 
@@ -108,6 +108,7 @@ public class SoySyntaxHighlighter extends SyntaxHighlighterBase {
         keys2.put(SoyToken.DOC_COMMENT_IDENTIFIER, SOY_DOC_COMMENT_IDENTIFIER);
         keys2.put(SoyToken.STRING_PARAMETER_REF, SOY_TEMPLATE_PARAMETER);
         keys2.put(SoyToken.BAD_STRING_ESCAPE, SOY_BAD_STRING_ESCAPE);
+        keys2.put(SoyToken.BRACE_IN_STRING, SOY_BAD_STRING_ESCAPE);
     }
 
     @NotNull

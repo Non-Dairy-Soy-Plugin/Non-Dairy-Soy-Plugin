@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,18 +18,17 @@ package net.venaglia.nondairy;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
-import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.psi.ElementManipulators;
-import net.venaglia.nondairy.soylang.SoyFileType;
-import net.venaglia.nondairy.soylang.elements.SoyASTElement;
+import net.venaglia.nondairy.soylang.elements.SoyPsiElement;
 import net.venaglia.nondairy.soylang.elements.SoyElementManipulator;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 6, 2010
  * Time: 8:49:36 PM
+ *
+ * IntelliJ plugin main class for the Non-Dairy Soy Plugin
  */
 public class NonDairyMain implements ApplicationComponent {
 
@@ -39,8 +38,7 @@ public class NonDairyMain implements ApplicationComponent {
     public void initComponent() {
         ApplicationManager.getApplication().runWriteAction(new Runnable() {
             public void run() {
-                FileTypeManager.getInstance().registerFileType(SoyFileType.INSTANCE, "soy");
-                ElementManipulators.INSTANCE.addExplicitExtension(SoyASTElement.class, new SoyElementManipulator());
+                ElementManipulators.INSTANCE.addExplicitExtension(SoyPsiElement.class, new SoyElementManipulator());
             }
         });
     }
@@ -53,5 +51,4 @@ public class NonDairyMain implements ApplicationComponent {
     public String getComponentName() {
         return "NonDairySoyPlugin";
     }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,13 +23,21 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 15, 2010
  * Time: 7:37:31 PM
+ *
+ * Abstraction class to facilitate unit testing and simplify common operations
+ * in the parser classes.
  */
 public abstract class TokenSource {
 
+    /**
+     * Shortcut to skip past elements until the specified end token is reached.
+     * @param endToken the token to stop at.
+     * @param markerType an optional marker to wrap the skipped sequence with,
+     *     typically an error marker.
+     */
     public void fastForward(IElementType endToken, @Nullable IElementType markerType) {
         PsiBuilder.Marker errorMarker = markerType == null ? null : mark("errorMarker");
         while (!eof()) {
@@ -40,22 +48,52 @@ public abstract class TokenSource {
         if (errorMarker != null) errorMarker.done(markerType);
     }
 
+    /**
+     * Inserts a new marker immediately after the current token.
+     * @param name An object that can be used for debugging purposes. This
+     *     object's toString() value will be included in debugging output.
+     * @return the marker object to be closed or discarded later by the parser.
+     */
     public abstract PsiBuilder.Marker mark(@NonNls Object name);
 
+    /**
+     * @return the type of the current token.
+     */
     public abstract IElementType token();
 
+    /**
+     * @return The string that the current token was generated from.
+     */
     public abstract String text();
 
+    /**
+     * @return true if this token source has reached the end of the file.
+     */
     public abstract boolean eof();
 
+    /**
+     * Advances to the next token.
+     */
     public abstract void advance();
 
+    /**
+     * Shortcut to skip over the current element and mark it with the specified
+     * IElementType.
+     * @param type The type to mark the current element with.
+     * @param name The name to mark this element with, used for debugging.
+     */
     public void advanceAndMark(IElementType type, @NonNls Object name) {
         PsiBuilder.Marker marker = mark(name);
         advance();
         marker.done(type);
     }
 
+    /**
+     * Shortcut to skip over the current element and mark it with an error with
+     * the specified IElementType.
+     * @param type The type to mark the current element with.
+     * @param name The name to mark this element with, used for debugging.
+     */
     public void advanceAndMarkBad(IElementType type, @NonNls Object name) {
         PsiBuilder.Marker marker = mark(name);
         errorBadToken();
@@ -63,6 +101,13 @@ public abstract class TokenSource {
         marker.done(type);
     }
 
+    /**
+     * Shortcut to skip over the current element and mark it with an error with
+     * the specified IElementType.
+     * @param type The type to mark the current element with.
+     * @param name The name to mark this element with, used for debugging.
+     * @param message The error message to associate with the current element.
+     */
     public void advanceAndMarkBad(IElementType type, @NonNls Object name, String message) {
         PsiBuilder.Marker marker = mark(name);
         error(message);
@@ -70,27 +115,18 @@ public abstract class TokenSource {
         marker.done(type);
     }
 
+    /**
+     * Marks the most recently created marker, that is not yet marked done, as
+     * an error, with the specified message.
+     * @param message The error message to associate with recent marker.
+     */
     public abstract void error(String message);
 
+    /**
+     * Shortcut to mark the most recently created marker, that is not yet
+     * marked done, as an error, with a default message.
+     */
     public void errorBadToken() {
         error(I18N.msg("lexer.error.unexpected.token", token()));
-    }
-    
-    public interface Symbol {
-
-        @NonNls
-        static final String FORMAT_TO_STRING = "%s [line:%d|col:%d] <%s>";
-        
-        int getLine();
-
-        int getColumn();
-
-        int getLength();
-
-        @Nullable IElementType getToken();
-
-        @Nullable String getText();
-        
-        String toString();
     }
 }

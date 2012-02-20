@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,11 +20,13 @@ import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 
 /**
-* Created by IntelliJ IDEA.
-* User: ed
-* Date: Aug 26, 2010
-* Time: 7:30:13 AM
-*/
+ * User: ed
+ * Date: Aug 26, 2010
+ * Time: 7:30:13 AM
+ *
+ * An ElementPredicate that matches soy tags based on their Java class
+ * hierarchy.
+ */
 public class ElementClassPredicate extends AbstractElementPredicate {
 
     private final Class<? extends PsiElement> type;

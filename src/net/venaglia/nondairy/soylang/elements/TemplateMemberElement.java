@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,41 +18,29 @@ package net.venaglia.nondairy.soylang.elements;
 
 import static net.venaglia.nondairy.soylang.SoyElement.*;
 
-import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: 1/17/12
  * Time: 8:31 AM
+ *
+ * Interface to be implemented by SoyPsiElements that live within a soy
+ * template.
  */
-public interface TemplateMemberElement {
+public interface TemplateMemberElement extends NamespaceMemberElement {
 
     static final PsiElementPath PATH_TO_CONTAINING_TEMPLATE_NAME =
             new PsiElementPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
-                               new ElementTypePredicate(template_tag).onChildren(),
-                               new ElementTypePredicate(tag_between_braces).onChildren(),
-                               new ElementTypePredicate(template_name).onChildren());
-
-    static final PsiElementPath PATH_TO_NAMESPACE_NAME =
-            new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
-                               new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
-                               new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                               new ElementTypePredicate(SoyElement.namespace_name).onChildren());
+                               new ElementTypePredicate(template_tag_pair).onChildren(),
+                               new ElementTypePredicate(template_tag).onChildren())
+                    .debug("path_to_containing_template_name");
 
     /**
      * @return The fully qualified name of this template
      */
     @Nullable
     String getTemplateName();
-
-    /**
-     * @return The fully qualified name of the namespace in which the template
-     *     is defined.
-     */
-    @Nullable
-    String getNamespace();
 }

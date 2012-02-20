@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,11 +27,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
-* Created by IntelliJ IDEA.
-* User: ed
-* Date: Aug 26, 2010
-* Time: 7:30:25 AM
-*/
+ * User: ed
+ * Date: Aug 26, 2010
+ * Time: 7:30:25 AM
+ *
+ * An ElementPredicate that matches soy tags based on the {@link IElementType}
+ * of the underlying {@link ASTNode}.
+ */
 public class ElementTypePredicate extends AbstractElementPredicate {
 
     private final Set<IElementType> types;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,16 +27,17 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
-import net.venaglia.nondairy.soylang.elements.factory.SoyASTElementFactory;
+import net.venaglia.nondairy.soylang.elements.factory.SoyPsiElementFactory;
 import net.venaglia.nondairy.soylang.lexer.SoyLexer;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 31, 2010
  * Time: 9:39:00 PM
+ *
+ * IntelliJ parser definition for closure templates.
  */
 public class SoyParserDefinition implements ParserDefinition {
 
@@ -70,7 +71,7 @@ public class SoyParserDefinition implements ParserDefinition {
 
     @NotNull
     public PsiElement createElement(ASTNode node) {
-        return SoyASTElementFactory.createFor(node);
+        return SoyPsiElementFactory.getInstance().create(node);
     }
 
     public PsiFile createFile(FileViewProvider viewProvider) {

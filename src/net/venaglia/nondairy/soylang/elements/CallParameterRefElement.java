@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,47 +21,61 @@ import static net.venaglia.nondairy.soylang.SoyElement.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.util.IncorrectOperationException;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.NamePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
-import net.venaglia.nondairy.soylang.elements.path.TemplateNamePredicate;
+import net.venaglia.nondairy.soylang.elements.path.TemplatePath;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 24, 2010
  * Time: 5:24:32 PM
+ *
+ * SoyPsiElement that represents a parameter reference within a soy param tag.
  */
 public class CallParameterRefElement extends ParameterElement {
+
+    private static final BindHandler BIND_HANDLER = new BindHandler() {
+        @Override
+        public PsiElement bind(PsiElement ref, PsiElement def) throws IncorrectOperationException {
+            if (ref instanceof CallParameterRefElement && def instanceof ParameterDefElement) {
+                ((CallParameterRefElement)ref).setName(((ParameterDefElement)def).getName());
+            }
+            throw new IncorrectOperationException();
+        }
+    };
 
     private static final PsiElementPath PATH_TO_INVOKED_TEMPLATE_NAME =
                     new PsiElementPath(new ElementTypePredicate(param_tag).onFirstAncestor(),
                                        new ElementTypePredicate(call_tag).onPreviousSiblings(false),
                                        new ElementTypePredicate(tag_between_braces).onChildren(),
-                                       new ElementTypePredicate(template_name_ref, template_name_ref_absolute).onChildren());
+                                       new ElementTypePredicate(template_name_ref, template_name_ref_absolute).onChildren())
+            .debug("path_to_invoked_template_name");
 
-    private final ElementPredicate parameterNamePredicate;
 
     public CallParameterRefElement(@NotNull ASTNode node) {
         super(node);
-        parameterNamePredicate = new NamePredicate(getName());
     }
 
     @Override
     public PsiReference getReference() {
-        final String myTemplateName = getTemplateName();
-        if (myTemplateName == null) {
-            // this call either points outside this file, or a template name is not specified
-            return null;
+        PsiElement element = PATH_TO_INVOKED_TEMPLATE_NAME.navigate(this).oneOrNull();
+        if (element instanceof TemplateMemberElement) {
+            String myTemplateName = ((TemplateMemberElement)element).getTemplateName();
+            if (myTemplateName != null) {
+                ElementPredicate parameterNamePredicate = new NamePredicate(getName());
+                PsiElementPath pathToTemplateParameters =
+                        TemplatePath.forTemplateName(myTemplateName)
+                                    .debug("for_template_name!call")
+                                    .append(ParameterRefElement.PATH_TO_PARAMETER_DEF)
+                                    .debug("path_to_template_params");
+                return new SoyPsiElementReference(this, pathToTemplateParameters, parameterNamePredicate).bound(BIND_HANDLER);
+            }
         }
-
-        ElementPredicate templateNamePredicate = new TemplateNamePredicate(myTemplateName);
-        PsiElementPath pathToTemplateParameters =
-                LocalTemplateNameRef.PATH_TO_TEMPLATE_NAMES.append(templateNamePredicate)
-                                                           .append(ParameterRefElement.PATH_TO_PARAMETER_DEF);
-        return new SoyASTElementReference(this, pathToTemplateParameters, parameterNamePredicate);
+        return null;
     }
 
     @Override
@@ -81,5 +95,4 @@ public class CallParameterRefElement extends ParameterElement {
         }
         return null;
     }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
@@ -31,24 +30,24 @@ import com.intellij.psi.impl.source.tree.LazyParseableElement;
 import com.intellij.util.IncorrectOperationException;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.SoyLanguage;
+import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: 1/17/12
  * Time: 7:31 PM
+ *
+ * SoyPsiElement that represents a function invocation within a soy expression.
  */
-public class FunctionCallElement extends SoyASTElement implements PsiNamedElement, ItemPresentation {
+public class FunctionCallRefElement extends SoyPsiElement implements PsiNamedElement, ItemPresentation {
 
-    public static final Icon SOY_FUNCTION_ICON = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy-function.png");
+    private FunctionCallRefElement.FunctionElementReference functionElementReference;
 
-    private FunctionCallElement.FunctionElementReference functionElementReference;
-
-    public FunctionCallElement(@NotNull ASTNode node) {
+    public FunctionCallRefElement(@NotNull ASTNode node) {
         super(node);
     }
 
@@ -84,20 +83,24 @@ public class FunctionCallElement extends SoyASTElement implements PsiNamedElemen
 
     @Override
     public Icon getIcon(boolean open) {
-        return SOY_FUNCTION_ICON;
+        return SoyIcons.FUNCTION;
     }
 
+    /**
+     * Custom reference object that resolves to a dummy psi element for the
+     * encapsulating FunctionCallRefElement.
+     */
     // someday this could find the Java class that implements SoyFunction
-    private class FunctionElementReference extends SoyASTElementReference {
+    private class FunctionElementReference extends SoyPsiElementReference {
 
         private final String functionName;
         private final FunctionDefElement element;
 
         public FunctionElementReference() {
-            super(FunctionCallElement.this);
-            functionName = FunctionCallElement.this.getText();
+            super(FunctionCallRefElement.this);
+            functionName = FunctionCallRefElement.this.getText();
             element = new FunctionDefElement(functionName);
-            new DummyHolder(FunctionCallElement.this.getManager(),
+            new DummyHolder(FunctionCallRefElement.this.getManager(),
                             new DummyHolderElement(functionName),
                             null,
                             IdentityCharTable.INSTANCE,
@@ -113,7 +116,7 @@ public class FunctionCallElement extends SoyASTElement implements PsiNamedElemen
         @Override
         public boolean isReferenceTo(PsiElement element) {
             return (element instanceof FunctionDefElement ||
-                    element instanceof FunctionCallElement) &&
+                    element instanceof FunctionCallRefElement) &&
                    functionName.equals(element.getText());
         }
 
@@ -123,7 +126,11 @@ public class FunctionCallElement extends SoyASTElement implements PsiNamedElemen
         }
     }
 
-    private static class FunctionDefElement extends SoyASTElement implements ItemPresentation {
+    /**
+     * A dummy PsiElement to act as a surrogate reference for
+     * FunctionCallRefElement objects.
+     */
+    private static class FunctionDefElement extends SoyPsiElement implements ItemPresentation {
 
         private final String name;
 
@@ -149,7 +156,7 @@ public class FunctionCallElement extends SoyASTElement implements PsiNamedElemen
 
         @Override
         public Icon getIcon(boolean open) {
-            return SOY_FUNCTION_ICON;
+            return SoyIcons.FUNCTION;
         }
 
         @Override

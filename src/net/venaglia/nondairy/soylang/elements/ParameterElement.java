@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,19 +20,22 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNamedElement;
 import com.intellij.util.IncorrectOperationException;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: 1/17/12
  * Time: 6:06 PM
+ *
+ * Common base class for SoyPsiElement implementations that represent template
+ * parameters.
  */
-public abstract class ParameterElement extends SoyASTElement implements PsiNamedElement, TemplateMemberElement {
+public abstract class ParameterElement
+        extends SoyPsiElement
+        implements SoyNamedElement, TemplateMemberElement {
 
     protected ParameterElement(@NotNull ASTNode node) {
         super(node);
@@ -55,20 +58,18 @@ public abstract class ParameterElement extends SoyASTElement implements PsiNamed
     }
 
     @Override
-    public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-        return setName(newElementName);
+    public String getCanonicalName() {
+        String tn = getTemplateName();
+        return (tn == null ? "" : tn) + "$" + getName();
     }
 
     @Override
     public String getTemplateName() {
-        PsiElementCollection callTo = PATH_TO_CONTAINING_TEMPLATE_NAME.navigate(this);
-        LocalTemplateNameRef localTemplateNameRef = (LocalTemplateNameRef)callTo.oneOrNull();
-        if (localTemplateNameRef == null) {
-            return null;
+        PsiElement element = PATH_TO_CONTAINING_TEMPLATE_NAME.navigate(this).oneOrNull();
+        if (element instanceof TemplateMemberElement) {
+            return ((TemplateMemberElement)element).getTemplateName();
         }
-        String localName = localTemplateNameRef.getName();
-        String namespace = getNamespace();
-        return (namespace == null) ? localName : namespace + "." + localName;
+        return null;
     }
 
     @Override

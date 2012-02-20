@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,10 +23,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Pattern;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 26, 2010
  * Time: 7:30:25 AM
+ *
+ * An ElementPredicate that matches soy tags based on their contained text.
  */
 public class ElementTextPredicate extends AbstractElementPredicate {
 

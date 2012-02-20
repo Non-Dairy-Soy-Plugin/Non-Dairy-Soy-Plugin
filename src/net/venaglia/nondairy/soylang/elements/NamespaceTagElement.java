@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,19 +17,41 @@
 package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
+import net.venaglia.nondairy.soylang.SoyElement;
+import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 24, 2010
  * Time: 5:24:32 PM
+ *
+ * SoyPsiElement that represents the namespace soy tag.
  */
-public class NamespaceTagElement extends SoyASTElement {
+public class NamespaceTagElement extends SoyCommandTag implements NamespaceMemberElement {
 
+    private static final PsiElementPath PATH_TO_NAMESPACE_NAME = new PsiElementPath(
+            new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+            new ElementTypePredicate(SoyElement.namespace_name).onChildren()
+    ).debug("path_to_namespace_name");
+    
     public NamespaceTagElement(@NotNull ASTNode node) {
         super(node);
     }
 
-
+    /**
+     * @return The fully qualified name of the namespace
+     */
+    @Override
+    @Nullable
+    public String getNamespace() {
+        PsiElement element = PATH_TO_NAMESPACE_NAME.navigate(this).oneOrNull();
+        if (element instanceof NamespaceDefElement) {
+            return ((NamespaceDefElement)element).getName();
+        }
+        return null;
+    }
 }

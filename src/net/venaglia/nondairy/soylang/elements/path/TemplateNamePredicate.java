@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,12 +21,13 @@ import net.venaglia.nondairy.soylang.elements.TemplateMemberElement;
 import org.jetbrains.annotations.NotNull;
 
 /**
-* Created by IntelliJ IDEA.
-* User: ed
-* Date: 1/23/12
-* Time: 5:20 PM
-* To change this template use File | Settings | File Templates.
-*/
+ * User: ed
+ * Date: 1/23/12
+ * Time: 5:20 PM
+ *
+ * An ElementPredicate that matches soy tags that implement
+ * {@link TemplateMemberElement} and have a particular template name.
+ */
 public class TemplateNamePredicate extends AbstractElementPredicate {
 
     private final String myTemplateName;

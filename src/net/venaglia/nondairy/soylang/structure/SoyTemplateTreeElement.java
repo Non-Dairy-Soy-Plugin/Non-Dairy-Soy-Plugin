@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,10 +25,11 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 27, 2010
  * Time: 7:24:10 PM
+ *
+ * Structure tree element for template definitions.
  */
 public class SoyTemplateTreeElement extends PsiTreeElementBase<LocalTemplateNameDef> {
 

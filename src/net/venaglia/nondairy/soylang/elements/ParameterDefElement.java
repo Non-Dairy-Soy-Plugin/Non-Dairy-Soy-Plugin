@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,30 +18,25 @@ package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
-import com.intellij.openapi.util.IconLoader;
-import com.intellij.psi.PsiReference;
 import net.venaglia.nondairy.soylang.SoyElement;
+import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 24, 2010
  * Time: 5:24:32 PM
+ *
+ * SoyPsiElement that represents a template parameter definition in the soy doc
+ * that precedes a soy template definition. This element may also represent the
+ * parameter declaration in a for or foreach soy tag.
  */
 public class ParameterDefElement extends ParameterElement implements ItemPresentation {
 
-    public static final Icon SOY_PARAM_ICON = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy-param.png");
-
     public ParameterDefElement(@NotNull ASTNode node) {
         super(node);
-    }
-
-    @Override
-    public PsiReference getReference() {
-        return new SoyASTElementReference(this);
     }
 
     @Override
@@ -56,6 +51,11 @@ public class ParameterDefElement extends ParameterElement implements ItemPresent
 
     @Override
     public Icon getIcon(boolean open) {
-        return getNode().getElementType() == SoyElement.doc_comment_param ? SOY_PARAM_ICON : null;
+        return getNode().getElementType() == SoyElement.doc_comment_param ? SoyIcons.PARAMETER : null;
+    }
+
+    @Override
+    public boolean isDefinitionElement() {
+        return true;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,68 +20,61 @@ import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilder;
 import com.intellij.lang.folding.FoldingDescriptor;
 import com.intellij.openapi.editor.Document;
-import com.intellij.psi.tree.TokenSet;
+import com.intellij.psi.PsiElement;
+import net.venaglia.nondairy.soylang.elements.SoyCommandTag;
+import net.venaglia.nondairy.soylang.elements.path.CommandBoundaryPredicate;
+import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 27, 2010
  * Time: 7:52:00 AM
+ *
+ * Class to build FoldingDescriptor objects for the soy psi tree.
  */
 public class SoyFoldingBuilder implements FoldingBuilder {
 
     public static final FoldingDescriptor[] EMPTY = new FoldingDescriptor[0];
 
-    private static final TokenSet SEARCH_FOR = TokenSet.create(SoyFileType.FILE,
-                                                               SoyElement.soy_file,
-                                                               SoyElement.tag_and_doc_comment,
-                                                               SoyElement.template_tag_pair);
+    private static final PsiElementPath PATH_TO_FOLDING_REGIONS =
+            new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                               new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
+                               new ElementTypePredicate(SoyElement.template_tag_pair).onChildren()).debug("path_to_folding_regions");
+    private static final PsiElementPath PATH_TO_PLACEHOLDER_LABEL =
+            new PsiElementPath(new ElementTypePredicate(SoyElement.template_tag).onChildren(),
+                               new CommandBoundaryPredicate(SoyCommandTag.Boundary.BEGIN)).debug("path_to_placeholder_label");
 
     @NotNull
     @Override
     public FoldingDescriptor[] buildFoldRegions(@NotNull ASTNode node, @NotNull Document document) {
-        Collection<ASTNode> nodes = Collections.singleton(node);
-        for (int i = 0; i < 4; ++i) {
-            nodes = childrenOf(nodes, SEARCH_FOR);
+        PsiElementCollection elements = PATH_TO_FOLDING_REGIONS.navigate(node.getPsi());
+        if (elements.isEmpty()) {
+            return EMPTY;
         }
-        nodes = childrenOf(nodes, TokenSet.create(SoyElement.template_tag_pair));
-        if (!nodes.isEmpty()) {
-            FoldingDescriptor[] descriptors = new FoldingDescriptor[nodes.size()];
-            int i = 0;
-            for (ASTNode astNode : nodes) {
-                descriptors[i++] = new FoldingDescriptor(astNode, astNode.getTextRange());
-            }
-            return descriptors;
+        FoldingDescriptor[] descriptors = new FoldingDescriptor[elements.size()];
+        int i = 0;
+        for (PsiElement element : elements) {
+            descriptors[i++] = new FoldingDescriptor(element.getNode(), element.getTextRange());
         }
-        return EMPTY;
-    }
-
-    private Collection<ASTNode> childrenOf(@NotNull Collection<ASTNode> nodes,
-                                           @NotNull TokenSet filter) {
-        if (nodes.isEmpty()) return nodes;
-        Collection<ASTNode> buffer = new LinkedList<ASTNode>();
-        for (ASTNode node : nodes) {
-            if (filter.contains(node.getElementType())) buffer.add(node);
-            buffer.addAll(Arrays.asList(node.getChildren(filter)));
-        }
-        return buffer.isEmpty() ? Collections.<ASTNode>emptySet() : buffer;
+        return descriptors;
     }
 
     @Override
     public String getPlaceholderText(@NotNull ASTNode node) {
         if (node.getElementType() == SoyElement.template_tag_pair) {
-            Collection<ASTNode> buffer = Collections.singleton(node);
-            buffer = childrenOf(buffer, TokenSet.create(SoyElement.template_tag));
-            buffer = childrenOf(buffer, TokenSet.create(SoyElement.tag_between_braces));
-            buffer = childrenOf(buffer, TokenSet.create(SoyElement.template_name));
-            if (!buffer.isEmpty()) {
-                return "{template " + buffer.iterator().next().getText() + " .../}"; //NON-NLS
+            PsiElement element = PATH_TO_PLACEHOLDER_LABEL.navigate(node.getPsi()).oneOrNull();
+            if (element instanceof SoyCommandTag) {
+                SoyCommandTag commandTag = (SoyCommandTag)element;
+                String command = commandTag.getCommand();
+                String label = commandTag.getFoldedLabel();
+                if (label != null) {
+                    return String.format("{%1$s %2$s}...{/%1$s}", command, label); //NON-NLS
+                } else {
+                    return String.format("{%1$s}...(/%1$s}", command); //NON-NLS
+                }
             }
         }
         return null;
@@ -91,4 +84,5 @@ public class SoyFoldingBuilder implements FoldingBuilder {
     public boolean isCollapsedByDefault(@NotNull ASTNode node) {
         return false;
     }
+
 }

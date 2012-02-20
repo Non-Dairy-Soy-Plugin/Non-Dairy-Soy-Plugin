@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@ package net.venaglia.nondairy.i18n;
 import org.jetbrains.annotations.NonNls;
 
 /**
-* Created by IntelliJ IDEA.
-* User: ed
-* Date: Aug 23, 2010
-* Time: 10:52:04 PM
-* To change this template use File | Settings | File Templates.
+ * User: ed
+ * Date: Aug 23, 2010
+ * Time: 10:52:04 PM
+ *
+ * This class is used to wrap a formatted message. It is used when the cost of
+ * creating a short-lived object is less expensive than the cost of
+ * MessageFormat.format() for messages that are unlikely to be displayed.
 */
 public class MessageBuffer {
     

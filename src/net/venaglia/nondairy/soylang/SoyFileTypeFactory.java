@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,10 +21,11 @@ import com.intellij.openapi.fileTypes.FileTypeFactory;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 31, 2010
  * Time: 12:48:20 PM
+ *
+ * Factory class to create SoyFileType objects in IntelliJ.
  */
 public class SoyFileTypeFactory extends FileTypeFactory {
 

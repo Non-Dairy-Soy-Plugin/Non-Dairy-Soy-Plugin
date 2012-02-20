@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,15 +27,16 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: 1/22/12
  * Time: 11:18 AM
+ *
+ * NamesValidator implementation for the closure template language.
  */
 public class SoyNamesValidator implements NamesValidator {
 
     @NonNls
-    private static Pattern MATCH_VALID_IDENTIFIER = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
+    public static Pattern MATCH_VALID_IDENTIFIER = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
     
     @NonNls
     private static final Set<String> KEYWORDS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(

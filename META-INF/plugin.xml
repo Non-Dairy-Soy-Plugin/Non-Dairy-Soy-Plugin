@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2010 Ed Venaglia
+  ~ Copyright 2010 - 2012 Ed Venaglia
   ~
   ~    Licensed under the Apache License, Version 2.0 (the "License");
   ~    you may not use this file except in compliance with the License.
@@ -17,28 +17,30 @@
 <idea-plugin version="2">
     <name>Non-Dairy Soy Plugin</name>
     <description>
-        A plugin to help with the development of Closure Templates (soy files).
-
-        This plugin is still under development, and updates are subject to
-        my available free time. For now, this initial version provides a few
-        basic language features such as code folding, use highlighting, go to
-        declaration, and structure view.
-
-        Use at your own risk! ...after all, this is my first plugin.
+        <![CDATA[
+        <p>A plugin to help with the development of Closure Templates
+        (soy files).</p>
+        <p>This plugin includes support for syntax highlighting, code folding,
+        find usages and go to declaration on parameters and templates, and
+        Structure view.</p>
+        <p>This plugin is still under development, and updates are subject to
+        my available free time.</p>
+        ]]>
     </description>
-    <version>0.3.2 (alpha)</version>
+    <version>0.4.0 (beta)</version>
     <vendor>Ed Venaglia</vendor>
     <idea-version since-build="111.1"/>
 
     <application-components>
-        <!-- Add your application components here -->
         <component>
             <implementation-class>net.venaglia.nondairy.NonDairyMain</implementation-class>
         </component>
     </application-components>
 
     <project-components>
-        <!-- Add your project components here -->
+        <component>
+            <implementation-class>net.venaglia.nondairy.soylang.SoyProjectComponent</implementation-class>
+        </component>
     </project-components>
 
     <actions>
@@ -52,6 +54,7 @@
         <fileTypeFactory implementation="net.venaglia.nondairy.soylang.SoyFileTypeFactory"/>
         <syntaxHighlighter key="soy" implementationClass="net.venaglia.nondairy.soylang.SoySyntaxHighlighter"/>
         <colorSettingsPage implementation="net.venaglia.nondairy.soylang.SoyColorsAndFontsPage"/>
+        <findUsagesHandlerFactory implementation="net.venaglia.nondairy.soylang.SoyFindUsagesHandlerFactory"/>
         <lang.foldingBuilder language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFoldingBuilder"/>
         <lang.braceMatcher language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyBraceMatcher"/>
         <lang.parserDefinition language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyParserDefinition"/>
@@ -59,5 +62,6 @@
         <lang.psiStructureViewFactory language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyStructureViewFactory"/>
         <lang.findUsagesProvider language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFindUsagesProvider"/>
         <lang.namesValidator language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyNamesValidator"/>
+        <gotoSymbolContributor implementation="net.venaglia.nondairy.soylang.SoyGoToSymbolProvider"/>
     </extensions>
 </idea-plugin>

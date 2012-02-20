@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package net.venaglia.nondairy.soylang.elements;
 
-import com.intellij.codeInsight.lookup.LookupElement;
-import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.extapi.psi.PsiElementBase;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.Language;
@@ -32,23 +30,30 @@ import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 31, 2010
  * Time: 10:21:04 PM
+ *
+ * PsiElement base class used by the plugin. This class implements helper
+ * methods that can be overridden to consolidate the functionality specific to
+ * the variety of structures of closure templates.
  */
-public class SoyASTElement extends PsiElementBase implements PsiElement {
+public class SoyPsiElement extends PsiElementBase implements PsiElement {
+
+    private static final AtomicLong LAST_CREATED = new AtomicLong();
 
     @NotNull
     private final ASTNode node;
 
-    public SoyASTElement(@NotNull ASTNode node) {
+    public SoyPsiElement(@NotNull ASTNode node) {
+        LAST_CREATED.set(System.currentTimeMillis());
         this.node = node;
     }
 
@@ -154,18 +159,63 @@ public class SoyASTElement extends PsiElementBase implements PsiElement {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + getNode().getElementType() + "]";
+        String n = null;
+        String l = null;
+        ItemPresentation presentation = this.getPresentation();
+        if (presentation != null) {
+            n = presentation.getPresentableText();
+            l = presentation.getLocationString();
+        }
+        if (n == null) {
+            n = getCanonicalName();
+        }
+        if (n == null) {
+            n = getName();
+        }
+        @NonNls
+        String fmt;
+        if (l != null) {
+            fmt = "%s [%s]: <%4$s> \"%3$s\"";
+        } else if (n != null) {
+            fmt = "%s [%s]: \"%s\"";
+        } else {
+            fmt = "%s [%s]";
+        }
+        return String.format(fmt, getClass().getSimpleName(), getNode().getElementType(), n, l);
     }
 
     public PsiElement setName(@NonNls String name) throws IncorrectOperationException {
         throw new IncorrectOperationException("Rename is not implemented for " + getClass().getSimpleName());
     }
 
-    protected void buildLookupElements(PsiElement element, Collection<? super LookupElement> buffer) {
-        buffer.add(LookupElementBuilder.create((PsiNamedElement)element));
+    /**
+     * Returns a string that can be used as a unique name for the element
+     * represented by implementing class. Subclasses that also implement
+     * {@link PsiNamedElement} should provide an appropriate implementation of
+     * this method.
+     * @return a string that can be used as a canonical name for this element.
+     */
+    @Nullable
+    public String getCanonicalName() {
+        return null;
     }
 
-    public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-        throw new IncorrectOperationException();
+    /**
+     * @return true if this SoyNamedElement is one that is references, false if
+     *     this element references another.
+     * @see net.venaglia.nondairy.soylang.elements.SoyNamedElement#isDefinitionElement()
+     */
+    public boolean isDefinitionElement() {
+        return false;
+    }
+
+    /**
+     * This method provides the timestamp of the most recently created
+     * SoyPsiElement. This timestamp is useful for knowing when cached data
+     * that relates to SoyPsiElement objects should be invalidated.
+     * @return a timestamp indicating the last time a SoyPsiElement was created.
+     */
+    public static long getLastCreated() {
+        return LAST_CREATED.get();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,15 +19,22 @@ package net.venaglia.nondairy.soylang.elements.path;
 import com.intellij.psi.PsiElement;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 26, 2010
  * Time: 7:29:49 AM
  *
- * ElementPredicate implementations are used to filter elements when traversing
- * the AST.
-*/
+ * ElementPredicate implementations are used to filter elements, typically when
+ * traversing the psi tree.
+ *
+ * @see TraversalPredicate
+ */
 public interface ElementPredicate {
 
+    /**
+     * Performs an implementation specific test against the passed value
+     * @param element The element to test.
+     * @return true if the passed element is permitted by this predicate, false
+     *     otherwise.
+     */
     boolean test(PsiElement element);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * 
+ * Class to represent soy files in IntelliJ.
  */
 public class SoyFile extends PsiFileBase {
 
@@ -46,12 +46,14 @@ public class SoyFile extends PsiFileBase {
         .or(new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
                                new ElementTypePredicate(SoyElement.template_tag).onChildren(),
                                new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                               new ElementTypePredicate(SoyElement.template_name).onChildren()));
+                               new ElementTypePredicate(SoyElement.template_name).onChildren()))
+        .debug("reference_path");
     private static final PsiElementPath NAMESPACE_NAME_PATH =
             new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
                                new ElementTypePredicate(SoyElement.namespace_def).onChildren(),
                                new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-                               new ElementTypePredicate(SoyElement.namespace_name).onChildren());
+                               new ElementTypePredicate(SoyElement.namespace_name).onChildren())
+         .debug("namespace_name_path");
 
     public SoyFile(FileViewProvider viewProvider) {
         super(viewProvider, SoyLanguage.INSTANCE);

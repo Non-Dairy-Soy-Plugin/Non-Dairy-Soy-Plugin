@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,10 +20,15 @@ import net.venaglia.nondairy.i18n.I18N;
 import org.jetbrains.annotations.NonNls;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: 1/23/12
  * Time: 7:19 PM
+ *
+ * Enumeration of the various value types in soy expressions.
+ *
+ * Note: This use of information is not fully realized at this time. It is
+ * intended for future use in intentions that detect possibly inappropriate
+ * data types passed as function parameters.
  */
 public enum ExpressionType {
     ANY, STRING, NUMBER, BOOLEAN, NONE;

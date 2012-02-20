@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -115,6 +115,16 @@ Hello world
 
     {for $i in range(
     {/for}
+
+{/template}
+
+/**
+ * Checking support for incomplete tags
+ */
+{template .incompleteTags6}
+
+    {call .foo data='\
+    {}
 
 {/template}
 

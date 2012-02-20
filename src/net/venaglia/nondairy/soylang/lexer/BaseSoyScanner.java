@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,10 +25,11 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 14, 2010
  * Time: 9:40:08 PM
+ *
+ * Base class for the flex lexer implementation.
  */
 abstract class BaseSoyScanner {
 

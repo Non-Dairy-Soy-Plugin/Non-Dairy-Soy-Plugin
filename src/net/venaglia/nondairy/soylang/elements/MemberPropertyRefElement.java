@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,22 +17,21 @@
 package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.navigation.ItemPresentation;
-import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: 1/17/12
  * Time: 8:03 PM
+ *
+ * SoyPsiElement class that represents a dotted property reference on a
+ * ParameterRefElement, or another MemberPropertyRefElement.
  */
-public class MemberPropertyRefElement extends SoyASTElement implements PsiNamedElement, ItemPresentation {
+public class MemberPropertyRefElement
+        extends SoyPsiElement {
 
 //    private static final PsiElementPath STRING_LITERAL_TEXT_PATH = new PsiElementPath(new ElementTypePredicate(SoyToken.STRING_LITERAL).onChildren());
 
@@ -52,29 +51,22 @@ public class MemberPropertyRefElement extends SoyASTElement implements PsiNamedE
         return name;
     }
 
-    @Override
-    public String getPresentableText() {
-        return getName();
-    }
-
-    @Override
-    public String getLocationString() {
-        return null;
-    }
-
-    @Override
-    public Icon getIcon(boolean open) {
-        return null;
-    }
-
-    public static class ForBracketedStringLiteral extends SoyASTElement implements IntermediateElement {
+    /**
+     * SoyPsiElement class that represents a property reference on a
+     * ParameterRefElement, or another MemberPropertyRefElement.
+     * 
+     * This class implements {@link IntermediateElement} to act as an
+     * intermediary for building a MemberPropertyRefElement for bracketed
+     * string literals.
+     */
+    public static class ForBracketedStringLiteral extends SoyPsiElement implements IntermediateElement {
 
         public ForBracketedStringLiteral(@NotNull ASTNode node) {
             super(node);
         }
 
         @Override
-        public SoyASTElement resolveFinalElement() {
+        public SoyPsiElement resolveFinalElement() {
             ASTNode[] children = getNode().getChildren(null);
             if (children != null && children.length == 3 &&
                 children[0].getElementType() == SoyToken.LBRACK &&
@@ -105,17 +97,17 @@ public class MemberPropertyRefElement extends SoyASTElement implements PsiNamedE
                                     char c = (char)Integer.parseInt(text.substring(2), 16);
                                     text = String.valueOf(c); 
                                     break;
-                                default: return new SoyASTElement(getNode());
+                                default: return new SoyPsiElement(getNode());
                             }
                             buffer.append(text);
                         } else {
-                            return new SoyASTElement(getNode());
+                            return new SoyPsiElement(getNode());
                         }
                     }
                     return new MemberPropertyRefElement(getNode(), buffer.toString());
                 }
             }
-            return new SoyASTElement(getNode());
+            return new SoyPsiElement(getNode());
         }
     }
 }

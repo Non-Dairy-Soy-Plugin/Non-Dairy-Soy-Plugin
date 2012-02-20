@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,11 +19,19 @@ package net.venaglia.nondairy.soylang.elements.path;
 import com.intellij.psi.PsiElement;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 27, 2010
  * Time: 9:25:22 AM
+ *
+ * Interface that permits transformations PsiElements into another type.
  */
 public interface PsiElementMapper<T> {
+
+    /**
+     * Transforms the passed element into another value, as determined by the
+     * implementing class.
+     * @param element The element to transform.
+     * @return The transformed value.
+     */
     T map(PsiElement element);
 }

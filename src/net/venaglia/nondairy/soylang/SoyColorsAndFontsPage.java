@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.intellij.openapi.options.colors.AttributesDescriptor;
 import com.intellij.openapi.options.colors.ColorDescriptor;
 import com.intellij.openapi.options.colors.ColorSettingsPage;
 import net.venaglia.nondairy.i18n.I18N;
+import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,10 +32,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 31, 2010
  * Time: 2:48:16 PM
+ *
+ * Color settings page used for customizing the syntax highlighting of soy files.
  */
 public class SoyColorsAndFontsPage implements ColorSettingsPage {
     @NotNull
@@ -44,7 +46,7 @@ public class SoyColorsAndFontsPage implements ColorSettingsPage {
 
     @Nullable
     public Icon getIcon() {
-        return SoyFileType.SOY_ICON;
+        return SoyIcons.FILE;
     }
 
     @NotNull

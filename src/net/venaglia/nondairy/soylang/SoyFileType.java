@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,24 +17,24 @@
 package net.venaglia.nondairy.soylang;
 
 import com.intellij.openapi.fileTypes.LanguageFileType;
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.psi.tree.IFileElementType;
 import net.venaglia.nondairy.i18n.I18N;
+import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
 /**
-* Created by IntelliJ IDEA.
-* User: ed
-* Date: Jul 31, 2010
-* Time: 9:50:44 AM
-* To change this template use File | Settings | File Templates.
-*/
+ * User: ed
+ * Date: Jul 31, 2010
+ * Time: 9:50:44 AM
+ *
+ * IntelliJ file type to represent the closure template language used in soy
+ * files.
+ */
 public class SoyFileType extends LanguageFileType {
 
     public static final SoyFileType INSTANCE = new SoyFileType();
-    public static final Icon SOY_ICON = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy.png");
     public static final IFileElementType FILE = new IFileElementType("Soy File Type", SoyLanguage.INSTANCE);
 
     private SoyFileType() {
@@ -57,7 +57,7 @@ public class SoyFileType extends LanguageFileType {
     }
 
     public Icon getIcon() {
-        return SOY_ICON;
+        return SoyIcons.FILE;
     }
 
     @Override

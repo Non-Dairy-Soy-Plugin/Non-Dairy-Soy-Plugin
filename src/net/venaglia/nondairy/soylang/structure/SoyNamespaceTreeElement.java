@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,10 +25,11 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 27, 2010
  * Time: 9:33:10 PM
+ *
+ * Structure tree element for the namespace soy tag.
  */
 public class SoyNamespaceTreeElement extends PsiTreeElementBase<NamespaceDefElement> {
 

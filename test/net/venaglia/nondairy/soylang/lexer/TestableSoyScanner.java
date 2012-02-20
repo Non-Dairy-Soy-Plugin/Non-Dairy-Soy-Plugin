@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import net.venaglia.nondairy.soylang.lexer.cupparser.SoyParserSymbols;
 import java_cup.runtime.Scanner;
 import java_cup.runtime.Symbol;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -67,8 +68,25 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
         do {
             lastSymbol = null;
             advance();
+            testToEnsureLexerAdvances(lastSymbol);
         } while (lastSymbol != null && INPUT_TOKENS_TO_SKIP.contains(lastSymbol.getToken()));
         return lastSymbol;
+    }
+
+    private SoySymbol previousSymbol = null;
+    private int symbolRepeatCount = 0;
+
+    private void testToEnsureLexerAdvances(SoySymbol current) {
+        if (previousSymbol == null || current == null ||
+            previousSymbol.getToken() != current.getToken() ||
+            previousSymbol.getPosition() != current.position) {
+            previousSymbol = current;
+            symbolRepeatCount = 0;
+        } else {
+            if (++symbolRepeatCount >= 50) {
+                Assert.fail("Lexer is not advancing, the same symbol has been generated 50 times: " + previousSymbol); //NON-NLS
+            }
+        }
     }
 
     public void reset() {

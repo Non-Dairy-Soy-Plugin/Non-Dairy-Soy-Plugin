@@ -1,0 +1,103 @@
+
+  Copyright 2010 - 2012 Ed Venaglia
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+===============================================================================
+  Things I'd like to add support for:
+===============================================================================
+
+  This is a comprehensive list of project dreams. Some of these ideas may not
+  even be possible, but they would be nice to have, and some could make this
+  plugin really stand out.
+
+  All future improvements start on this list, and are selected based on their
+  scope, impact, risk, and popular demand.
+
+===============================================================================
+
+Find symbol by name:
+    Templates and deltemplates
+
+Parser:
+    Create branches on the PSI tree for nested commands
+    Create branches in the PSI tree for "nice" HTML tag pairs
+
+Editor:
+    Auto-insert close tag for template, deltemplate, if, switch, for, foreach, msg, call, delcall, & param
+    Auto-insert close tag for HTML tags
+    Auto-complete for local parameters
+    Auto-complete for parameter definitions for params that are used but not declared
+    Auto-complete for call parameters
+    Auto-complete for functions
+    Auto-complete for template names
+    Soy doc tool-tips for call and delcall
+    Soy doc tool-tips for call params
+    Soy doc tool-tips for directive params
+    Reorder templates using shift-command with up/down arrow keys
+    Show "overridden" icon in margin for default deltemaplates that are overridden at least one delpackage
+    Show "overrides" icon in margin for deltemaplates that override a default deltemplate
+
+Code Folding:
+    Collapse commands: if, switch, for, foreach, literal, msg, call
+    Collapse soy docs
+    Collapse HTML tag pairs that play nicely with soy tag pairs
+
+Refactoring:
+    Extract template from selection
+    Convert template into deltemplate
+    Add required parameter to template or deltemplate
+
+Surround with:
+    Surround selection with if and if/else tags
+    Surround selection with msg tags
+    Surround selection with HTML tags
+
+Code inspection:
+    Show when a parameter is declared and not used
+    Show when a parameter is used and not declared
+    Show when a required parameter is not passed to call or delcall
+    Show when delcall defines a required parameter that is not required by the default
+    Show when a template or deltemplate is defined more than once
+    Show when using a non-iterator parameter is passed to a parameter only function
+    Show parameters that are used as more than one of: list, object, value
+    Show when using an optional parameter, without first checking if it exists
+    Show when using any parameter, all parameters are optional, and hasData() is not called
+    Compute cyclic complexity of a template and show when it exceeds a configurable threshold
+    Compute cyclic complexity of an expression and show when it exceeds a configurable threshold
+    Show when a msg tag has no desc attribute
+    Show when directive arguments are too many, too few, or are the wrong type
+
+Intentions:
+    Insert missing params to call or delcall
+    Define template when template (or default delegate) cannot be found
+    Define template parameter when a parameter is not found
+    Negate boolean expression
+    Replace call with delcall
+    Convert optional parameter to required parameter
+
+Code formatting
+    !! Not sure how to handle code between matching tags
+
+Go to declaration:
+    Soy functions defined by a Java classes
+    Soy directives defined by a Java classes
+    Soy templates and deltempaltes from JS source
+        JS integration should be optional
+        !! Don't know how to integrate with JS
+
+I18N:
+    Spanish, German
+
+Other:
+    Call hierarchy

@@ -1,3 +1,25 @@
-// line comments are not detected if they are not at the beginning of a line and there is non-whitespace anywhere before them.
-template names do not resolve between files
-renaming a template only renames the definition, not the call
+
+  Copyright 2010 - 2012 Ed Venaglia
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+===============================================================================
+  This file contains a list of known issues, and when they should be fixed.
+===============================================================================
+
+Pri | Fix   | Description
+----+-------+-------------------------------------------------------------------------------------
+ P2 | 0.4.x | go to declaration on a template arbitrarily finds one, not all delegates
+ P2 | 0.4.x | msg tags cannot contain for or foreach tags and should be shown as an error
+ P3 | 0.4.x | i18n resource file need description for all messages
+ P3 | 0.4.x | HTML syntax highlighting occurs inside a CDATA block, but shouldn't

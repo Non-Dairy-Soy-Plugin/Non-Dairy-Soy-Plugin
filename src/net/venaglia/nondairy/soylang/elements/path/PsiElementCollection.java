@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,37 +21,27 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 26, 2010
  * Time: 7:28:39 AM
+ * 
+ * A collection that contains psi elements while navigating in a 
+ * {@link PsiElementPath}.
  */
 public class PsiElementCollection extends LinkedHashSet<PsiElement> {
 
+    /**
+     * An immutable, empty PsiElementCollection
+     */
     public static final PsiElementCollection EMPTY = new PsiElementCollection() {
         @Override
         public Iterator<PsiElement> iterator() {
-            final Iterator<PsiElement> iterator = super.iterator();
-            return new Iterator<PsiElement>() {
-                @Override
-                public boolean hasNext() {
-                    return iterator.hasNext();
-                }
-
-                @Override
-                public PsiElement next() {
-                    return iterator.next();
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
+            return Collections.<PsiElement>emptySet().iterator();
         }
 
         @Override
@@ -82,6 +72,17 @@ public class PsiElementCollection extends LinkedHashSet<PsiElement> {
         super(c);
     }
 
+    public PsiElementCollection(int initialSize) {
+        super(initialSize);
+    }
+
+    /**
+     * Convenience method to apply an {@link ElementPredicate} to this
+     * collection.
+     * @param predicate The predicate to apply
+     * @return A new PsiElementCollection that contains a filtered subset of
+     *     this collection.
+     */
     public PsiElementCollection applyPredicate(ElementPredicate predicate) {
         PsiElementCollection buffer = new PsiElementCollection();
         for (PsiElement element : this) {
@@ -90,10 +91,21 @@ public class PsiElementCollection extends LinkedHashSet<PsiElement> {
         return buffer;
     }
 
+    /**
+     * @return The first elelment of this collection, or null if this
+     *     collection is empty.
+     */
     public final @Nullable PsiElement oneOrNull() {
         return isEmpty() ? null : iterator().next();
     }
 
+    /**
+     * Transforms this collection into another collection by transforming each
+     * element with the specified mapper.
+     * @param mapper The mapper to transform elements with.
+     * @param <T> The type to transform elements into.
+     * @return A new collection containing transformed elements.
+     */
     public <T> Collection<T> map(PsiElementMapper<T> mapper) {
         Collection<T> buffer = new ArrayList<T>(size());
         for (PsiElement element : this) {

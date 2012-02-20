@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,10 +35,21 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 31, 2010
  * Time: 9:42:17 PM
+ *
+ * IntelliJ PsiParser implementation for closure templates.
+ *
+ * This class looks for two system properties that enable enhanced
+ * troubleshooting and diagnostics:
+ *
+ * <code>net.venaglia.nondairy.parser.paranoid = true</code>
+ * This will enable the PsiBuilder's debug mode.
+ *
+ * <code>net.venaglia.nondairy.parser.debugFile=parse-log.html</code>
+ * This will record the creation of the FIRST soy psi tree parsed, step by
+ * step, to the specified file. This filename should end in ".html".
  */
 public class SoyParser implements PsiParser {
 
@@ -98,7 +109,7 @@ public class SoyParser implements PsiParser {
                     out.printf("-----[ After operation - %5d ]------------------------------------------\n", i);
                     out.print(tokenSource.getTree(i));
                 }
-                out.println("=====[ Tree build - end of trace ]=========================================");
+                out.println("=====[ Tree build - end of detail ]=========================================");
             }
             out.close();
             out = null;

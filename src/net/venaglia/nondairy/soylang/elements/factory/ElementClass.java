@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package net.venaglia.nondairy.soylang.elements.factory;
 
 import static java.lang.annotation.ElementType.*;
 
-import net.venaglia.nondairy.soylang.elements.SoyASTElement;
+import net.venaglia.nondairy.soylang.elements.SoyPsiElement;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -31,14 +31,14 @@ import java.lang.annotation.Target;
  * Time: 8:43:41 PM
  *
  * An annotation used on the fields defining SoyElement instances that
- * identifies the SoyASTElement subclass that should be constructed to hold AST
+ * identifies the SoyPsiElement subclass that should be constructed to hold AST
  * nodes of that type.
  * <p>
  * Any SoyElement field not identified with this annotation is contained within
- * an instance of the base SoyASTElement.
+ * an instance of the base SoyPsiElement.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ FIELD })
 public @interface ElementClass {
-    Class<? extends SoyASTElement> value();
+    Class<? extends SoyPsiElement> value();
 }

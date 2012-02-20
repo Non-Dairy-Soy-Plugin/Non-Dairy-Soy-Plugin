@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,18 +16,23 @@
 
 package net.venaglia.nondairy.soylang.elements.factory;
 
-import com.intellij.extapi.psi.PsiElementBase;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 24, 2010
  * Time: 5:38:59 PM
+ *
+ * Base interface for factory classes that will produce PsiElements.
  */
-public interface ASTElementFactory<T extends PsiElementBase> {
+public interface PsiElementFactory<T extends PsiElement> {
 
+    /**
+     * Creates a new PsiElement to be inserted into the psi tree.
+     * @param node The node from the abstract syntax tree built by the parser.
+     * @return A new PsiElement to contain the passed node.
+     */
     T create(@NotNull ASTNode node);
-
 }

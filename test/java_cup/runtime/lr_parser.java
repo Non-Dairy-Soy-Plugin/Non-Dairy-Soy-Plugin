@@ -29,7 +29,7 @@ import java.util.Stack;
  *
  *  This class actually provides four LR parsers.  The methods parse() and
  *  debug_parse() provide two versions of the main parser (the only difference
- *  being that debug_parse() emits debugging trace messages as it parses).
+ *  being that debug_parse() emits debugging detail messages as it parses).
  *  In addition to these main parsers, the error recovery mechanism uses two
  *  more.  One of these is used to simulate "parsing ahead" in the input
  *  without carrying out actions (to verify that a potential error recovery

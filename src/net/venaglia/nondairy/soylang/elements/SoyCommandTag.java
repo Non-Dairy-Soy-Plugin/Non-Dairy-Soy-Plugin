@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -34,9 +34,9 @@ import java.util.regex.Pattern;
  * Date: 1/21/12
  * Time: 8:50 AM
  *
- * object to represent a soy command
+ * Base class for SoyPsiElement objects that represent a soy command.
  */
-public class SoyCommandTag extends SoyASTElement {
+public class SoyCommandTag extends SoyPsiElement {
 
     @NonNls
     private static final Pattern MATCH_TAG_NAME = Pattern.compile("\\w+");
@@ -46,9 +46,17 @@ public class SoyCommandTag extends SoyASTElement {
         "namespace", "delpackage", "else", "elseif", "case", "default", "ifempty"
     )));
 
+    /**
+     * Enumeration of tag boundaries.
+     */
     public enum Boundary {
+        /** A tag that begins a block, where matching close tag is expected */
         BEGIN,
+
+        /** A tag that end a block, where matching begin tag is expected */
         END,
+
+        /** A tag that stands on its own, and is not part of a pair */
         UNARY
     }
 
@@ -65,6 +73,11 @@ public class SoyCommandTag extends SoyASTElement {
         return null;
     }
 
+    @Nullable
+    public String getFoldedLabel() {
+        return null;
+    }
+    
     public Boundary getBoundary() {
         String text = getText();
         Matcher matcher = MATCH_TAG_NAME.matcher(text);

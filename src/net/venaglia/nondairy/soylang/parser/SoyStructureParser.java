@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -34,10 +34,12 @@ import java.util.Collections;
 import java.util.Stack;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 2, 2010
  * Time: 8:18:40 PM
+ *
+ * Prime parser implementation for soy files. This class orchestrates the other
+ * parser classes and manages the overall structure of the psi tree.
  */
 public class SoyStructureParser {
 
@@ -78,7 +80,7 @@ public class SoyStructureParser {
                 if (docBeginMarker != null &&
                     unclosedTagParsers.size() == 1 &&
                     unclosedTagParsers.peek() == tagParser &&
-                    tagParser.getTagToken() == SoyToken.TEMPLATE) {
+                    (tagParser.getTagToken() == SoyToken.TEMPLATE || tagParser.getTagToken() == SoyToken.DELTEMPLATE)) {
                     this.docBeginMarker = docBeginMarker;
                     docBeginMarker = null;
                 }
@@ -97,6 +99,8 @@ public class SoyStructureParser {
                 }
                 if (token == SoyToken.IGNORED_TEXT || token == SoyToken.TEMPLATE_TEXT || token == SoyToken.LITERAL_TEXT) {
                     source.advance();
+                } else if (token == SoyToken.LBRACE_ERROR) {
+                    source.advanceAndMarkBad(unexpected_symbol, "command_expected", I18N.msg("syntax.error.expected.command"));
                 } else {
                     source.advanceAndMarkBad(unexpected_symbol, "unexpected_symbol", I18N.msg("lexer.error.unexpected.token", token));
                 }
@@ -115,7 +119,7 @@ public class SoyStructureParser {
         IElementType type = tagParser.getTagToken();
         if (!(type instanceof SoyToken)) return;
         SoyToken tagToken = (SoyToken)type;
-        String tagTokenName = tagToken.name().toLowerCase();
+        String tagTokenName = tagToken.getCommand();
         if (tagParser.isCloseTag()) {
             findInStack(Collections.singleton(tagToken),
                         tagParser,
@@ -125,7 +129,7 @@ public class SoyStructureParser {
                         msg("syntax.error.unclosed.open.tag"));
         } else if (SoyToken.TAG_SECTION_TOKENS.contains(tagToken)) {
             SectionTag section = SectionTag.getBySoyToken(tagToken);
-            String sectionTokenName = section.getContainerTokens().iterator().next().name();
+            String sectionTokenName = section.getContainerTokens().iterator().next().getCommand();
             TagParser within = findInStack(section.getContainerTokens(),
                                            tagParser,
                                            null,
@@ -143,7 +147,7 @@ public class SoyStructureParser {
                 unclosedTagParsers.push(within); // put it back
             }
             if (tagParser.isRequiresCloseTag()) unclosedTagParsers.push(tagParser);
-        } else if (tagToken == SoyToken.NAMESPACE || tagToken == SoyToken.TEMPLATE) {
+        } else if (tagToken == SoyToken.NAMESPACE || tagToken == SoyToken.TEMPLATE || tagToken == SoyToken.DELTEMPLATE) {
             if (!unclosedTagParsers.isEmpty()) {
                 TagParser within = unclosedTagParsers.get(0);
                 processBadTag(within, I18N.msg("syntax.error.unexpected.close.tag",

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,11 +17,18 @@
 package net.venaglia.nondairy.util;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: 12/17/11
  * Time: 12:43 PM
+ *
+ * Generic visitor interface for sequentially passing the elements of a
+ * collection or other data structure.
  */
 public interface Visitor<E> {
+
+    /**
+     * Called for each element in a collection or similar data structure.
+     * @param element The element.
+     */
     void visit(E element);
 }

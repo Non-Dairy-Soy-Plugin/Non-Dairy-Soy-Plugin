@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,10 +25,13 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 21, 2010
  * Time: 7:32:11 PM
+ * 
+ * Helper class for extracting tokens by name and id from the element type
+ * enumeration classes: {@link net.venaglia.nondairy.soylang.SoyElement} and
+ * {@link SoyToken}.
  */
 class SoySyntaxUtil {
 
@@ -38,6 +41,11 @@ class SoySyntaxUtil {
     @NonNls
     private static final Pattern MATCH_NON_TERMINAL_NAME = Pattern.compile("[a-z][a-z0-9]*(_[a-z0-9]+)*");
 
+    /**
+     * Builds a map of id to symbol name for type definitions in the specified class.
+     * @param klass The class to inspect.
+     * @return the map indexing symbol names by id.
+     */
     static Map<Integer,String> extractSymbolNames(Class<?> klass) {
         LinkedHashMap<Integer, String> map = new LinkedHashMap<Integer, String>();
         for (Field field : klass.getFields()) {

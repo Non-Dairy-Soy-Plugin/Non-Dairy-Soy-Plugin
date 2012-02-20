@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,12 +35,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
-* Created by IntelliJ IDEA.
-* User: ed
-* Date: 12/10/11
-* Time: 2:00 PM
-* To change this template use File | Settings | File Templates.
-*/
+ * User: ed
+ * Date: 12/10/11
+ * Time: 2:00 PM
+ *
+ * Subclass of PsiBuilderTokenSource that can track the psi tree as it is being
+ * built. This class creates an HTML file that captures every discrete change
+ * as it is made on the psi tree.
+ */
 public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
 
     final List<Node<?>> tree = new NodeList();

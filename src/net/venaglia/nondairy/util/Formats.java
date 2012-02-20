@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,10 +19,11 @@ package net.venaglia.nondairy.util;
 import java.util.Arrays;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 16, 2010
  * Time: 10:19:46 AM
+ *
+ * String formatting utilities class.
  */
 public class Formats {
 
@@ -35,6 +36,12 @@ public class Formats {
         INDENT = new String(indent);
     }
 
+    /**
+     * Builds a whitespace string for prefixing lines at the specified indent level.
+     * @param depth The nesting level to build an indent string for.
+     * @return a whitespace string, suitable for indenting nested structures at
+     *     the specified nesting level.
+     */
     public static CharSequence indent(int depth) {
         return Formats.INDENT.subSequence(0, depth * 4);
     }

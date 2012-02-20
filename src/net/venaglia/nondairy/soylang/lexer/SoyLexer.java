@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,10 +19,11 @@ package net.venaglia.nondairy.soylang.lexer;
 import com.intellij.lexer.FlexAdapter;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 31, 2010
  * Time: 2:02:20 PM
+ *
+ * Implementation class for wrapping the soy flex lexer.
  */
 public class SoyLexer extends FlexAdapter {
 

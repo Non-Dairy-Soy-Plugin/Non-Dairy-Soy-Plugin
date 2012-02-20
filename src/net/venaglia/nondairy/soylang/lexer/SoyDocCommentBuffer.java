@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,10 +24,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Jul 13, 2010
  * Time: 2:39:59 PM
+ *
+ * Buffer the provides additional parsing of the soy doc comment.
  */
 public class SoyDocCommentBuffer {
 

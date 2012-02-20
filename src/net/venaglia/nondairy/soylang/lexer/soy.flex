@@ -1,5 +1,5 @@
 /*
-   Copyright 2010 Ed Venaglia
+   Copyright 2010 - 2012 Ed Venaglia
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ HtmlHexEntityId = "#x" [1-9a-fA-F] [0-9a-fA-F] {0,3} | "#x0"
 HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexEntityId} ) ";"
 
 %state OPEN_TAG, CLOSE_TAG, SOY_TAG, LITERAL_BLOCK, DELPACKAGE_TAG, NAMESPACE_TAG, TEMPLATE_TAG, IDENTIFIER_TAG, TAG_DIRECTIVE
-%state DOCS, DOCS_BOL, DOCS_IDENT, STRING, STRING_PARAM
+%state DOCS, DOCS_BOL, DOCS_IDENT, STRING, STRING_PARAM, STRING_IN_SINGLE_BRACES, STRING_IN_DOUBLE_BRACES
 
 %state HTML_INITIAL, HTML_TAG_START, HTML_TAG_END, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_NAME_RESUME, HTML_ATTRIBUTE_EQ
 %state HTML_ATTRIBUTE_VALUE, HTML_ATTRIBUTE_VALUE_1, HTML_ATTRIBUTE_VALUE_2, HTML_COMMENT
@@ -580,7 +580,23 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    }
                                  }
 
-  {StringCharacter}+             { return symbol(STRING_LITERAL, yytext().toString()); }
+  {StringCharacter}+             { String text = yytext().toString();
+                                   boolean foundBrace = false;
+                                   for (int i = 0, l = text.length(); i < l && !foundBrace; ++i) {
+                                       char c = text.charAt(i);
+                                       foundBrace = c == '{' || c == '}';
+                                   }
+                                   if (foundBrace) {
+                                       yypushback(text.length());
+                                       if (doubleBraceTag) {
+                                           yybegin(STRING_IN_DOUBLE_BRACES);
+                                       } else {
+                                           yybegin(STRING_IN_SINGLE_BRACES);
+                                       }
+                                   } else {
+                                       return symbol(STRING_LITERAL, yytext().toString());
+                                   }
+                                 }
 
   /* escape sequences */
   "\\b"                          { return symbol(STRING_LITERAL_ESCAPE, "\b"); }
@@ -597,8 +613,37 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
   /* error cases */
   \\.                            { return symbol(BAD_STRING_ESCAPE, yytext().toString()); }
+  "\\"                           { return symbol(BAD_STRING_ESCAPE, "\\"); }
   {LineTerminator}               { yybegin(SOY_TAG); return symbol(UNTERMINATED_STRING_LITERAL); }
   <<EOF>>                        { yybegin(YYINITIAL); }
+}
+
+<STRING_IN_DOUBLE_BRACES> {
+  "}" "}"                        { yypushback(2); yybegin(nextStateAfterString); }
+  [^\r\n\'\"\\\}]+ "}" "}"       { String text = yytext().toString();
+                                   yypushback(2);
+                                   return symbol(STRING_LITERAL, text.substring(0, text.length() - 2));
+                                 }
+  [^\r\n\'\"\\]+                 { yybegin(STRING);
+                                   return symbol(STRING_LITERAL, yytext().toString());
+                                 }
+  .                              { yypushback(1); yybegin(STRING); }
+  <<EOF>>                        { yybegin(STRING); }
+}
+
+<STRING_IN_SINGLE_BRACES> {
+  "{"                            { return symbol(BRACE_IN_STRING, yytext().toString()); }
+  "}"                            { yypushback(1); yybegin(nextStateAfterString); }
+  [^\r\n\'\"\\\{\}]+ "{" |
+  [^\r\n\'\"\\\{\}]+ "}"         { String text = yytext().toString();
+                                   yypushback(1);
+                                   return symbol(STRING_LITERAL, text.substring(0, text.length() - 1));
+                                 }
+  [^\r\n\'\"\\]+                 { yybegin(STRING);
+                                   return symbol(STRING_LITERAL, yytext().toString());
+                                 }
+  .                              { yypushback(1); yybegin(STRING); }
+  <<EOF>>                        { yybegin(STRING); }
 }
 
 <STRING_PARAM> {

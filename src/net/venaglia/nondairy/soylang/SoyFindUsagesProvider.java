@@ -10,8 +10,8 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import net.venaglia.nondairy.i18n.I18N;
 import net.venaglia.nondairy.soylang.elements.TemplateMemberElement;
-import net.venaglia.nondairy.soylang.lexer.SoyLexer;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
+import net.venaglia.nondairy.soylang.lexer.SoyWordScanningLexer;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,10 +21,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Sep 5, 2010
  * Time: 7:08:59 PM
+ *
+ * FindUsagesProvider implementation to support IntelliJ find usages on soy
+ * psi elements.
  */
 public class SoyFindUsagesProvider implements FindUsagesProvider {
 
@@ -47,7 +49,7 @@ public class SoyFindUsagesProvider implements FindUsagesProvider {
 
     @Override
     public WordsScanner getWordsScanner() {
-        return new DefaultWordsScanner(new SoyLexer(),
+        return new DefaultWordsScanner(new SoyWordScanningLexer(),
                                        SoyToken.NAME_TOKENS,
                                        SoyToken.COMMENT_TOKENS,
                                        TokenSet.create(SoyToken.STRING_LITERAL));
@@ -103,7 +105,11 @@ public class SoyFindUsagesProvider implements FindUsagesProvider {
     private String defaultString (@Nullable String value) {
         return value == null ? "" : value;
     }
-    
+
+    /**
+     * Enumeration used to declare the logic used to describe soy psi elements
+     * that support "find usages".
+     */
     enum UsageType {
         PARAMETER(SoyElement.PARAMETER_NAME_TOKENS, "find.usage.type.variable") {
             @Override
@@ -176,7 +182,7 @@ public class SoyFindUsagesProvider implements FindUsagesProvider {
         
         @Nullable
         String getDescriptiveName(@NotNull PsiElement element) {
-            return getFullName(element);
+            return getShortName(element);
         }
 
         @Nullable

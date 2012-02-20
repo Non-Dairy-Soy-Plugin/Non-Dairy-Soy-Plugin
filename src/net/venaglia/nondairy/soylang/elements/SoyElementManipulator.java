@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Ed Venaglia
+ * Copyright 2010 - 2012 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,15 +28,16 @@ import com.intellij.util.CharTable;
 import com.intellij.util.IncorrectOperationException;
 
 /**
- * Created by IntelliJ IDEA.
  * User: ed
  * Date: Aug 28, 2010
  * Time: 10:53:30 AM
+ *
+ * Element manipulator implementation used to manipulate the psi tree in soy files.
  */
-public class SoyElementManipulator extends AbstractElementManipulator<SoyASTElement> {
+public class SoyElementManipulator extends AbstractElementManipulator<SoyPsiElement> {
 
     @Override
-    public SoyASTElement handleContentChange(SoyASTElement element, TextRange range, String newContent)
+    public SoyPsiElement handleContentChange(SoyPsiElement element, TextRange range, String newContent)
             throws IncorrectOperationException {
         CompositeElement attrNode = (CompositeElement)element.getNode();
         final ASTNode valueNode = attrNode.findLeafElementAt(range.getStartOffset());
