@@ -15,9 +15,19 @@
 */
 
 {namespace non.dairy}
+
 /**
-* @param bar
+* @param person
 */
-{template .foo autoescape="false"}
-Hello {$bar.name|escapeHtml}
+{template .greeting autoescape="false"}
+Hello {$person.name|escapeHtml}, how are you today?
+{/template}
+
+/**
+* @param person
+* @param place
+*/
+{template .farewell autoescape="false"}
+Fare thee well, {$person.name|escapeHtml}.
+Until we meet again in the land of {$place.name}.
 {/template}
