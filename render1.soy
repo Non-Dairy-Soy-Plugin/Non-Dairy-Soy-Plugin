@@ -14,18 +14,29 @@
 *    limitations under the License.
 */
 
-{namespace non.dairy.sample.library}
+{namespace non.dairy.sample.library.client.one}
 
 /**
-* @param person
-*/
-{template .format_person autoescape="false"}
-{$person.firstname|escapeHtml}, {$person.lastname|escapeHtml}.
-{/template}
-
-/**
+* @param people
 * @param city
 */
-{template .format_city autoescape="false"}
-<b>{$city.city|escapeHtml}, {$city.state}</b>
+{template .greet_the_group autoescape="false"}
+
+    <p>
+        It is so good to see you all gathered here, at {call non.dairy.sample.library.format_city} {param city: $city /}{/call}.
+    </p>
+
+    <p>
+        Here are all those present:
+        <ul>
+            {foreach $person in $people}
+            <li>
+            {call non.dairy.sample.library.format_person} {param person: $person/}{/call}.
+            <li>
+            {/foreach}
+        </ul>
+
+    </p>
+
 {/template}
+
