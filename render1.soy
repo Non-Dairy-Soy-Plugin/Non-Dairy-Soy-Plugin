@@ -40,3 +40,14 @@
 
 {/template}
 
+/**
+* @param person
+*/
+{template .print_nametag autoescape="false"}
+   <p>
+        Hello, my name is
+        </br>
+        <em>{call non.dairy.sample.library.format_person} {param person: $person/}{/call}</em>
+   </p>
+{/template}
+
