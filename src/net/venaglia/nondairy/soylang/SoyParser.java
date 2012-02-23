@@ -56,11 +56,16 @@ public class SoyParser implements PsiParser {
     @NonNls
     public static final String PARANOID_PROPERTY = "net.venaglia.nondairy.parser.paranoid";
     @NonNls
+    public static final String ENABLE_PARSER_PROPERTY = "net.venaglia.nondairy.parser.enabled";
+    @NonNls
     public static final String DEBUG_FILE_PROPERTY = "net.venaglia.nondairy.parser.debugFile";
 
     private static final boolean PARANOID
             = Boolean.valueOf(System.getProperty(PARANOID_PROPERTY,
                                                  Boolean.toString(false)));
+    private static final boolean PARSER_ENABLED
+            = Boolean.valueOf(System.getProperty(ENABLE_PARSER_PROPERTY, 
+                                                 Boolean.toString(true)));
     private static final AtomicReference<String> LOG_TO_FILE
             = new AtomicReference<String>(System.getProperty(DEBUG_FILE_PROPERTY));
 
@@ -71,10 +76,19 @@ public class SoyParser implements PsiParser {
             builder.setDebugMode(true);
         }
         builder.enforceCommentTokens(TokenSet.create(SoyToken.COMMENT, SoyToken.LINE_COMMENT));
+        if (!PARSER_ENABLED) {
+            PsiBuilder.Marker file = builder.mark();
+            while (!builder.eof()) { // skip everything
+                builder.advanceLexer();
+            }
+            file.done(root);
+            return builder.getTreeBuilt();
+        }
         if (logToFile != null || PARANOID) {
             TrackedPsiBuilderTokenSource tokenSource = new TrackedPsiBuilderTokenSource(builder);
             PsiBuilder.Marker file = builder.mark();
-            new SoyStructureParser(tokenSource).parse();
+            while (!tokenSource.eof()) tokenSource.advance();
+//            new SoyStructureParser(tokenSource).parse();
             file.done(root);
             try {
                 return builder.getTreeBuilt();

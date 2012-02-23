@@ -452,7 +452,9 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
                     for (List<SoySymbol> symbolGroup : groupedSymbols) {
                         flatSymbols.addAll(symbolGroup);
                     }
-                    return Arrays.asList(flatSymbols);
+                    List<List<SoySymbol>> nextSet = new ArrayList<List<SoySymbol>>(1);
+                    nextSet.add(flatSymbols);
+                    return nextSet;
             }
             return null;
         }

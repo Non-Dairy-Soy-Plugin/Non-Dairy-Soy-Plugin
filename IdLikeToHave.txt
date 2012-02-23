@@ -47,6 +47,10 @@ Editor:
     Reorder templates using shift-command with up/down arrow keys
     Show "overridden" icon in margin for default deltemaplates that are overridden at least one delpackage
     Show "overrides" icon in margin for deltemaplates that override a default deltemplate
+    Injected Data: (see: http://code.google.com/closure/templates/docs/concepts.html#injecteddata)
+        Show a different color for $ij
+        Do not permit renaming of $ij
+        Find/Highlight usages of $ij should show ALL references in ALL templates
 
 Code Folding:
     Collapse commands: if, switch, for, foreach, literal, msg, call
@@ -66,6 +70,7 @@ Surround with:
 Code inspection:
     Show when a parameter is declared and not used
     Show when a parameter is used and not declared
+    Show when declaring a parameter named "ij"
     Show when a required parameter is not passed to call or delcall
     Show when delcall defines a required parameter that is not required by the default
     Show when a template or deltemplate is defined more than once

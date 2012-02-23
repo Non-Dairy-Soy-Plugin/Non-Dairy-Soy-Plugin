@@ -273,6 +273,11 @@ public class ExpressionParserTest extends BaseParserTest {
         testParseSequence("(4 * 5 }", "SOY_TAG", null);
     }
 
+    @Test
+    public void testEofInStringLiteralToFunctionCall() throws Exception {
+        testParseSequence("myFunc('foo-bar", "SOY_TAG", null);
+    }
+
 //    @Test
 //    public void testExtraParenthesis() throws Exception {
 //        testParseSequence("(4 * 5)) }", "SOY_TAG");

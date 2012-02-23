@@ -272,7 +272,10 @@ class ExpressionParser {
             }
         }
 
-        if (!source.eof()) {
+        if (source.eof()) {
+            beginArgList.drop();
+            beginCall.drop();
+        } else {
             token = source.token();
             if (token != SoyToken.RPAREN) {
                 source.error(I18N.msg("syntax.error.invalid.function.parameter.list"));
