@@ -1,38 +1,173 @@
 body {
-  margin-top: 1.0em;
-  background-color: #3b3475;
+  margin: 0;
+  padding: 0;
+  background-color: #abcdef;
   font-family: Helvetica, Arial, FreeSans, san-serif;
-  color: #ffffff;
+  color: #333;
+  min-width: 800px
+}
+
+#inset {
+    position: relative;
+    float: right;
+    width: 300px;
+    overflow: visible;
+}
+
+.git-hub {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 0;
+    width: 120px;
+    height: 120px;
+    text-indent: -9999px;
+}
+
+.download {
+    float: right;
+    height: 92px;
+    padding: 32px 96px 24px 0;
+}
+.download .zip, .download .tar {
+    background-repeat: no-repeat;
+    background-size: 125%;
+    background-position: -8px;
+    display: inline-block;
+    width: 72px;
+    height: 90px;
+}
+.download .zip {
+    background-image: url('https://github.com/images/modules/download/zip.png');
+}
+.download .tar {
+    background-image: url('https://github.com/images/modules/download/tar.png');
+}
+
+.cow {
+    float: right;
+    clear: both;
+    width: 480px;
+    height: 420px;
+    background: no-repeat url('../images/cow.png');
+    margin: 64px 0 24px 24px;
+}
+
+#banner {
+    background: #56789a;
+    padding: 8px 64px 0 12px;
+    box-shadow: 0 0 24px 24px #56789a;
+    color: #111;
+}
+
+#banner a {
+    color: #123;
+}
+
+#banner h1 {
+    white-space: nowrap;
+    z-index: 999;
+}
+
+.description {
+    font-size: 1.2em;
+    margin-top: 24px;
+    font-style: italic;
+    color: #fff;
+    text-align: right;
 }
 
 #container {
   margin: 0 auto;
-  width: 700px;
+  padding: 32px 12px 12px 12px;
 }
 
-h1 { font-size: 3.8em; color: #c4cb8a; margin-bottom: 3px; }
+h1 {
+    font-size: 48px;
+    margin-top: 24px;
+    margin-bottom: 3px;
+}
 
-h1 .small { font-size: 0.4em; }
+h1 .small {
+    font-size: 24px;
+}
+h1 .top {
+    vertical-align: 16px;
+}
 
-h1 a { text-decoration: none }
+h1 a {
+    text-decoration: none;
+}
 
-h2 { font-size: 1.5em; color: #c4cb8a; }
+h2 {
+    font-size: 1.5em;
+    color: #123456;
+}
 
-h3 { font-size: 1.0em; color: #c4cb8a; }
+h3 {
+    font-size: 1.0em;
+    color: #123456;
+}
 
-a { color: #c4cb8a; }
+a {
+    color: #123456;
+}
 
-.description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
+.feature {
+    padding-left: 24px;
+}
 
-.download { float: right; }
+.code {
+    display: block;
+    text-shadow: 0 0 2px #090;
+    background: #020;
+    color: #6f6;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-weight: bold;
+    box-shadow: 0 0 24px 8px #010 inset;
+    margin: 8px;
+}
 
-pre { background: #000; color: #fff; padding: 15px;}
+.code b {
+    color: #cFc;
+    text-shadow: 0 0 3px #6F6;
+    font-weight: bold;
+}
 
-hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
+hr {
+    border: 0;
+    width: 80%;
+    border-bottom: 1px solid #aaa;
+}
 
-.footer { text-align:center; padding-top:30px; font-style: italic; }
+.footer {
+    text-align:center;
+    padding-top:30px;
+    font-style: italic;
+}
 
 .gallery-thumbnail {
-    width: 272px;
-    height: 272px;
+    vertical-align: top;
+    width: 240px;
+}
+
+.gallery img {
+    margin-bottom: 8px;
+}
+
+.gallery:last-child img {
+    margin-bottom: 0;
+}
+
+#lightbox-secNav-btnClose {
+    width: 20px;
+    height: 20px;
+    margin-right: -12px;
+}
+
+#fancybox-outer {
+    background-color: rgba(51, 51, 51, .3);
 }

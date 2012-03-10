@@ -1,123 +1,176 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset='utf-8'>
+    <meta charset='utf-8'>
 
-  <title>evenaglia/Non-Dairy-Soy-Plugin @ GitHub</title>
+    <title>Non-Dairy-Soy-Plugin @ GitHub</title>
 
-  <script type="text/javascript" src="javascript/jquery.1.2.1.js"></script>
-  <script type="text/javascript" src="javascript/jquery.lightbox-0.5.js"></script>
-  <script type="text/javascript" src="javascript/main.js"></script>
+    <script type="text/javascript" src="javascript/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="javascript/jquery.fancybox-1.3.4.pack.js"></script>
+    <script type="text/javascript" src="javascript/main.js"></script>
 
-  <link rel="stylesheet" type="text/css" href="style/main.css" />
-  <link rel="stylesheet" type="text/css" href="style/jquery.lightbox-0.5.css" />
+    <link rel="stylesheet" type="text/css" href="fancybox/jquery.fancybox-1.3.4.css"/>
+    <link rel="stylesheet" type="text/css" href="style/main.css"/>
 
 </head>
 
 <body>
-  <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
 
-  <div id="container">
+<div id="inset">
+    <map name="imgmap">
+        <area shape="poly" coords="10,0,55,0,149,94,149,139" href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin" alt="Fork me on GitHub"/>
+    </map>
+    <img src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" class="git-hub" usemap="#imgmap"/>
 
     <div class="download">
-      <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin/zipball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
-      <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin/tarball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+        <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin/zipball/master" class="zip"></a>
+        <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin/tarball/master" class="tar"></a>
     </div>
+</div>
 
-    <h1><a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin">Non-Dairy-Soy-Plugin</a>
-      <span class="small">by <a href="https://github.com/evenaglia">evenaglia</a></span></h1>
+<div id="banner">
+    <h1>
+        <span class="small top">The</span>
+        <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin" style="color: #fff">Non-Dairy-Soy-Plugin</a>
+        <span class="small">by <a href="https://github.com/evenaglia">Ed Venaglia</a></span>
+    </h1>
 
     <div class="description">
-      A Google Closure Template Plugin for IntelliJ IDEA 11.x
+        A Google Closure Template Plugin for IntelliJ IDEA 11.x
+    </div>
+</div>
+
+<div id="container">
+
+    <div class="cow"></div>
+
+    <h2>Description</h2>
+
+    <p>A plugin to help with the development of Closure Templates (soy files).
+        This plugin includes support for syntax highlighting, code folding, find usages and go to declaration on
+        parameters and templates, and Structure view.
+        This plugin is still under development, and updates are subject to my available free time.
+    </p>
+
+    <h2>Install</h2>
+
+    <p>Browse the IntelliJ plugin repository through your IntelliJ IDE</p>
+
+
+    <h2>Features</h2>
+
+    <div class="feature">
+        <h3>Template and parameter name rename refactoring across files, within files</h3>
+        <p>
+            <a class="gallery" href="images/refactor_template1.png" title="Rename refactoring, enter a new name">
+                <img class="gallery-thumbnail" src="images/refactor_template1.png" alt=""/>
+            </a>
+            <a class="gallery" href="images/refactor_template2.png" title="Rename refactoring, preview changes">
+                <img class="gallery-thumbnail" src="images/refactor_template2.png" alt=""/>
+            </a>
+        </p>
     </div>
 
-    
-      <p>A plugin to help with the development of Closure Templates (soy files).
-This plugin includes support for syntax highlighting, code folding, find usages and go to declaration on parameters and templates, and Structure view.
-This plugin is still under development, and updates are subject to my available free time.
-</p>
-    
-      <h2>Install</h2>
-      <p>Browse the IntelliJ plugin repository through your IntelliJ IDE</p>
+    <div class="feature">
+        <h3>Symbol Search to find templates</h3>
+        <p>
+            <a class="gallery" href="images/symbol_search.png" title="Templates in symbol search">
+                <img class="gallery-thumbnail" src="images/symbol_search.png" alt=""/>
+            </a>
+        </p>
+    </div>
+
+    <div class="feature">
+        <h3>Go To Declaration for parameters templates across files, within files</h3>
+        <p>
+            <a class="gallery" href="images/goto_declaration.png" title="Go to the declaration of templates">
+                <img class="gallery-thumbnail" src="images/goto_declaration.png" alt="" style="width: 383px;"/>
+            </a>
+        </p>
+    </div>
+
+    <div class="feature">
+        <h3>Comments recognition</h3>
+        <p>
+            <a class="gallery" href="images/comments.png" title="Syntax highlighting in comments">
+                <img class="gallery-thumbnail" src="images/comments.png" alt=""/>
+            </a>
+        </p>
+    </div>
+
+    <div class="feature">
+        <h3>Template Code folding</h3>
+        <p>
+            <a class="gallery" href="images/template_code_folding.png" title="Code folding on templates">
+                <img class="gallery-thumbnail" src="images/template_code_folding.png" alt=""/>
+            </a>
+        </p>
+    </div>
+
+    <div class="feature">
+        <h3>Structure view</h3>
+        <p>
+            <a class="gallery" href="images/structure_view.png" title="Structure view">
+                <img class="gallery-thumbnail" src="images/structure_view.png"/>
+            </a>
+        </p>
+    </div>
+
+    <div class="feature">
+        <h3>Template and parameter usage highlighting</h3>
+        <p>
+            <a class="gallery" href="images/highlight.png" title="Highlight symbols within a file">
+                <img class="gallery-thumbnail" src="images/highlight.png" alt=""/>
+            </a>
+        </p>
+    </div>
+
+    <div class="feature">
+        <h3>Error checking</h3>
+        <p>
+            <a class="gallery" href="images/errors.png" title="Syntax highlighting of errors">
+                <img class="gallery-thumbnail" src="images/errors.png" alt=""/>
+            </a>
+        </p>
+    </div>
+
+    <div class="feature">
+        <h3>Function name syntax highlighting</h3>
+        <p>
+            <a class="gallery" href="images/syntax_highlighting.png" title="Syntax highlighting of functions">
+                <img class="gallery-thumbnail" src="images/syntax_highlighting.png" alt=""/>
+            </a>
+        </p>
+    </div>
+
+    <h2>License</h2>
+
+    <p>Apache 2.0</p>
 
 
-      <h2>Features</h2>
+    <h2>Authors</h2>
 
-      <h3>Template and parameter name rename refactoring across files, within files</h3>
-      <p>
-          <a class="gallery" href="images/refactor_template1.png"><img class="gallery-thumbnail" src="images/refactor_template1.png" alt="" /></a>
-      </p>
-      <p>
-          <a class="gallery" href="images/refactor_template2.png"><img class="gallery-thumbnail" src="images/refactor_template2.png" alt="" /></a>
-      </p>
+    <p>Ed Venaglia<br/>
+        Aron Racho</p>
 
-      <h3>Symbol Search to find templates</h3>
-      <p>
-          <a class="gallery" href="images/symbol_search.png"><img class="gallery-thumbnail" src="images/symbol_search.png" alt="" /></a>
-      </p>
-
-      <h3>Go To Declaration for parameters templates across files, within files</h3>
-      <p>
-          <a class="gallery" href="images/goto_declaration.png"><img class="gallery-thumbnail" src="images/goto_declaration.png" alt="" /></a>
-      </p>
-
-      <h3>Comments recognition</h3>
-      <p>
-          <a class="gallery" href="images/comments.png"><img class="gallery-thumbnail" src="images/comments.png" alt="" /></a>
-      </p>
-
-
-      <h3>Template Code folding</h3>
-      <p>
-          <a class="gallery" href="images/template_code_folding.png"><img class="gallery-thumbnail" src="images/template_code_folding.png" alt="" /></a>
-      </p>
-
-      <h3>Structure view</h3>
-      <p>
-          <a class="gallery" href="images/structure_view.png"><img class="gallery-thumbnail" src="images/structure_view.png" alt="" /></a>
-      </p>
-
-      <h3>Template and parameter usage highlighting</h3>
-      <p>
-          <a class="gallery" href="images/highlight.png"><img class="gallery-thumbnail" src="images/highlight.png" alt="" /></a>
-      </p>
-
-      <h3>Error checking</h3>
-      <p>
-          <a class="gallery" href="images/errors.png"><img class="gallery-thumbnail" src="images/errors.png" alt="" /></a>
-      </p>
-
-      <h3>Function name syntax highlighting</h3>
-      <p>
-          <a class="gallery" href="images/syntax_highlighting.png"><img class="gallery-thumbnail" src="images/syntax_highlighting.png" alt="" /></a>
-      </p>
-
-      <h2>License</h2>
-      <p>Apache 2.0</p>
-    
-
-      <h2>Authors</h2>
-      <p>Ed Venaglia<br/>
-         Aron Racho</p>
-    
     <h2>Download</h2>
+
     <p>
-      You can download this project in either
-      <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin/zipball/master">zip</a> or
-      <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin/tarball/master">tar formats.
+        You can download this project in either
+        <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin/zipball/master">zip</a> or
+        <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin/tarball/master">tar formats.</a>
     </p>
+
     <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/evenaglia/Non-Dairy-Soy-Plugin</pre>
+        by running:
+    <span class="code"><b>$</b> git clone git://github.com/evenaglia/Non-Dairy-Soy-Plugin</span>
     </p>
 
     <div class="footer">
-      get the source code on GitHub : <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin">evenaglia/Non-Dairy-Soy-Plugin</a>
+        get the source code on GitHub : <a href="https://github.com/evenaglia/Non-Dairy-Soy-Plugin">evenaglia/Non-Dairy-Soy-Plugin</a>
     </div>
 
-  </div>
+</div>
 
 </body>
 </html>
