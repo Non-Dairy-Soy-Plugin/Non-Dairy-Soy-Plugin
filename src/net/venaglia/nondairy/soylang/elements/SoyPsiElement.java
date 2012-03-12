@@ -23,17 +23,11 @@ import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
-import com.intellij.psi.impl.source.SourceTreeToPsiMap;
-import com.intellij.psi.impl.source.tree.CompositeElement;
-import com.intellij.psi.impl.source.tree.SharedImplUtil;
-import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -65,43 +59,33 @@ public class SoyPsiElement extends PsiElementBase implements PsiElement {
 
     @Override
     public PsiElement getParent() {
-        return SharedImplUtil.getParent(getNode());
+        return TreeNavigator.INSTANCE.getParent(getNode());
     }
 
     @Override
     @NotNull
     public PsiElement[] getChildren() {
-        PsiElement psiChild = getFirstChild();
-        if (psiChild == null) return PsiElement.EMPTY_ARRAY;
-
-        List<PsiElement> result = new ArrayList<PsiElement>();
-        while (psiChild != null) {
-            if (psiChild.getNode() instanceof CompositeElement) {
-                result.add(psiChild);
-            }
-            psiChild = psiChild.getNextSibling();
-        }
-        return PsiUtilCore.toPsiElementArray(result);
+        return TreeNavigator.INSTANCE.getAllChildren(getNode());
     }
 
     @Override
     public PsiElement getFirstChild() {
-        return SharedImplUtil.getFirstChild(getNode());
+        return TreeNavigator.INSTANCE.getFirstChild(getNode());
     }
 
     @Override
     public PsiElement getLastChild() {
-        return SharedImplUtil.getLastChild(getNode());
+        return TreeNavigator.INSTANCE.getLastChild(getNode());
     }
 
     @Override
     public PsiElement getNextSibling() {
-        return SharedImplUtil.getNextSibling(getNode());
+        return TreeNavigator.INSTANCE.getNextSibling(getNode());
     }
 
     @Override
     public PsiElement getPrevSibling() {
-        return SharedImplUtil.getPrevSibling(getNode());
+        return TreeNavigator.INSTANCE.getPrevSibling(getNode());
     }
 
     @Override
@@ -121,8 +105,7 @@ public class SoyPsiElement extends PsiElementBase implements PsiElement {
 
     @Override
     public PsiElement findElementAt(int offset) {
-        ASTNode treeElement = getNode().findLeafElementAt(offset);
-        return SourceTreeToPsiMap.treeElementToPsi(treeElement);
+        return TreeNavigator.INSTANCE.getNthChild(getNode(), offset);
     }
 
     @Override
@@ -218,4 +201,5 @@ public class SoyPsiElement extends PsiElementBase implements PsiElement {
     public static long getLastCreated() {
         return LAST_CREATED.get();
     }
+
 }

@@ -53,6 +53,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken DOC_COMMENT_TAG = new SoyToken(103, "DOC_COMMENT_TAG");
     public static final SoyToken DOC_COMMENT_IDENTIFIER = new SoyToken(104, "DOC_COMMENT_IDENTIFIER");
     public static final SoyToken DOC_COMMENT_END = new SoyToken(105, "DOC_COMMENT_END");
+    public static final SoyToken DOC_COMMENT_BAD_CHARACTER = new SoyToken(108, "DOC_COMMENT_BAD_CHARACTER");
     public static final SoyToken LINE_COMMENT = new SoyToken(107, "LINE_COMMENT");
 
     // everything not in braces or doc comments
@@ -222,7 +223,7 @@ public final class SoyToken extends IElementType {
     // eof marker
     public static final SoyToken EOF = new SoyToken(-1, "EOF");
 
-    public static final TokenSet WHITESPACE_TOKENS = TokenSet.create(WHITESPACE, DOC_COMMENT_WHITESPACE, XmlTokenType.TAG_WHITE_SPACE);
+    public static final TokenSet WHITESPACE_TOKENS = TokenSet.create(WHITESPACE, DOC_COMMENT_WHITESPACE, XmlTokenType.TAG_WHITE_SPACE, XmlTokenType.XML_WHITE_SPACE);
     public static final TokenSet COMMENT_TOKENS = TokenSet.orSet(fromValueRange(100, 149), XmlTokenType.COMMENTS);
     public static final TokenSet DOC_COMMENT_TOKENS = fromValueRange(100, 149, LINE_COMMENT, COMMENT);
     public static final TokenSet STRING_LITERAL_TOKENS = or(fromValueRange(STRING_LITERAL_BEGIN, STRING_LITERAL_END),
@@ -241,7 +242,7 @@ public final class SoyToken extends IElementType {
     public static final TokenSet BRACES = TokenSet.create(LBRACE, RBRACE);
     public static final TokenSet TAG_BRACES = TokenSet.create(TAG_LBRACE, TAG_RBRACE, TAG_END_LBRACE, TAG_END_RBRACE);
     public static final TokenSet OPERATORS = fromValueRange(900, 999, NOT, AND, OR);
-    public static final TokenSet ILLEGALS = fromValueRange(1000, 1099, BAD_STRING_ESCAPE, BRACE_IN_STRING);
+    public static final TokenSet ILLEGALS = fromValueRange(1000, 1099, BAD_STRING_ESCAPE, BRACE_IN_STRING, DOC_COMMENT_BAD_CHARACTER);
 
     public static final TokenSet WORD_TOKENS = TokenSet.orSet(COMMANDS, SPECIAL_CHARS, KEYWORDS, NUMERIC_LITERALS);
     public static final TokenSet EXPRESSION_TOKENS = TokenSet.orSet(fromValueRange(750, 849, LBRACE, RBRACE),

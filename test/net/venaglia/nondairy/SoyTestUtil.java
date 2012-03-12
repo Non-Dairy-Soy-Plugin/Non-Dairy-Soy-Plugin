@@ -18,23 +18,38 @@ package net.venaglia.nondairy;
 
 import static net.venaglia.nondairy.soylang.lexer.SoyToken.WHITESPACE_TOKENS;
 
+import com.intellij.lang.LanguageParserDefinitions;
 import com.intellij.lang.PsiBuilder;
+import com.intellij.openapi.extensions.Extensions;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import net.venaglia.nondairy.mocks.MockTreeNavigator;
 import net.venaglia.nondairy.soylang.SoyElement;
+import net.venaglia.nondairy.soylang.SoyLanguage;
+import net.venaglia.nondairy.soylang.SoyParserDefinition;
 import net.venaglia.nondairy.soylang.elements.TreeBuildingTokenSource;
+import net.venaglia.nondairy.soylang.elements.TreeNavigator;
 import net.venaglia.nondairy.soylang.elements.factory.SoyPsiElementFactory;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import net.venaglia.nondairy.soylang.lexer.SoyScannerTest;
 import net.venaglia.nondairy.soylang.lexer.SoySymbol;
 import net.venaglia.nondairy.soylang.lexer.TestableSoyScanner;
 import net.venaglia.nondairy.soylang.parser.SoyStructureParser;
+import net.venaglia.nondairy.util.SourceTuple;
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,6 +60,26 @@ import java.util.NoSuchElementException;
 @NonNls
 @SuppressWarnings({ "HardCodedStringLiteral" })
 public class SoyTestUtil {
+
+    private static AtomicBoolean INITILAIZED = new AtomicBoolean();
+
+    static {
+        init();
+    }
+    
+    public static void init() {
+        if (!INITILAIZED.getAndSet(true)) {
+            Extensions.registerAreaClass("IDEA_PROJECT", null);
+            System.setProperty(TreeNavigator.OVERRIDE_TREE_NAVIGATOR_PROPERTY,
+                               MockTreeNavigator.class.getName());
+            LanguageParserDefinitions.INSTANCE.addExplicitExtension(SoyLanguage.INSTANCE,
+                                                                    new SoyParserDefinition());
+            if (System.getProperty(PsiElementPath.TRACE_PATH_PROPERTY_NAME) == null) {
+                System.setProperty(PsiElementPath.TRACE_PATH_PROPERTY_NAME,
+                                   PsiElementPath.TRACE_PATH_BY_THREAD);
+            }
+        }
+    }
 
     public static String fromSource(String source) {
         if (source == null || "null".equals(source)) return null;
@@ -112,8 +147,13 @@ public class SoyTestUtil {
         in.close();
         return out.getBuffer().toString();
     }
-    
-    public static PsiElement getPsiTreeFor(String name) {
+
+    public static PsiElement getPsiTreeFor(@NotNull @NonNls String name) {
+        SourceTuple tuple = new SourceTuple(name);
+        return tuple.psi;
+    }
+
+    public static PsiElement getPsiTreeFor(@NotNull PsiFile fileNode, @NotNull @NonNls String name) {
         try {
             String source = getTestSourceBuffer(name);
             TestableSoyScanner scanner = SoyScannerTest.buildScanner(source, "YYINITIAL");
@@ -121,8 +161,9 @@ public class SoyTestUtil {
             TreeBuildingTokenSource tokenSource = new TreeBuildingTokenSource(source, iterator);
             PsiBuilder.Marker file = tokenSource.mark("_file_");
             new SoyStructureParser(tokenSource).parse();
+            assertTrue(tokenSource.eof());
             file.done(SoyElement.soy_file);
-            return tokenSource.buildNode(SoyPsiElementFactory.getInstance()).getPsi();
+            return tokenSource.buildNode(fileNode, SoyPsiElementFactory.getInstance());
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -172,7 +213,33 @@ public class SoyTestUtil {
         }
     }
 
+    /**
+     * Produces a human readable, multi-line string, that describes the passed
+     * element and its children as a tree.
+     * @param element The element to be described.
+     * @return A multi-line indented string, representing a tree structure.
+     */
+    public static String print(PsiElement element) {
+        StringWriter buffer = new StringWriter(4096);
+        print(element, "", new AtomicInteger(), new PrintWriter(buffer));
+        return buffer.toString();
+    }
+
+    private static void print(PsiElement element, String indent, AtomicInteger count, PrintWriter out) {
+        count.getAndIncrement();
+        out.print(indent);
+        out.println(element);
+        PsiElement[] children = element.getChildren();
+        if (children.length > 0) {
+            String childIndent = indent + "    ";
+            for (PsiElement child : children) {
+                print(child, childIndent, count, out);
+            }
+        }
+    }
+
     public static void main(String[] args) {
-        System.out.println(getPsiTreeFor("minimal.soy"));
+        PsiElement element = getPsiTreeFor("minimal.soy");
+        System.out.println(print(element));
     }
 }

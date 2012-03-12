@@ -37,15 +37,19 @@ public abstract class TokenSource {
      * @param endToken the token to stop at.
      * @param markerType an optional marker to wrap the skipped sequence with,
      *     typically an error marker.
+     * @return A count of the number of token skipped over
      */
-    public void fastForward(IElementType endToken, @Nullable IElementType markerType) {
+    public int fastForward(IElementType endToken, @Nullable IElementType markerType) {
         PsiBuilder.Marker errorMarker = markerType == null ? null : mark("errorMarker");
+        int count = 0;
         while (!eof()) {
             IElementType token = token();
             advance();
+            count ++;
             if (token == endToken) break;
         }
         if (errorMarker != null) errorMarker.done(markerType);
+        return count;
     }
 
     /**

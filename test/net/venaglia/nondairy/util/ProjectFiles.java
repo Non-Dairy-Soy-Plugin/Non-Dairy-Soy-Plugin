@@ -14,13 +14,23 @@
  *    limitations under the License.
  */
 
-{delpackage my.experiment}
+package net.venaglia.nondairy.util;
 
-{namespace my.namespace}
+import static java.lang.annotation.ElementType.TYPE;
 
-{deltemplate .foo}
-    {delcall my.namespace.dummy}
-        {param option: true/}
-        {param text}Some text{/param}
-    {/delcall}
-{/deltemplate}
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * User: ed
+ * Date: 2/29/12
+ * Time: 8:22 AM
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ TYPE })
+@Inherited
+public @interface ProjectFiles {
+    String[] value();
+}

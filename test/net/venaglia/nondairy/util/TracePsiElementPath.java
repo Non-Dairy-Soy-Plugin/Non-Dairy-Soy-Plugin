@@ -14,13 +14,23 @@
  *    limitations under the License.
  */
 
-{delpackage my.experiment}
+package net.venaglia.nondairy.util;
 
-{namespace my.namespace}
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-{deltemplate .foo}
-    {delcall my.namespace.dummy}
-        {param option: true/}
-        {param text}Some text{/param}
-    {/delcall}
-{/deltemplate}
+import static java.lang.annotation.ElementType.*;
+
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
+
+/**
+ * User: ed
+ * Date: 3/10/12
+ * Time: 12:20 PM
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ TYPE, METHOD })
+public @interface TracePsiElementPath {
+    String[] value() default { PsiElementPath.TraceState.ALL_PATHS };
+}

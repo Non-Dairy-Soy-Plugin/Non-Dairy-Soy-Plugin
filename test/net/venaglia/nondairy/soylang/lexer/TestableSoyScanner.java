@@ -17,6 +17,7 @@
 package net.venaglia.nondairy.soylang.lexer;
 
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.xml.XmlTokenType;
 import net.venaglia.nondairy.soylang.lexer.cupparser.SoyParserSymbols;
 import java_cup.runtime.Scanner;
 import java_cup.runtime.Symbol;
@@ -38,16 +39,18 @@ import java.util.Set;
  */
 public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol>, Scanner {
 
-    private static Set<SoyToken> INPUT_TOKENS_TO_SKIP;
+    private static Set<IElementType> INPUT_TOKENS_TO_SKIP;
 
     static {
         SoyToken.importParserValues(SoyParserSymbols.class);
-        Set<SoyToken> inputTokensToSkip = new HashSet<SoyToken>();
+        Set<IElementType> inputTokensToSkip = new HashSet<IElementType>();
         inputTokensToSkip.add(SoyToken.WHITESPACE);
         inputTokensToSkip.add(SoyToken.DOC_COMMENT_WHITESPACE);
         inputTokensToSkip.add(SoyToken.COMMENT);
         inputTokensToSkip.add(SoyToken.LINE_COMMENT);
         inputTokensToSkip.add(SoyToken.IGNORED_TEXT);
+        inputTokensToSkip.add(XmlTokenType.TAG_WHITE_SPACE);
+        inputTokensToSkip.add(XmlTokenType.XML_WHITE_SPACE);
         INPUT_TOKENS_TO_SKIP = Collections.unmodifiableSet(inputTokensToSkip);
     }
 

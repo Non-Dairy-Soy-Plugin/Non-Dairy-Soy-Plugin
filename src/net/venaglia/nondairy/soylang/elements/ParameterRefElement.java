@@ -56,7 +56,8 @@ public class ParameterRefElement extends ParameterElement {
                 .or(new PsiElementPath(AlwaysTruePredicate.INSTACE.onAncestors(),
                                        new ElementTypePredicate(iterator_tag).onPreviousSiblings(true),
                                        new ElementTypePredicate(tag_between_braces).onChildren(),
-                                       new ElementTypePredicate(parameter_def).onChildren()).debug("path_to_parameter_def!iterator"));
+                                       new ElementTypePredicate(parameter_def).onChildren()).debug("path_to_parameter_def!iterator"))
+                .debug("path_to_parameter_def");
 
     private final ElementPredicate parameterNamePredicate;
 

@@ -14,13 +14,19 @@
  *    limitations under the License.
  */
 
-{delpackage my.experiment}
+package net.venaglia.nondairy.mocks;
 
-{namespace my.namespace}
+import com.intellij.openapi.Disposable;
 
-{deltemplate .foo}
-    {delcall my.namespace.dummy}
-        {param option: true/}
-        {param text}Some text{/param}
-    {/delcall}
-{/deltemplate}
+/**
+* User: ed
+* Date: 3/10/12
+* Time: 3:40 PM
+*/
+public class MockDisposable implements Disposable {
+
+    @Override
+    public void dispose() {
+        // no-op
+    }
+}

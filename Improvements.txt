@@ -15,6 +15,13 @@
 
 ===============================================================================
 
+ver 0.4.2
+* HTML/XML syntax now supports DOCTYPE, preprocessor directives, and CDATA
+* A parameter definition starting with $, now shows as an error.
+
+ver 0.4.1
+* Fixed parser bug that was crashing the IDE
+
 ver 0.4.0
 * Templates can now be found with symbol search
 * "Go To Declaration", now works across files

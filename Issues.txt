@@ -22,4 +22,3 @@ Pri | Fix   | Description
  P2 | 0.4.x | go to declaration on a template arbitrarily finds one, not all delegates
  P2 | 0.4.x | msg tags cannot contain for or foreach tags and should be shown as an error
  P3 | 0.4.x | i18n resource file need description for all messages
- P3 | 0.4.x | HTML syntax highlighting occurs inside a CDATA block, but shouldn't

@@ -14,13 +14,30 @@
  *    limitations under the License.
  */
 
-{delpackage my.experiment}
+{namespace non.dairy.sample.library}
 
-{namespace my.namespace}
+/**
+* @param person
+*/
+{template .format_person autoescape="false"}
+{$person.firstname|escapeHtml}, {$person.lastname|escapeHtml}.
+{/template}
 
-{deltemplate .foo}
-    {delcall my.namespace.dummy}
-        {param option: true/}
-        {param text}Some text{/param}
-    {/delcall}
-{/deltemplate}
+/**
+* @param city
+*/
+{template .format_city autoescape="false"}
+<b>{$city.city|escapeHtml}, {$city.state}</b>
+{/template}
+
+/**
+* @param address
+*/
+{template .format_address autoescape="false"}
+<div>
+{$address.line1}
+{if $address.line2}<br/>{$address.line2}{/if}<br/>
+{call .format_city}{param city:['city':$address.city,'state':$address.state]/}{/call}
+{sp}{$address.postalCode}
+</div>
+{/template}

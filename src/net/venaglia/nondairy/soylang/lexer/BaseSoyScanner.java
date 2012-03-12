@@ -75,6 +75,7 @@ abstract class BaseSoyScanner {
      * specified radix in scanner buffer from <code>start</code>
      * to <code>end</code>
      */
+    @SuppressWarnings("JavaDoc")
     long parseLong(int start, int end, int radix) {
         long result = 0;
         long digit;
@@ -99,6 +100,7 @@ abstract class BaseSoyScanner {
     int nextStateAfterCloseTag = 0;
     int nextStateAfterLiterealTag = 0;
     int nextStateAfterString = 0;
+    int nextStateAfterHtmlAttribute = 0;
     IElementType capturedIdentifierType = SoyToken.CAPTURED_IDENTIFIER;
     char stringTerminator = '\"';
     int tagStartLine = -1;

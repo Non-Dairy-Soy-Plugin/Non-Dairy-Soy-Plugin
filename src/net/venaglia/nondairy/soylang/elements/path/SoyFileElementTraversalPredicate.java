@@ -19,7 +19,6 @@ package net.venaglia.nondairy.soylang.elements.path;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectFileIndex;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -27,6 +26,7 @@ import com.intellij.psi.PsiManager;
 import net.venaglia.nondairy.soylang.SoyFileType;
 import net.venaglia.nondairy.soylang.cache.DelegateCache;
 import net.venaglia.nondairy.soylang.cache.TemplateCache;
+import net.venaglia.nondairy.soylang.elements.TreeNavigator;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -72,7 +72,7 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
             }
         }
         for (Module module : search) {
-            PsiManager manager = PsiManager.getInstance(module.getProject());
+            PsiManager manager = TreeNavigator.INSTANCE.getPsiManager(module.getProject());
             for (VirtualFile file : findFiles(module)) {
                 PsiFile psiFile = manager.findFile(file);
                 if (psiFile != null) {
@@ -84,7 +84,7 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
     }
 
     private void getModulesToSearch(PsiElement element, Set<Module> modules) {
-        ProjectFileIndex fileIndex = ProjectRootManager.getInstance(element.getProject()).getFileIndex();
+        ProjectFileIndex fileIndex = TreeNavigator.INSTANCE.getProjectFileIndex(element.getProject());
         VirtualFile virtualFile = element.getContainingFile().getVirtualFile();
         if (virtualFile != null) {
             Module module = fileIndex.getModuleForFile(virtualFile);
@@ -97,10 +97,12 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
     
     private void collectModuleDependencies (Module start, Set<Module> modules) {
         ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(start);
-        for (Module module : moduleRootManager.getDependencies()) {
-            if (!modules.contains(module)) {
-                modules.add(module);
-                collectModuleDependencies(module, modules);
+        if (moduleRootManager != null) {
+            for (Module module : moduleRootManager.getDependencies()) {
+                if (!modules.contains(module)) {
+                    modules.add(module);
+                    collectModuleDependencies(module, modules);
+                }
             }
         }
     }

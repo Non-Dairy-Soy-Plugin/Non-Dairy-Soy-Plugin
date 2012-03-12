@@ -55,7 +55,9 @@ public class SoyStructureParser {
             if (tagElement.name().endsWith("_tag")) { // NON-NLS
                 tagPairElement = SoyElement.valueOf(tagElement.name() + "_pair"); //NON-NLS
             }
-            if (tagPairElement == null) tagPairElement = SoyElement.tag_pair;
+            if (tagPairElement == null) {
+                tagPairElement = SoyElement.tag_pair;
+            }
             within.getTagMarker().precede().done(tagPairElement);
         }
     };
@@ -146,7 +148,9 @@ public class SoyStructureParser {
                                                   sectionTokenName));
                 unclosedTagParsers.push(within); // put it back
             }
-            if (tagParser.isRequiresCloseTag()) unclosedTagParsers.push(tagParser);
+            if (tagParser.isRequiresCloseTag()) {
+                unclosedTagParsers.push(tagParser);
+            }
         } else if (tagToken == SoyToken.NAMESPACE || tagToken == SoyToken.TEMPLATE || tagToken == SoyToken.DELTEMPLATE) {
             if (!unclosedTagParsers.isEmpty()) {
                 TagParser within = unclosedTagParsers.get(0);

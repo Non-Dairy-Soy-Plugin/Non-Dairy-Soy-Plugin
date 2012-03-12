@@ -19,14 +19,17 @@ package net.venaglia.nondairy.soylang.elements.path;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
+import net.venaglia.nondairy.util.TinySet;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -92,6 +95,24 @@ public class PsiElementPath {
      */
     public static final PsiElementPath EMPTY;
 
+    /**
+     * System property that may be set to enable logging of PsiElementPath
+     * traversal operations.
+     *
+     * The system property may be set to "*" to allow logging of ALL path
+     * traversal operations. This will result in extremely verbose output.
+     */
+    @NonNls
+    public static final String TRACE_PATH_PROPERTY_NAME = "net.venaglia.nondairy.path.debug";
+
+    /**
+     * System property value for {@link PsiElementPath#TRACE_PATH_PROPERTY_NAME}
+     * that will allow dynamic configuration of which path traversals will be
+     * logged.
+     */
+    @NonNls
+    public static final String TRACE_PATH_BY_THREAD = "[dyanmic - per thread]";
+
     static {
         AbstractElementPredicate any = new AbstractElementPredicate() {
             @Override
@@ -138,6 +159,7 @@ public class PsiElementPath {
     private final ElementPredicate[] elementReferencePath;
 
     /** name, used for debugging */
+    @NonNls
     protected String name;
 
     /**
@@ -150,6 +172,14 @@ public class PsiElementPath {
      * @param elementReferencePath The list of predicates to execute.
      */
     public PsiElementPath(ElementPredicate... elementReferencePath) {
+        if (TraceState.TRACING_ENABLED) {
+            for (StackTraceElement ste : new Throwable().getStackTrace()) {
+                name = "anonymous at " + ste;
+                if (!name.contains(PsiElementPath.class.getName())) {
+                    break;
+                }
+            }
+        }
         this.elementReferencePath = elementReferencePath;
     }
 
@@ -189,7 +219,10 @@ public class PsiElementPath {
     }
 
     @NotNull PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
-        if (start.isEmpty()) return PsiElementCollection.EMPTY;
+        if (start.isEmpty()) {
+            TraceState.detailMessage("\tABORT!");
+            return PsiElementCollection.EMPTY;
+        }
         PsiElementCollection current = new PsiElementCollection(start);
         for (int i = 0, j = elementReferencePath.length; i < j && !current.isEmpty(); ++i) {
             ElementPredicate next = elementReferencePath[i];
@@ -475,14 +508,22 @@ public class PsiElementPath {
     public static class TraceState {
 
         @NonNls
-        private static final String TRACE_PATH_PROPERTY_NAME = "net.venaglia.nondairy.path.debug";
+        public static final String ALL_PATHS = "[all paths!]";
+
         private static final boolean TRACING_ENABLED;
+        private static final boolean TRACING_PER_THREAD;
         private static final Set<String> TRACING_FOR;
 
         static {
+            boolean tracingPerThread = false;
             String names = System.getProperty(TRACE_PATH_PROPERTY_NAME);
             if (names == null) {
                 TRACING_FOR = Collections.emptySet();
+            } else if ("*".equals(names)) {
+                TRACING_FOR = new AllPathsSet();
+            } else if (TRACE_PATH_BY_THREAD.equals(names)) {
+                tracingPerThread = true;
+                TRACING_FOR = new ThreadLocalSet();
             } else {
                 Set<String> namesSet = new HashSet<String>();
                 for (String name : names.toLowerCase().split("\\|")) {
@@ -491,11 +532,18 @@ public class PsiElementPath {
                 namesSet.remove(""); // can't contain the empty string
                 TRACING_FOR = Collections.unmodifiableSet(namesSet);
             }
-            TRACING_ENABLED = !TRACING_FOR.isEmpty();
+            TRACING_PER_THREAD = tracingPerThread;
+            TRACING_ENABLED = TRACING_PER_THREAD || !TRACING_FOR.isEmpty();
             if (TRACING_ENABLED) {
-                System.out.println("PsiTemplatePath tracing has been enabled for:"); //NON-NLS
-                for (String name : TRACING_FOR) {
-                    System.out.println("\t" + name);
+                if (TRACING_PER_THREAD) {
+                    System.out.println("PsiTemplatePath tracing is dynamic, configured per thread"); //NON-NLS
+                } else if (TRACING_FOR.contains(ALL_PATHS)) {
+                    System.out.println("PsiTemplatePath tracing is enabled for:"); //NON-NLS
+                } else {
+                    System.out.println("PsiTemplatePath tracing is enabled for:"); //NON-NLS
+                    for (String name : TRACING_FOR) {
+                        System.out.println("\t" + name);
+                    }
                 }
             }
         }
@@ -569,10 +617,10 @@ public class PsiElementPath {
          * from the current top of the TraceState stack.
          * @param name The debug name to be pushed on the stack.
          */
-        public static void push(@Nullable String name) {
+        public static void push(@Nullable @NonNls String name) {
             if (TRACING_ENABLED) {
                 Level level;
-                if (name == null) {
+                if (name == null || name.startsWith("anonymous at ")) {
                     level = Level.INHERIT;
                 } else if (TRACING_FOR.contains(name.toLowerCase())) {
                     String override = System.getProperty(TRACE_PATH_PROPERTY_NAME + "." + name);
@@ -697,6 +745,81 @@ public class PsiElementPath {
          */
         public static void fineMessage(@NotNull @NonNls String format, Object... args) {
             levelMessage(Level.FINE, format, args);
+        }
+
+        /**
+         * @return true if path navigation tracing can be changed dynamically,
+         *     per thread, false otherwise.
+         */
+        public static boolean isDebugPerThread() {
+            return TRACING_PER_THREAD;
+        }
+
+        /**
+         * @param names The names to enable debugging for
+         * @throws IllegalStateException if path navigation cannot be changed
+         *     dynamically
+         */
+        public static void enableDebugFor(String... names) {
+            if (!TRACING_PER_THREAD) {
+                throw new IllegalStateException();
+            }
+            if (names.length > 0) {
+                Set<String> nameSet = new HashSet<String>(Arrays.asList(names));
+                if (nameSet.contains(ALL_PATHS)) {
+                    nameSet = new AllPathsSet();
+                }
+                ThreadLocalSet.SET.set(nameSet);
+                System.out.println("PsiTemplatePath tracing is enabled for (" + Thread.currentThread() + "):"); //NON-NLS
+                for (String name : TRACING_FOR) {
+                    System.out.println("\t" + name);
+                }
+            } else {
+                System.out.println("PsiTemplatePath tracing is disabled (" + Thread.currentThread() + ")"); //NON-NLS
+                ThreadLocalSet.SET.remove();
+            }
+        }
+
+        /**
+         * This class is used when debugging all path navigation operations
+         */
+        private static class AllPathsSet extends TinySet<String> {
+
+            private AllPathsSet() {
+                this.add(ALL_PATHS);
+            }
+
+            @Override
+            public boolean contains(Object o) {
+                return true;
+            }
+        }
+
+        /**
+         * This class is used by the TraceState when tracing can be configured
+         * dynamically
+         */
+        private static class ThreadLocalSet extends AbstractSet<String> {
+
+            static ThreadLocal<Set<String>> SET = new ThreadLocal<Set<String>>();
+            
+            @Override
+            public Iterator<String> iterator() {
+                Set<String> set = SET.get();
+                return set == null ? Collections.<String>emptySet().iterator() : set.iterator();
+            }
+
+            @Override
+            public int size() {
+                Set<String> set = SET.get();
+                return set == null ? 0 : set.size();
+            }
+
+            @Override
+            public boolean contains(Object o) {
+                Set<String> set = SET.get();
+                return set != null && (set.contains(o) || set.contains("*"));
+            }
         }
     }
 }

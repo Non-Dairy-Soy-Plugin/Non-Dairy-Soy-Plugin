@@ -65,6 +65,7 @@ class ExpressionParser {
     private IElementType expressionType = expression;
     private int prec = PREC_UNSPECIFIED;
     private int remainingValues = -1;
+    private int capturedTokens = 0;
     private boolean markerIsDone = false;
     private ExpressionType apparentType = ExpressionType.NONE;
     private ExpressionType expectingType = ExpressionType.ANY;
@@ -110,6 +111,8 @@ class ExpressionParser {
 //                                              apparentType.getLabel(),
 //                                              expectingType.getLabel()));
 //                    wrapper.done(expressionType);
+                } else if (capturedTokens == 0) {
+                    exprMarker.drop();
                 } else {
                     exprMarker.done(expressionType);
                 }
@@ -143,6 +146,7 @@ class ExpressionParser {
                     if (--parenCount < 0) break;
                 }
                 source.advance();
+                parser.capturedTokens++;
             } else {
                 break;
             }
@@ -150,6 +154,9 @@ class ExpressionParser {
         while (parser != null) {
             parser.done();
             if (parser == this) break;
+            if (parser.parent != null) {
+                parser.parent.capturedTokens += parser.capturedTokens;
+            }
             parser = parser.parent;
         }
     }
@@ -158,6 +165,7 @@ class ExpressionParser {
         prec = PREC_LITERAL;
         expressionType = constant_expression;
         source.advance();
+        capturedTokens++;
         remainingValues = 0;
         done();
     }
@@ -176,7 +184,7 @@ class ExpressionParser {
             char delim = source.text().charAt(0);
             prec = PREC_LITERAL;
             expressionType = constant_expression;
-            source.fastForward(SoyToken.STRING_LITERAL_END, null);
+            capturedTokens += source.fastForward(SoyToken.STRING_LITERAL_END, null);
             remainingValues = 0;
             if (delim == '"') {
                 done(I18N.msg("syntax.error.string.literal.double.quotes"));
@@ -187,43 +195,58 @@ class ExpressionParser {
             prec = PREC_LITERAL;
             expressionType = parameter_ref;
             source.advance();
+            capturedTokens++;
             remainingValues = 0;
             done();
         } else if (token == SoyToken.LPAREN) {
             prec = PREC_PARENTHESIS;
             source.advance();
+            capturedTokens++;
             ExpressionParser innerParser = new ExpressionParser(source);
             innerParser.expecting(expectingType).parse();
             apparentType = apparentType.or(innerParser.apparentType);
-            if (!source.eof() && source.token() == SoyToken.RPAREN) source.advance();
+            capturedTokens += innerParser.capturedTokens;
+            if (!source.eof() && source.token() == SoyToken.RPAREN) {
+                source.advance();
+                capturedTokens++;
+            }
             remainingValues = 0;
         } else if (token == SoyToken.LBRACK) {
             prec = PREC_PARENTHESIS;
             expressionType = bracket_property_ref;
             source.advance();
+            capturedTokens++;
             ExpressionParser innerParser = new ExpressionParser(source);
             innerParser.expecting(expectingType).parse();
             apparentType = apparentType.or(innerParser.apparentType);
-            if (!source.eof() && source.token() == SoyToken.RBRACK) source.advance();
+            capturedTokens += innerParser.capturedTokens;
+            if (!source.eof() && source.token() == SoyToken.RBRACK) {
+                source.advance();
+                capturedTokens++;
+            }
             remainingValues = 0;
         } else if (token == SoyToken.MINUS) {
             apparentType = apparentType.or(ExpressionType.NUMBER);
             prec = PREC_UMINUS_NOT;
             source.advance();
+            capturedTokens++;
             remainingValues = 1;
         } else if (token == SoyToken.NOT) {
             apparentType = apparentType.or(ExpressionType.BOOLEAN);
             prec = PREC_UMINUS_NOT;
             source.advance();
+            capturedTokens++;
             remainingValues = 1;
         } else if (token == SoyToken.CAPTURED_IDENTIFIER && parent != null && parent.prec == PREC_DOT) {
             prec = PREC_LITERAL;
             source.advance();
+            capturedTokens++;
             remainingValues = 0;
         } else if (token == SoyToken.CAPTURED_IDENTIFIER) {
             prec = PREC_LITERAL;
             expressionType = global_expression;
             source.advance();
+            capturedTokens++;
             remainingValues = 0;
             done();
         } else if (token == SoyToken.CAPTURED_FUNCTION_IDENTIFIER) {
@@ -251,6 +274,7 @@ class ExpressionParser {
         }
         PsiBuilder.Marker beginCall = source.mark("beginCall");
         source.advance();
+        capturedTokens++;
         if (source.eof()) {
             beginCall.drop();
             return -1;
@@ -267,6 +291,7 @@ class ExpressionParser {
                 break;
             }
             source.advance();
+            capturedTokens++;
             if (!source.eof()) {
                 if (parseSingleExpression()) argCount++;
             }
@@ -282,6 +307,7 @@ class ExpressionParser {
                 beginCall.drop();
             } else {
                 source.advance();
+                capturedTokens++;
                 beginCall.done(function_call_args);
             }
         }
@@ -296,6 +322,7 @@ class ExpressionParser {
         ExpressionParser expressionParser = new ExpressionParser(source).expecting(expectingType);
         expressionParser.parse();
         apparentType = apparentType.or(expressionParser.expectingType);
+        capturedTokens += expressionParser.capturedTokens;
         return expressionParser.prec != PREC_UNSPECIFIED;
     }
 
@@ -304,12 +331,14 @@ class ExpressionParser {
 
         while (parser.parent != null && parser.parent.prec >= prec && parser.parent.prec != PREC_PARENTHESIS) {
             parser.done();
+            parser.parent.capturedTokens += parser.capturedTokens;
             parser = parser.parent;
         }
 
         PsiBuilder.Marker newMarker = parser.exprMarker.precede();
         parser.done();
         source.advance();
+        parser.capturedTokens++;
         parser.expressionType = expression;
         parser.exprMarker = newMarker;
         parser.markerIsDone = false;
@@ -344,14 +373,17 @@ class ExpressionParser {
                 ExpressionParser leftParser = new ExpressionParser(source);
                 leftParser.expecting(expectingType).parse();
                 apparentType = leftParser.apparentType;
+                parser.capturedTokens += leftParser.capturedTokens;
             }
             if (!source.eof()) {
                 if (source.token() == SoyToken.COLON) {
                     parser.remainingValues = 1;
                     source.advance();
+                    parser.capturedTokens++;
                     ExpressionParser rightParser = new ExpressionParser(source);
                     rightParser.expecting(expectingType).parse();
                     apparentType.or(rightParser.apparentType);
+                    parser.capturedTokens += rightParser.capturedTokens;
                     parser.remainingValues--;
                     done();
                 } else {
@@ -365,9 +397,13 @@ class ExpressionParser {
             return parser.parent;
         } else if (SoyToken.EXPRESSION_TOKENS.contains(token)) {
             parser = new ExpressionParser(parser);
-        } else {
+        } else if (parser.parent != null) {
+            parser.parent.capturedTokens += parser.capturedTokens;
             parser.done();
             return parser.parent;
+        } else {
+            parser.done();
+            return null;
         }
         return parser;
     }

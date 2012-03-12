@@ -97,6 +97,7 @@ EndLiteralBlock = "{/literal}"
 /* HTML classes */
 HtmlIdentifier = [a-zA-Z_] [-a-zA-Z0-9_-]*
 HtmlCommentText = [^-]+ | "-" [^-] | "--" [^>]
+HtmlCDataText = [^\]\{\}]+ | "]" [^\]\{\}] | "]]" [^>\{\}]
 
 HtmlMnemonicEntityId = [a-zA-Z] [a-zA-Z0-9] {1,9}
 HtmlDecimalEntityId = "#" [1-9] [0-9] {0,4} + "#0"
@@ -108,6 +109,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
 %state HTML_INITIAL, HTML_TAG_START, HTML_TAG_END, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_NAME_RESUME, HTML_ATTRIBUTE_EQ
 %state HTML_ATTRIBUTE_VALUE, HTML_ATTRIBUTE_VALUE_1, HTML_ATTRIBUTE_VALUE_2, HTML_COMMENT
+%state HTML_DOCTYPE, HTML_DIRECTIVE, HTML_CDATA
 
 %%
 
@@ -563,6 +565,8 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <DOCS_IDENT> {
+  "$" {Identifier}               { yypushback(yylength() - 1);
+                                   return symbol(DOC_COMMENT_BAD_CHARACTER); }
   {Identifier}                   { yybegin(DOCS); return symbol(DOC_COMMENT_IDENTIFIER, yytext().toString()); }
   {LineTerminator}               { yybegin(DOCS_BOL); return symbol(DOC_COMMENT, yytext().toString()); }
   [ \t\f]+                       { return symbol(DOC_COMMENT_WHITESPACE, yytext().toString()); }
@@ -684,12 +688,18 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    return symbol(XML_END_TAG_START); }
   "<!--"                         { yybegin(HTML_COMMENT);
                                    return symbol(XML_COMMENT_START); }
+  "<!DOCTYPE"                    { yybegin(HTML_DOCTYPE);
+                                   return symbol(XML_DOCTYPE_START); }
+  "<![CDATA["                    { yybegin(HTML_CDATA);
+                                   return symbol(XML_CDATA_START); }
+  "<?"                           { yybegin(HTML_DIRECTIVE);
+                                   return symbol(XML_DECL_START); }
   "<" | ">"                      { return symbol(XML_BAD_CHARACTER); }
 
-  {WhiteSpace}+                  { return symbol(WHITESPACE); }
+  {WhiteSpace}+                  { return symbol(XML_WHITE_SPACE); }
   {HtmlEntityRef}                { return symbol(XML_CHAR_ENTITY_REF, yytext()); }
   [^{}<>&/ \r\n\t\f] ( [^{}<>&\r\n]* [^{}<>& \r\n\t\f] )? |
-  [^\r\n{}<>/]+ | [^\r\n]        { return symbol(XML_DATA_CHARACTERS, yytext()); }
+  [^\r\n&{}<>/]+ | [^&\r\n]      { return symbol(XML_DATA_CHARACTERS, yytext()); }
   .                              { return symbol(XML_BAD_CHARACTER); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
@@ -702,7 +712,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
 <HTML_TAG_START> {
   {HtmlIdentifier} ":" {HtmlIdentifier} |
-  {HtmlIdentifier}               { yybegin(closeHtml ? HTML_TAG_END : HTML_ATTRIBUTE_NAME); return symbol(XML_TAG_NAME, yytext()); }
+  {HtmlIdentifier}               { nextStateAfterHtmlAttribute = HTML_INITIAL;
+                                   yybegin(closeHtml ? HTML_TAG_END : HTML_ATTRIBUTE_NAME);
+                                   return symbol(XML_TAG_NAME, yytext()); }
   .                              { return symbol(XML_BAD_CHARACTER); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
@@ -716,7 +728,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
 <HTML_ATTRIBUTE_NAME> {
   {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
-  {HtmlIdentifier}               { yybegin(HTML_ATTRIBUTE_EQ); return symbol(XML_EQ); }
+  {HtmlIdentifier}               { yybegin(HTML_ATTRIBUTE_EQ); return symbol(XML_NAME); }
   "{" "{"?                       { return symbol(LBRACE_ERROR); }
   "}" "}"?                       { return symbol(RBRACE_ERROR); }
   "{" "{"? [^ \t\f\r\n}]         { yybegin(OPEN_TAG);
@@ -774,7 +786,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <HTML_ATTRIBUTE_EQ> {
-  "="                            { yybegin(HTML_ATTRIBUTE_VALUE); return symbol(XML_EQ); }
+  "="                            { nextStateAfterHtmlAttribute = HTML_ATTRIBUTE_NAME;
+                                   yybegin(HTML_ATTRIBUTE_VALUE);
+                                   return symbol(XML_EQ); }
   {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
   .                              { yypushback(1); yybegin(HTML_ATTRIBUTE_NAME); }
   <<EOF>>                        { yybegin(YYINITIAL); }
@@ -782,10 +796,13 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 
 <HTML_ATTRIBUTE_VALUE> {
   {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
-  {HtmlIdentifier}               { yybegin(HTML_ATTRIBUTE_NAME); return symbol(XML_ATTRIBUTE_VALUE_TOKEN); }
-  \'                             { yybegin(HTML_ATTRIBUTE_VALUE_1); return symbol(XML_ATTRIBUTE_VALUE_START_DELIMITER); }
-  \"                             { yybegin(HTML_ATTRIBUTE_VALUE_2); return symbol(XML_ATTRIBUTE_VALUE_START_DELIMITER); }
-  .                              { yypushback(1); yybegin(HTML_ATTRIBUTE_NAME); }
+  {HtmlIdentifier}               { yybegin(nextStateAfterHtmlAttribute); yypushback(yylength()); }
+  \'                             { yybegin(HTML_ATTRIBUTE_VALUE_1);
+                                   return symbol(XML_ATTRIBUTE_VALUE_START_DELIMITER); }
+  \"                             { yybegin(HTML_ATTRIBUTE_VALUE_2);
+                                   return symbol(XML_ATTRIBUTE_VALUE_START_DELIMITER); }
+  .                              { yypushback(1);
+                                   yybegin(nextStateAfterHtmlAttribute); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
 
@@ -808,11 +825,13 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    nextStateAfterCloseTag = HTML_ATTRIBUTE_VALUE_1;
                                    tagStartLine = yyline;
                                    return symbol(TAG_END_LBRACE, yytext().toString()); }
-  \'                             { yybegin(HTML_ATTRIBUTE_NAME); return symbol(XML_ATTRIBUTE_VALUE_END_DELIMITER); }
+  \'                             { yybegin(nextStateAfterHtmlAttribute);
+                                   return symbol(XML_ATTRIBUTE_VALUE_END_DELIMITER); }
 
   {HtmlEntityRef}                { return symbol(XML_CHAR_ENTITY_REF, yytext()); }
   [^{}<>&']+                     { return symbol(XML_ATTRIBUTE_VALUE_TOKEN, yytext()); }
-  ">"                            { yybegin(HTML_INITIAL); return symbol(XML_BAD_CHARACTER); }
+  ">"                            { yybegin(nextStateAfterHtmlAttribute);
+                                   return symbol(XML_BAD_CHARACTER); }
   .                              { return symbol(XML_BAD_CHARACTER); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
@@ -836,11 +855,103 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    nextStateAfterCloseTag = HTML_ATTRIBUTE_VALUE_2;
                                    tagStartLine = yyline;
                                    return symbol(TAG_END_LBRACE, yytext().toString()); }
-  \"                             { yybegin(HTML_ATTRIBUTE_NAME); return symbol(XML_ATTRIBUTE_VALUE_END_DELIMITER); }
+  \"                             { yybegin(nextStateAfterHtmlAttribute);
+                                   return symbol(XML_ATTRIBUTE_VALUE_END_DELIMITER); }
 
   {HtmlEntityRef}                { return symbol(XML_CHAR_ENTITY_REF, yytext()); }
   [^{}<>&\"]+                    { return symbol(XML_ATTRIBUTE_VALUE_TOKEN, yytext()); }
-  ">"                            { yybegin(HTML_INITIAL); return symbol(XML_BAD_CHARACTER); }
+  ">"                            { yybegin(nextStateAfterHtmlAttribute);
+                                   return symbol(XML_BAD_CHARACTER); }
   .                              { return symbol(XML_BAD_CHARACTER); }
+  <<EOF>>                        { yybegin(YYINITIAL); }
+}
+
+<HTML_DOCTYPE> {
+  "{" "{"?                       { return symbol(LBRACE_ERROR); }
+  "}" "}"?                       { return symbol(RBRACE_ERROR); }
+  "{" "{"? [^ \t\f\r\n} ]        { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = false;
+                                   doubleBraceTag = yylength() == 2;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_DOCTYPE;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_LBRACE, yytext().toString()); }
+  "{" "{"? "/" [^ \t\f\r\n}]     { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = true;
+                                   doubleBraceTag = yylength() == 3;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_DOCTYPE;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_END_LBRACE, yytext().toString()); }
+  "SYSTEM"                       { return symbol(XML_DOCTYPE_SYSTEM); }
+  "PUBLIC"                       { return symbol(XML_DOCTYPE_PUBLIC); }
+  {HtmlIdentifier}               { return symbol(XML_NAME); }
+  "="                            { nextStateAfterHtmlAttribute = HTML_DOCTYPE;
+                                   yybegin(HTML_ATTRIBUTE_VALUE);
+                                   return symbol(XML_EQ); }
+  \" [^\"]* \"                   { return symbol(XML_ATTRIBUTE_VALUE_TOKEN); }
+  \' [^\']* \'                   { return symbol(XML_ATTRIBUTE_VALUE_TOKEN); }
+  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  ">"                            { yybegin(HTML_INITIAL); return symbol(XML_DOCTYPE_END); }
+  .                              { return symbol(XML_BAD_CHARACTER); }
+  <<EOF>>                        { yybegin(YYINITIAL); }
+}
+
+<HTML_DIRECTIVE> {
+  "{" "{"?                       { return symbol(LBRACE_ERROR); }
+  "}" "}"?                       { return symbol(RBRACE_ERROR); }
+  "{" "{"? [^ \t\f\r\n} ]        { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = false;
+                                   doubleBraceTag = yylength() == 2;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_DIRECTIVE;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_LBRACE, yytext().toString()); }
+  "{" "{"? "/" [^ \t\f\r\n}]     { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = true;
+                                   doubleBraceTag = yylength() == 3;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_DIRECTIVE;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_END_LBRACE, yytext().toString()); }
+  {HtmlIdentifier}               { return symbol(XML_NAME); }
+  "="                            { nextStateAfterHtmlAttribute = HTML_DIRECTIVE;
+                                   yybegin(HTML_ATTRIBUTE_VALUE);
+                                   return symbol(XML_EQ); }
+  \" | \'                        { yypushback(1);
+                                   nextStateAfterCloseTag = HTML_DIRECTIVE;
+                                   yybegin(HTML_ATTRIBUTE_VALUE); }
+  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  "?>"                           { yybegin(HTML_INITIAL); return symbol(XML_DECL_END); }
+  ">"                            { yybegin(HTML_INITIAL); return symbol(XML_DECL_END); }
+  .                              { return symbol(XML_BAD_CHARACTER); }
+  <<EOF>>                        { yybegin(YYINITIAL); }
+}
+
+<HTML_CDATA> {
+  "{" "{"?                       { return symbol(LBRACE_ERROR); }
+  "}" "}"?                       { return symbol(RBRACE_ERROR); }
+  "{" "{"? [^ \t\f\r\n} ]        { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = false;
+                                   doubleBraceTag = yylength() == 2;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_CDATA;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_LBRACE, yytext().toString()); }
+  "{" "{"? "/" [^ \t\f\r\n}]     { yybegin(OPEN_TAG);
+                                   yypushback(1);
+                                   closeTag = true;
+                                   doubleBraceTag = yylength() == 3;
+                                   currentCommand = null;
+                                   nextStateAfterCloseTag = HTML_CDATA;
+                                   tagStartLine = yyline;
+                                   return symbol(TAG_END_LBRACE, yytext().toString()); }
+  "]]>"                          { yybegin(HTML_INITIAL); return symbol(XML_CDATA_END); }
+  {HtmlCDataText}+               { return symbol(XML_PCDATA); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }

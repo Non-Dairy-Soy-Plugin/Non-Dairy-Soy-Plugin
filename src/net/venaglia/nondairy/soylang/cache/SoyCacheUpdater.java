@@ -19,16 +19,14 @@ package net.venaglia.nondairy.soylang.cache;
 import com.intellij.ide.caches.CacheUpdater;
 import com.intellij.ide.caches.FileContent;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.FilenameIndex;
 import net.venaglia.nondairy.soylang.SoyFileType;
+import net.venaglia.nondairy.soylang.elements.TreeNavigator;
 import net.venaglia.nondairy.util.TinySet;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -75,7 +73,7 @@ public class SoyCacheUpdater implements CacheUpdater {
 
     public SoyCacheUpdater(Project project) {
         this.project = project;
-        fileIndex = ProjectRootManager.getInstance(project).getFileIndex();
+        fileIndex = TreeNavigator.INSTANCE.getProjectFileIndex(project);
         if ("true".equals(System.getProperty(DEBUG_CACHE_PROPERTY))) { //NON-NLS
             Thread thread = new Thread(new CacheDebugger(project), "Soy Template Cache Debugger - " + project); //NON-NLS
             thread.setDaemon(true);
@@ -121,7 +119,7 @@ public class SoyCacheUpdater implements CacheUpdater {
 
     @SuppressWarnings("StringEquality")
     private void updateCacheImpl(@NotNull DelegateCache delegateCache, @NotNull VirtualFile file) {
-        Document document = FileDocumentManager.getInstance().getDocument(file);
+        Document document = TreeNavigator.INSTANCE.getDocument(file);
         Collection<String> templates = new ArrayList<String>(16);
         Collection<String> deltemplates = new ArrayList<String>(16);
         String delegate = DelegateCache.DEFAULT_DELEGATE;
@@ -166,7 +164,7 @@ public class SoyCacheUpdater implements CacheUpdater {
         if (delegateCache != null) {
             removeFromCacheImpl(delegateCache, file);
         } else {
-            for (Module module : ModuleManager.getInstance(project).getModules()) {
+            for (Module module : TreeNavigator.INSTANCE.getModules(project)) {
                 removeFromCacheImpl(DelegateCache.getDelegateCache(module), file);
             }
         }
@@ -246,7 +244,7 @@ public class SoyCacheUpdater implements CacheUpdater {
         @NonNls
         private void logChanges(Project project, PrintWriter log) {
             Collection<Module> modules = new HashSet<Module>(
-                    Arrays.asList(ModuleManager.getInstance(project).getModules())
+                    Arrays.asList(TreeNavigator.INSTANCE.getModules(project))
             );
             lastVersions.keySet().retainAll(modules);
             modules.removeAll(lastVersions.keySet());
