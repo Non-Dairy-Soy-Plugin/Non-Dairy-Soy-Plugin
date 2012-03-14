@@ -42,7 +42,11 @@ public class MockProjectEnvironmentRunner extends BlockJUnit4ClassRunner {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                for (String name : projectFiles.value()) {
+                ProjectFiles files = method.getMethod().getAnnotation(ProjectFiles.class);
+                if (files == null) {
+                    files = projectFiles;
+                }
+                for (String name : files.value()) {
                     new SourceTuple(name);
                 }
                 if (PsiElementPath.TraceState.isDebugPerThread()) {

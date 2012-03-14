@@ -26,14 +26,11 @@ import net.venaglia.nondairy.util.ProjectFiles;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Before;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
@@ -47,20 +44,8 @@ import static org.junit.Assert.*;
  * definitions within them.
  */
 @RunWith(MockProjectEnvironmentRunner.class)
-@ProjectFiles({"library.soy","render1.soy","render2.soy","minimal.soy","delegates.soy"})
+@ProjectFiles({"library.soy","render1.soy","render2.soy"})
 public abstract class AbstractPsiElementTest {
-
-    private Map<String,PsiFile> rootPsiElementsByTestFile;
-
-    @Before
-    public void setup() {
-        rootPsiElementsByTestFile = new HashMap<String,PsiFile>();
-        for (String filename : getClass().getAnnotation(ProjectFiles.class).value()) {
-            PsiFile root = MockProjectEnvironment.findPsiFile(filename);
-            assertNotNull(root);
-            rootPsiElementsByTestFile.put(filename, root);
-        }
-    }
 
     protected PsiElementCollection flatten(@NotNull PsiFile root) {
         PsiElementCollection elements = new PsiElementCollection();
@@ -94,7 +79,7 @@ public abstract class AbstractPsiElementTest {
                                                                        @Nullable final Class<T> type,
                                                                        @Nullable final Pattern pattern,
                                                                        @Nullable ElementPredicate predicate) {
-        PsiFile root = rootPsiElementsByTestFile.get(filename);
+        PsiFile root = findRootElement(filename);
         PsiElementCollection elements = flatten(root);
         if (type != null) {
             elements = elements.applyPredicate(new ElementPredicate() {
@@ -152,7 +137,10 @@ public abstract class AbstractPsiElementTest {
         return type.cast(iterator.next());
     }
 
+    @NotNull
     protected PsiFile findRootElement(@NotNull @NonNls String filename) {
-        return rootPsiElementsByTestFile.get(filename);
+        PsiFile root = MockProjectEnvironment.findPsiFile(filename);
+        assertNotNull(root);
+        return root;
     }
 }

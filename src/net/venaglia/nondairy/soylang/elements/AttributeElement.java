@@ -35,8 +35,6 @@ import org.jetbrains.annotations.Nullable;
 public class AttributeElement extends SoyPsiElement {
 
     private static final PsiElementPath PATH_TO_ATTRIBUTE_NAME = new PsiElementPath(
-            new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
-            new ElementTypePredicate(SoyElement.attribute).onChildren(),
             new ElementTypePredicate(SoyElement.attribute_key).onChildren()
     ).debug("path_to_attribute_name");
 

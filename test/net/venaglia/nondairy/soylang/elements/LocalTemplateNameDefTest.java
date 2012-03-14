@@ -24,6 +24,7 @@ import com.intellij.navigation.ItemPresentation;
 import com.intellij.ui.RowIcon;
 import com.intellij.util.PlatformIcons;
 import net.venaglia.nondairy.soylang.icons.SoyIcons;
+import net.venaglia.nondairy.util.ProjectFiles;
 import org.junit.Test;
 
 import javax.swing.*;
@@ -80,6 +81,25 @@ public class LocalTemplateNameDefTest extends AbstractPsiElementTest {
     }
 
     @Test
+    @ProjectFiles({"example.soy"})
+    public void testGetPresentation_private() throws Exception {
+        LocalTemplateNameDef def = findElement("example.soy",
+                                               LocalTemplateNameDef.class,
+                                               ".nondairy",
+                                               null);
+        ItemPresentation presentation = def.getPresentation();
+        assertNotNull(presentation);
+        assertEquals("example.soy", presentation.getLocationString());
+        assertEquals("example.soy.nondairy", presentation.getPresentableText());
+        Icon icon = presentation.getIcon(true);
+        assertTrue(icon instanceof RowIcon);
+        assertEquals(2, ((RowIcon)icon).getIconCount());
+        assertEquals(SoyIcons.TEMPLATE, ((RowIcon)icon).getIcon(0));
+        assertEquals(PlatformIcons.PRIVATE_ICON, ((RowIcon)icon).getIcon(1));
+    }
+
+    @Test
+    @ProjectFiles({"delegates.soy"})
     public void testGetPresentation_deltemplate() throws Exception {
         LocalTemplateNameDef def = findElement("delegates.soy",
                                                LocalTemplateNameDef.class,

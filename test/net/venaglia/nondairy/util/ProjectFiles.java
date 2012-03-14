@@ -17,6 +17,7 @@
 package net.venaglia.nondairy.util;
 
 import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.ElementType.METHOD;
 
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -29,7 +30,7 @@ import java.lang.annotation.Target;
  * Time: 8:22 AM
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ TYPE })
+@Target({ TYPE, METHOD })
 @Inherited
 public @interface ProjectFiles {
     String[] value();

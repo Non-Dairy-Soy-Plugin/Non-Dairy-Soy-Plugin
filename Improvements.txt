@@ -18,6 +18,7 @@
 ver 0.4.2
 * HTML/XML syntax now supports DOCTYPE, preprocessor directives, and CDATA
 * A parameter definition starting with $, now shows as an error.
+* Fixed bug where private templates would show with a public icon in structure view.
 
 ver 0.4.1
 * Fixed parser bug that was crashing the IDE
