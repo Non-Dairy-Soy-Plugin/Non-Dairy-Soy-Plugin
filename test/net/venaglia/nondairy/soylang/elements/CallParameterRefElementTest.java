@@ -16,8 +16,10 @@
 
 package net.venaglia.nondairy.soylang.elements;
 
+import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -63,5 +65,77 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
         PsiElement actual = psiReference.resolve();
         assertNotNull(actual);
         assertSame(def, actual);
+    }
+
+    @Test
+    public void testGetTemplateName_sameFile() throws Exception {
+        CallParameterRefElement ref = findElement("library.soy",
+                                                  CallParameterRefElement.class,
+                                                  "city",
+                                                  null);
+        assertEquals("non.dairy.sample.library.format_city", ref.getTemplateName());
+    }
+
+    @Test
+    public void testGetTemplateName_crossFile() throws Exception {
+        CallParameterRefElement ref = findNthElement("render1.soy",
+                                                     CallParameterRefElement.class,
+                                                     "person",
+                                                     null,
+                                                     0,
+                                                     2);
+        assertEquals("non.dairy.sample.library.format_person", ref.getTemplateName());
+    }
+
+    @Test
+    public void testGetNamespace_sameFile() throws Exception {
+        CallParameterRefElement ref = findElement("library.soy",
+                                                  CallParameterRefElement.class,
+                                                  "city",
+                                                  null);
+        assertEquals("non.dairy.sample.library", ref.getNamespace());
+    }
+
+    @Test
+    public void testGetNamespace_crossFile() throws Exception {
+        CallParameterRefElement ref = findNthElement("render1.soy",
+                                                     CallParameterRefElement.class,
+                                                     "person",
+                                                     null,
+                                                     0,
+                                                     2);
+        assertEquals("non.dairy.sample.library", ref.getNamespace());
+    }
+
+    @Test
+    public void testGetName_sameFile() throws Exception {
+        CallParameterRefElement ref = findElement("library.soy",
+                                                  CallParameterRefElement.class,
+                                                  "city",
+                                                  null);
+        assertEquals("city", ref.getName());
+    }
+
+    @Test
+    public void testGetName_crossFile() throws Exception {
+        CallParameterRefElement ref = findNthElement("render1.soy",
+                                                     CallParameterRefElement.class,
+                                                     "person",
+                                                     null,
+                                                     0,
+                                                     2);
+        assertEquals("person", ref.getName());
+    }
+
+    @Test
+    public void testGetPresentation() throws Exception {
+        CallParameterRefElement ref = findNthElement("render1.soy",
+                                                     CallParameterRefElement.class,
+                                                     "person",
+                                                     null,
+                                                     0,
+                                                     2);
+        ItemPresentation presentation = ref.getPresentation();
+        assertNull(presentation);
     }
 }

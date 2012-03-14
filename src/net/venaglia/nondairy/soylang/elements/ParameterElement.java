@@ -75,8 +75,8 @@ public abstract class ParameterElement
     @Override
     public String getNamespace() {
         PsiElementCollection elements = PATH_TO_NAMESPACE_NAME.navigate(this);
-        NamespaceDefElement namespaceDefElement = (NamespaceDefElement)elements.oneOrNull();
-        return namespaceDefElement != null ? namespaceDefElement.getName() : null;
+        NamespaceMemberElement namespaceDefElement = (NamespaceMemberElement)elements.oneOrNull();
+        return namespaceDefElement != null ? namespaceDefElement.getNamespace() : null;
     }
 
 }

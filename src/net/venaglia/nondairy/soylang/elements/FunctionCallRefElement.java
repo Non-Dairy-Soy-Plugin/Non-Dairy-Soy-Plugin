@@ -43,7 +43,7 @@ import javax.swing.*;
  *
  * SoyPsiElement that represents a function invocation within a soy expression.
  */
-public class FunctionCallRefElement extends SoyPsiElement implements PsiNamedElement, ItemPresentation {
+public class FunctionCallRefElement extends SoyPsiElement implements PsiNamedElement {
 
     private FunctionCallRefElement.FunctionElementReference functionElementReference;
 
@@ -69,21 +69,6 @@ public class FunctionCallRefElement extends SoyPsiElement implements PsiNamedEle
             functionElementReference = new FunctionElementReference();
         }
         return functionElementReference;
-    }
-
-    @Override
-    public String getPresentableText() {
-        return getText();
-    }
-
-    @Override
-    public String getLocationString() {
-        return null;
-    }
-
-    @Override
-    public Icon getIcon(boolean open) {
-        return SoyIcons.FUNCTION;
     }
 
     /**
@@ -130,7 +115,7 @@ public class FunctionCallRefElement extends SoyPsiElement implements PsiNamedEle
      * A dummy PsiElement to act as a surrogate reference for
      * FunctionCallRefElement objects.
      */
-    private static class FunctionDefElement extends SoyPsiElement implements ItemPresentation {
+    private static class FunctionDefElement extends SoyPsiElement implements PsiNamedElement, ItemPresentation {
 
         private final String name;
 

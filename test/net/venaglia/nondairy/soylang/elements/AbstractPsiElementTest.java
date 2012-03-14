@@ -47,7 +47,7 @@ import static org.junit.Assert.*;
  * definitions within them.
  */
 @RunWith(MockProjectEnvironmentRunner.class)
-@ProjectFiles({"library.soy","render1.soy","render2.soy","minimal.soy"})
+@ProjectFiles({"library.soy","render1.soy","render2.soy","minimal.soy","delegates.soy"})
 public abstract class AbstractPsiElementTest {
 
     private Map<String,PsiFile> rootPsiElementsByTestFile;

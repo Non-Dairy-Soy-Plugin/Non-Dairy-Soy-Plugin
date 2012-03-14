@@ -23,6 +23,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import net.venaglia.nondairy.SoyTestUtil;
@@ -71,6 +72,12 @@ public class MockProjectEnvironment {
                 public PsiFile findFile(@NotNull VirtualFile file) {
                     SourceTuple tuple = MockProjectEnvironment.getTuple(file);
                     return tuple == null ? null : tuple.psi;
+                }
+
+                @Override
+                public FileViewProvider findViewProvider(@NotNull VirtualFile file) {
+                    SourceTuple tuple = MockProjectEnvironment.getTuple(file);
+                    return tuple == null ? null : tuple.psi.getViewProvider();
                 }
             };
             module = new MockModule(project, new MockDisposable());
