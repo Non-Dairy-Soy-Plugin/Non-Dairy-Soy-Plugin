@@ -86,6 +86,11 @@ public class SoyProjectComponent extends AbstractProjectComponent implements Per
         });
     }
 
+    @Override
+    public void disposeComponent() {
+        soyCacheUpdater.dispose();
+    }
+
     @NotNull
     @Override
     public String getComponentName() {

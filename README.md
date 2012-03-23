@@ -30,10 +30,10 @@ necessary to add or revise something.
 > and I'll get to it as soon as I can.
 >
 > Please include:
-> * A description of the problem
-> * A stack trace (if available) or a screen shot
-> * Steps to reproduce the error
-> * A sample source file if possible
+> <li>A description of the problem</li>
+> <li>A stack trace (if available) or a screen shot</li>
+> <li>Steps to reproduce the error</li>
+> <li>A sample source file if possible</li>
 
 ### I'm using IntelliJ Idea 9 or 10. Do you plan on back porting bug fixes or improvements?
 

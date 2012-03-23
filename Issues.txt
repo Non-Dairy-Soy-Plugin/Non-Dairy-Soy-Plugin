@@ -20,5 +20,7 @@
 Pri | Fix   | Description
 ----+-------+-------------------------------------------------------------------------------------
  P2 | 0.4.x | go to declaration on a template arbitrarily finds one, not all delegates
- P2 | 0.4.x | msg tags cannot contain for or foreach tags and should be shown as an error
  P3 | 0.4.x | i18n resource file need description for all messages
+ P1 | 0.5.0 | Commands are not represented with a proper hierarchical PSI structure
+ P1 | 0.5.0 | Soy docs do not have a sensible PSI structure
+ P2 | 0.5.0 | msg tags cannot contain for or foreach tags and should be shown as an error

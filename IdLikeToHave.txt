@@ -26,9 +26,6 @@
 
 ===============================================================================
 
-Find symbol by name:
-    Templates and deltemplates
-
 Parser:
     Create branches on the PSI tree for nested commands
     Create branches in the PSI tree for "nice" HTML tag pairs
@@ -74,6 +71,7 @@ Code inspection:
     Show when a required parameter is not passed to call or delcall
     Show when delcall defines a required parameter that is not required by the default
     Show when a template or deltemplate is defined more than once
+    Show when a private template is never called
     Show when using a non-iterator parameter is passed to a parameter only function
     Show parameters that are used as more than one of: list, object, value
     Show when using an optional parameter, without first checking if it exists
@@ -106,3 +104,7 @@ I18N:
 
 Other:
     Call hierarchy
+
+Architectural improvements/optimizations:
+    Parsing template names can be deferred when building caches.
+    Add non-dairy tips to "tip of the day"

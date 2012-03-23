@@ -68,12 +68,12 @@ public class SoyCacheUpdater implements CacheUpdater {
     private static final long DEBUG_CACHE_CHANGE_DETECTION_DELAY = 1000L;
 
     private final Project project;
-    private final ProjectFileIndex fileIndex;
     private final AtomicLong lastUpdate = new AtomicLong();
+
+    private volatile boolean disposed = false;
 
     public SoyCacheUpdater(Project project) {
         this.project = project;
-        fileIndex = TreeNavigator.INSTANCE.getProjectFileIndex(project);
         if ("true".equals(System.getProperty(DEBUG_CACHE_PROPERTY))) { //NON-NLS
             Thread thread = new Thread(new CacheDebugger(project), "Soy Template Cache Debugger - " + project); //NON-NLS
             thread.setDaemon(true);
@@ -95,6 +95,9 @@ public class SoyCacheUpdater implements CacheUpdater {
 
     @Override
     public void processFile(FileContent fileContent) {
+        if (disposed) {
+            return;
+        }
         updateCache(fileContent.getVirtualFile());
     }
 
@@ -107,7 +110,10 @@ public class SoyCacheUpdater implements CacheUpdater {
     }
 
     public void updateCache(@NotNull VirtualFile file) {
-        if (file.getLength() <= 1000000) { // don't parse extremely large files
+        if (disposed) {
+            return;
+        }
+        if (isCacheableSoyFile(file)) {
             DelegateCache delegateCache = getDelegateCache(file);
             if (delegateCache != null) {
                 removeFromCacheImpl(delegateCache, file);
@@ -115,6 +121,14 @@ public class SoyCacheUpdater implements CacheUpdater {
             }
             lastUpdate.set(System.currentTimeMillis());
         }
+    }
+
+    private boolean isCacheableSoyFile(VirtualFile file) {
+        return file.isValid() &&
+               file.getLength() < 1000000 && // don't parse extremely large files
+               SoyFileType.INSTANCE
+                          .getDefaultExtension()
+                          .equals(file.getExtension());
     }
 
     @SuppressWarnings("StringEquality")
@@ -160,6 +174,9 @@ public class SoyCacheUpdater implements CacheUpdater {
     }
 
     public void removeFromCache(@NotNull VirtualFile file) {
+        if (disposed) {
+            return;
+        }
         DelegateCache delegateCache = getDelegateCache(file);
         if (delegateCache != null) {
             removeFromCacheImpl(delegateCache, file);
@@ -187,8 +204,16 @@ public class SoyCacheUpdater implements CacheUpdater {
     }
 
     private DelegateCache getDelegateCache(VirtualFile file) {
+        if (disposed) {
+            return null;
+        }
+        ProjectFileIndex fileIndex = TreeNavigator.INSTANCE.getProjectFileIndex(project);
         Module module = fileIndex.getModuleForFile(file);
         return module == null ? null : DelegateCache.getDelegateCache(module);
+    }
+
+    public void dispose() {
+        disposed = true;
     }
 
     /**
