@@ -23,6 +23,10 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * User: ed
  * Date: 3/11/12
@@ -42,11 +46,16 @@ public class MockProjectEnvironmentRunner extends BlockJUnit4ClassRunner {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                ProjectFiles files = method.getMethod().getAnnotation(ProjectFiles.class);
-                if (files == null) {
-                    files = projectFiles;
+                Set<String> files = new HashSet<String>();
+                Collections.addAll(files, projectFiles.files());
+                ProjectFiles pf = method.getMethod().getAnnotation(ProjectFiles.class);
+                if (pf != null) {
+                    if (!pf.inherit()) {
+                        files.clear();
+                    }
+                    Collections.addAll(files, pf.files());
                 }
-                for (String name : files.value()) {
+                for (String name : files) {
                     new SourceTuple(name);
                 }
                 if (PsiElementPath.TraceState.isDebugPerThread()) {

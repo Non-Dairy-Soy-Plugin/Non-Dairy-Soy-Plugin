@@ -40,17 +40,5 @@ public interface TraversalPredicate extends ElementPredicate {
     @NotNull
     PsiElementCollection traverse(@NotNull Collection<PsiElement> current);
 
-    /**
-     * If the element collection returned by
-     * {@link #traverse(java.util.Collection)} contains no element found
-     * acceptable by {@link #test(com.intellij.psi.PsiElement)}, the collection
-     * may be traversed again.
-     *
-     * Typically this method will return false. An implementation that is
-     * expected to repeat traversal until the first match is found, should
-     * return true.
-     * @return true if traversal should be repeated until a match is found,
-     *     false otherwise.
-     */
-    boolean traverseAgainIfNoMatch();
+    public interface AlwaysTrue extends TraversalPredicate, ElementPredicate.AlwaysTrue {}
 }

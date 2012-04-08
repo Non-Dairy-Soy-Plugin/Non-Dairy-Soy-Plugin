@@ -23,6 +23,7 @@ import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import net.venaglia.nondairy.soylang.elements.path.TemplatePath;
 import org.jetbrains.annotations.NonNls;
@@ -96,6 +97,12 @@ public class AbsoluteTemplateNameRef extends SoyPsiElement implements SoyNamedEl
     @Override
     public String getTemplateName() {
         return getText();
+    }
+
+    public String getDelegatePackage() {
+        PsiElementCollection elements = PATH_TO_DELEGATE_PACKAGE.navigate(this);
+        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
+        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
     }
 
     @Override

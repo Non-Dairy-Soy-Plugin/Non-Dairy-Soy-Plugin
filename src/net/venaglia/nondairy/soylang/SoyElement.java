@@ -55,6 +55,7 @@ public final class SoyElement extends IElementType {
     public static final SoyElement iterator_tag = new SoyElement(1007, "iterator_tag");
     public static final SoyElement iterator_tag_pair = new SoyElement(1008, "iterator_tag_pair");
 
+    @ElementClass(DelegatePackageElement.class)
     public static final SoyElement package_def = new SoyElement(1151, "package_def");
     public static final SoyElement package_name = new SoyElement(1152, "package_name");
 
@@ -73,11 +74,13 @@ public final class SoyElement extends IElementType {
     public static final SoyElement template_name_ref_absolute = new SoyElement(1203, "template_name_ref_absolute");
     public static final SoyElement template_tag_pair = new SoyElement(1204, "template_tag_pair");
 
+    @ElementClass(SoyDocCommentElement.class)
     public static final SoyElement doc_comment = new SoyElement(1300, "doc_comment");
     public static final SoyElement doc_comment_text = new SoyElement(1301, "doc_comment_text");
     public static final SoyElement doc_comment_tag = new SoyElement(1302, "doc_comment_tag");
     @ElementClass(ParameterDefElement.class)
-    public static final SoyElement doc_comment_param = new SoyElement(1303, "doc_comment_param");
+    public static final SoyElement doc_comment_param_def = new SoyElement(1303, "doc_comment_param_def");
+    public static final SoyElement doc_comment_tag_with_description = new SoyElement(1304, "doc_comment_tag_with_description");
 
     @ElementClass(AttributeElement.class)
     public static final SoyElement attribute = new SoyElement(1400, "attribute");
@@ -118,6 +121,11 @@ public final class SoyElement extends IElementType {
     public static final SoyElement call_tag_pair = new SoyElement(1901, "call_tag_pair");
     @ElementClass(SoyCommandTag.class)
     public static final SoyElement param_tag = new SoyElement(1902, "param_tag");
+    public static final SoyElement param_tag_pair = new SoyElement(1903, "param_tag_pair");
+
+    @ElementClass(SoyCommandTag.class)
+    public static final SoyElement msg_tag = new SoyElement(2000, "msg_tag");
+    public static final SoyElement msg_tag_pair = new SoyElement(2001, "msg_tag_pair");
 
     public static final SoyElement template_content = new SoyElement(4000, "template_content");
 
@@ -128,10 +136,11 @@ public final class SoyElement extends IElementType {
 
     public static final SoyElement unexpected_symbol = new SoyElement(8000, "unexpected_symbol");
 
-    public static final TokenSet PARAMETER_NAME_TOKENS = TokenSet.create(doc_comment_param, parameter_ref, parameter_def, invocation_parameter_ref);
+    public static final TokenSet PARAMETER_NAME_TOKENS = TokenSet.create(doc_comment_param_def, parameter_ref, parameter_def, invocation_parameter_ref);
     public static final TokenSet FUNCTION_NAME_TOKENS = TokenSet.create(function_call_name);
     public static final TokenSet TEMPLATE_NAME_TOKENS = TokenSet.create(template_name, template_name_ref, template_name_ref_absolute);
     public static final TokenSet PROPERTY_NAME_TOKENS = TokenSet.create(member_property_ref, bracket_property_ref);
+    public static final TokenSet TAG_PAIR_TOKENS = TokenSet.create(template_tag_pair, iterator_tag_pair, call_tag_pair, param_tag_pair, msg_tag_pair, tag_pair);
 
     public static final TokenSet ALL_FIND_USAGE_TOKENS = TokenSet.orSet(PARAMETER_NAME_TOKENS, FUNCTION_NAME_TOKENS, TEMPLATE_NAME_TOKENS, PROPERTY_NAME_TOKENS);
 

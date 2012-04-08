@@ -14,25 +14,27 @@
  *    limitations under the License.
  */
 
-package net.venaglia.nondairy.soylang.elements.path;
+package net.venaglia.nondairy.soylang.elements;
 
-import com.intellij.psi.PsiElement;
+import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiComment;
+import com.intellij.psi.tree.IElementType;
+import net.venaglia.nondairy.soylang.SoyElement;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * User: ed
- * Date: 1/22/12
- * Time: 10:48 AM
- *
- * A predicate that matches all elements.
+ * Date: 3/19/12
+ * Time: 8:14 AM
  */
-public class AlwaysTruePredicate extends AbstractElementPredicate {
+public class SoyDocCommentElement extends SoyPsiElement implements PsiComment {
 
-    public static final AlwaysTruePredicate INSTACE = new AlwaysTruePredicate();
-
-    private AlwaysTruePredicate() { }
+    public SoyDocCommentElement(@NotNull ASTNode node) {
+        super(node);
+    }
 
     @Override
-    public boolean test(PsiElement element) {
-        return true;
+    public IElementType getTokenType() {
+        return SoyElement.doc_comment;
     }
 }

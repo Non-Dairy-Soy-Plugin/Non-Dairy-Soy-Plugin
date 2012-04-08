@@ -28,6 +28,9 @@ import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * User: ed
  * Date: Aug 27, 2010
@@ -41,11 +44,9 @@ public class SoyFoldingBuilder implements FoldingBuilder {
 
     private static final PsiElementPath PATH_TO_FOLDING_REGIONS =
             new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onChildren(),
-                               new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
-                               new ElementTypePredicate(SoyElement.template_tag_pair).onChildren()).debug("path_to_folding_regions");
+                               new ElementTypePredicate(SoyElement.TAG_PAIR_TOKENS).onAllDescendants()).debug("path_to_folding_regions");
     private static final PsiElementPath PATH_TO_PLACEHOLDER_LABEL =
-            new PsiElementPath(new ElementTypePredicate(SoyElement.template_tag).onChildren(),
-                               new CommandBoundaryPredicate(SoyCommandTag.Boundary.BEGIN)).debug("path_to_placeholder_label");
+            new PsiElementPath(new CommandBoundaryPredicate(SoyCommandTag.Boundary.BEGIN).onFirstChild()).debug("path_to_placeholder_label");
 
     @NotNull
     @Override
@@ -54,17 +55,22 @@ public class SoyFoldingBuilder implements FoldingBuilder {
         if (elements.isEmpty()) {
             return EMPTY;
         }
-        FoldingDescriptor[] descriptors = new FoldingDescriptor[elements.size()];
-        int i = 0;
+        List<FoldingDescriptor> descriptors = new ArrayList<FoldingDescriptor>(elements.size());
         for (PsiElement element : elements) {
-            descriptors[i++] = new FoldingDescriptor(element.getNode(), element.getTextRange());
+            int startOffset = element.getTextOffset();
+            int startLine = document.getLineNumber(startOffset);
+            int textLength = element.getTextLength();
+            int endLine = document.getLineNumber(startOffset + textLength - 1);
+            if (startLine < endLine) {
+                descriptors.add(new FoldingDescriptor(element.getNode(), element.getTextRange()));
+            }
         }
-        return descriptors;
+        return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
     }
 
     @Override
     public String getPlaceholderText(@NotNull ASTNode node) {
-        if (node.getElementType() == SoyElement.template_tag_pair) {
+//        if (node.getElementType() == SoyElement.template_tag_pair) {
             PsiElement element = PATH_TO_PLACEHOLDER_LABEL.navigate(node.getPsi()).oneOrNull();
             if (element instanceof SoyCommandTag) {
                 SoyCommandTag commandTag = (SoyCommandTag)element;
@@ -76,7 +82,7 @@ public class SoyFoldingBuilder implements FoldingBuilder {
                     return String.format("{%1$s}...(/%1$s}", command); //NON-NLS
                 }
             }
-        }
+//        }
         return null;
     }
 

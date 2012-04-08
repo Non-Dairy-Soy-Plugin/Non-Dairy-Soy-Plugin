@@ -48,6 +48,7 @@ Editor:
         Show a different color for $ij
         Do not permit renaming of $ij
         Find/Highlight usages of $ij should show ALL references in ALL templates
+    Copy/paste of a template or call should optimize the called name for namespace
 
 Code Folding:
     Collapse commands: if, switch, for, foreach, literal, msg, call
@@ -65,9 +66,8 @@ Surround with:
     Surround selection with HTML tags
 
 Code inspection:
-    Show when a parameter is declared and not used
-    Show when a parameter is used and not declared
     Show when declaring a parameter named "ij"
+    Show when using "$ij"
     Show when a required parameter is not passed to call or delcall
     Show when delcall defines a required parameter that is not required by the default
     Show when a template or deltemplate is defined more than once
@@ -78,7 +78,6 @@ Code inspection:
     Show when using any parameter, all parameters are optional, and hasData() is not called
     Compute cyclic complexity of a template and show when it exceeds a configurable threshold
     Compute cyclic complexity of an expression and show when it exceeds a configurable threshold
-    Show when a msg tag has no desc attribute
     Show when directive arguments are too many, too few, or are the wrong type
 
 Intentions:

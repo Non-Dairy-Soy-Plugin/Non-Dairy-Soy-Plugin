@@ -97,7 +97,9 @@ public class SoyCommenter implements CodeDocumentationAwareCommenterEx {
         if (element == null || element.getNode() == null || element.getNode().getElementType() == null) return false;
         IElementType type = element.getNode().getElementType();
         return type == SoyToken.DOC_COMMENT ||
-               type == SoyToken.DOC_COMMENT_BEGIN ||
-               type == SoyToken.DOC_COMMENT_END;
+                type == SoyToken.DOC_COMMENT_TAG ||
+                type == SoyToken.DOC_COMMENT_PARAM_TAG ||
+                type == SoyToken.DOC_COMMENT_IDENTIFIER ||
+                type == SoyToken.DOC_COMMENT_BAD_CHARACTER;
     }
 }

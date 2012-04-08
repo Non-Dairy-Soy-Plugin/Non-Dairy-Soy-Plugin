@@ -37,13 +37,7 @@ abstract class BaseSoyScanner {
     static final Pattern MATCH_NON_IDENTIFIER_CHAR = Pattern.compile("[^a-zA-Z0-9_.]");
     static final Map<String, SymbolTransform> EXPRESSION_TOKENS;
 
-    static final Map<String, SoyDocCommentBuffer.InferredDataType> NON_SCALAR_TYPES_BY_COMMAND;
-
     static {
-        Map<String, SoyDocCommentBuffer.InferredDataType> nonScalarTypesByCommand =
-                new HashMap<String, SoyDocCommentBuffer.InferredDataType>();
-        NON_SCALAR_TYPES_BY_COMMAND = Collections.unmodifiableMap(nonScalarTypesByCommand);
-
         SymbolTransform booleanSymbolTransform = new SymbolTransform(SoyToken.BOOLEAN_LITERAL) {
             @Override
             protected Object getPayload(CharSequence identifier) {
@@ -101,10 +95,10 @@ abstract class BaseSoyScanner {
     int nextStateAfterLiterealTag = 0;
     int nextStateAfterString = 0;
     int nextStateAfterHtmlAttribute = 0;
+    int nextStateAfterWhitespace = 0;
     IElementType capturedIdentifierType = SoyToken.CAPTURED_IDENTIFIER;
     char stringTerminator = '\"';
     int tagStartLine = -1;
-    SoyDocCommentBuffer activeDocCommentBuffer = null;
 
     protected static class SymbolTransform {
 

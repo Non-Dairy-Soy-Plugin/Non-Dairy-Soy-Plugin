@@ -19,7 +19,6 @@ package net.venaglia.nondairy.soylang.elements;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -54,7 +53,7 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
                                                      CallParameterRefElement.class,
                                                      "person",
                                                      null,
-                                                     0,
+                                                     1,
                                                      2);
         ParameterDefElement def = findElement("library.soy",
                                               ParameterDefElement.class,
@@ -82,7 +81,7 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
                                                      CallParameterRefElement.class,
                                                      "person",
                                                      null,
-                                                     0,
+                                                     1,
                                                      2);
         assertEquals("non.dairy.sample.library.format_person", ref.getTemplateName());
     }
@@ -102,7 +101,7 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
                                                      CallParameterRefElement.class,
                                                      "person",
                                                      null,
-                                                     0,
+                                                     1,
                                                      2);
         assertEquals("non.dairy.sample.library", ref.getNamespace());
     }
@@ -122,7 +121,7 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
                                                      CallParameterRefElement.class,
                                                      "person",
                                                      null,
-                                                     0,
+                                                     1,
                                                      2);
         assertEquals("person", ref.getName());
     }
@@ -133,7 +132,7 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
                                                      CallParameterRefElement.class,
                                                      "person",
                                                      null,
-                                                     0,
+                                                     1,
                                                      2);
         ItemPresentation presentation = ref.getPresentation();
         assertNull(presentation);

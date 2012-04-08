@@ -18,6 +18,7 @@ package net.venaglia.nondairy.mocks;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.FileASTNode;
+import com.intellij.lang.Language;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -44,6 +45,8 @@ import java.util.NoSuchElementException;
  */
 @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
 public class MockTreeNode implements ASTNode {
+
+    private static final IElementType ERROR = new IElementType("GENERIC_ERROR_NODE", Language.ANY);
 
     MockTreeNode parent;
 
@@ -506,6 +509,9 @@ public class MockTreeNode implements ASTNode {
         public MockTreeNode build(PsiElementFactory factory) {
             if (built) {
                 throw new IllegalStateException();
+            }
+            if (type == null || errorMessage != null) {
+                type = ERROR;
             }
             if (type == null || startOffset == Integer.MIN_VALUE || text == null) {
                 throw new IllegalStateException();

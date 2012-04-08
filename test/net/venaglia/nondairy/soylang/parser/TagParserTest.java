@@ -172,45 +172,6 @@ public class TagParserTest extends BaseParserTest {
             "    TAG_RBRACE\n" +
             "}";
 
-    public static final String SIMPLE_TAG_PAIR_SOURCE =
-            "{template .testTemplate}\n" +
-            "<h1>Hello World</h1>\n" +
-            "{/template}";
-
-    public static final String SIMPLE_TAG_PAIR_EXPECT =
-            "tag_pair:{\n" +
-            "    template_tag:{\n" +
-            "        TAG_LBRACE\n" +
-            "        tag_between_braces:{\n" +
-            "            command_keyword:{\n" +
-            "                TEMPLATE\n" +
-            "            }\n" +
-            "            template_name:{\n" +
-            "                TEMPLATE_IDENTIFIER\n" +
-            "            }\n" +
-            "        }\n" +
-            "        TAG_RBRACE\n" +
-            "    }\n" +
-            "    template_content:{\n" +
-            "        XML_START_TAG_START\n" +
-            "        XML_TAG_NAME\n" +
-            "        XML_TAG_END\n" +
-            "        XML_DATA_CHARACTERS\n" +
-            "        XML_END_TAG_START\n" +
-            "        XML_TAG_NAME\n" +
-            "        XML_TAG_END" +
-            "    }\n" +
-            "    tag:{\n" +
-            "        TAG_END_LBRACE\n" +
-            "        tag_between_braces:{\n" +
-            "            command_keyword:{\n" +
-            "                TEMPLATE\n" +
-            "            }\n" +
-            "        }\n" +
-            "        TAG_RBRACE\n" +
-            "    }\n" +
-            "}";
-
     @Override
     protected void parseImpl(TokenSource tokenSource) {
         new TagParser(tokenSource).parse();
@@ -234,12 +195,6 @@ public class TagParserTest extends BaseParserTest {
     @Test
     public void testExpressionTag() throws Exception {
         testParseSequence(EXPRESSION_TAG_SOURCE, EXPRESSION_TAG_EXPECT, "HTML_INITIAL", null);
-    }
-
-    @Test
-    @Ignore("This is two tags, not one -- need to refactor it somewhere else")
-    public void testSimpleTagPair() throws Exception {
-        testParseSequence(SIMPLE_TAG_PAIR_SOURCE, SIMPLE_TAG_PAIR_EXPECT, "YYINITIAL", null);
     }
 
     @Test

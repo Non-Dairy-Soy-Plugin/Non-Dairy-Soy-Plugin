@@ -35,7 +35,7 @@ public class ParameterRefElementTest extends AbstractPsiElementTest {
                                                  ParameterRefElement.class,
                                                  "$person",
                                                  null,
-                                                 0,
+                                                 1,
                                                  2);
         ParameterDefElement def = findElement("render1.soy",
                                               ParameterDefElement.class,
@@ -54,7 +54,7 @@ public class ParameterRefElementTest extends AbstractPsiElementTest {
                                                  ParameterRefElement.class,
                                                  "$person",
                                                  null,
-                                                 1,
+                                                 2,
                                                  2);
         ParameterDefElement def = findElement("render1.soy",
                                               ParameterDefElement.class,

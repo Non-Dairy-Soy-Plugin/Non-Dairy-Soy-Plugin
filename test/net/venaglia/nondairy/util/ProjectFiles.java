@@ -33,5 +33,6 @@ import java.lang.annotation.Target;
 @Target({ TYPE, METHOD })
 @Inherited
 public @interface ProjectFiles {
-    String[] value();
+    String[] files() default {};
+    boolean inherit() default true;
 }

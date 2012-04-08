@@ -33,6 +33,7 @@ import net.venaglia.nondairy.mocks.MockProjectEnvironment;
 import net.venaglia.nondairy.mocks.MockSoyFile;
 import net.venaglia.nondairy.soylang.SoyFileType;
 import net.venaglia.nondairy.soylang.SoyLanguage;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,17 +51,25 @@ import java.util.Set;
 */
 public class SourceTuple {
 
+    private static final CharSequence SOURCE_AS_RESOURCE = new ImmutableCharSequence("");
+
     public final String name;
     public final PsiElement root;
     public final PsiFile psi;
     public final VirtualFile file;
     public final Document document;
 
-    public SourceTuple(String name) {
+    public SourceTuple(@NonNls String name) {
+        this(name, SOURCE_AS_RESOURCE);
+    }
+
+    public SourceTuple(@NonNls @NotNull String name, @NonNls @NotNull CharSequence source) {
         this.name = name;
         PsiElement[] children = { null };
         psi = new MockSoyFile(children, new MyFileViewProvider());
-        root = SoyTestUtil.getPsiTreeFor(psi, name);
+        root = source == SOURCE_AS_RESOURCE
+                         ? SoyTestUtil.getPsiTreeFor(psi, name)
+                         : SoyTestUtil.getPsiTreeFor(psi, name, source);
         children[0] = root;
         String text = root.getText();
         file = new LightVirtualFile(name,
@@ -138,12 +147,12 @@ public class SourceTuple {
         }
 
         @Override
-        public boolean supportsIncrementalReparse(Language rootLanguage) {
+        public boolean supportsIncrementalReparse(@NotNull Language rootLanguage) {
             return false;
         }
 
         @Override
-        public void rootChanged(PsiFile psiFile) {
+        public void rootChanged(@NotNull PsiFile psiFile) {
         }
 
         @Override
@@ -188,7 +197,7 @@ public class SourceTuple {
         }
 
         @Override
-        public PsiElement findElementAt(int offset, Language language) {
+        public PsiElement findElementAt(int offset, @NotNull Language language) {
             if (language == Language.ANY || language.equals(SoyLanguage.INSTANCE)) {
                 return findElementAt(offset);
             }
@@ -196,7 +205,7 @@ public class SourceTuple {
         }
 
         @Override
-        public PsiElement findElementAt(int offset, Class<? extends Language> lang) {
+        public PsiElement findElementAt(int offset, @NotNull Class<? extends Language> lang) {
             if (SoyLanguage.class.isAssignableFrom(lang)) {
                 return findElementAt(offset);
             }
@@ -213,7 +222,7 @@ public class SourceTuple {
 
         @NotNull
         @Override
-        public FileViewProvider createCopy(VirtualFile copy) {
+        public FileViewProvider createCopy(@NotNull VirtualFile copy) {
             return new MyFileViewProvider();
         }
 

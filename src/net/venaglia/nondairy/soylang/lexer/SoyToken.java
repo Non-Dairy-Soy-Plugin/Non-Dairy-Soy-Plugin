@@ -48,9 +48,11 @@ public final class SoyToken extends IElementType {
 
     public static final SoyToken COMMENT = new SoyToken(100, "COMMENT");
     public static final SoyToken DOC_COMMENT = new SoyToken(101, "DOC_COMMENT");
+    public static final SoyToken DOC_COMMENT_EOL = new SoyToken(109, "DOC_COMMENT_EOL");
     public static final SoyToken DOC_COMMENT_BEGIN = new SoyToken(106, "DOC_COMMENT_BEGIN");
     public static final SoyToken DOC_COMMENT_WHITESPACE = new SoyToken(102, "DOC_COMMENT_WHITESPACE");
     public static final SoyToken DOC_COMMENT_TAG = new SoyToken(103, "DOC_COMMENT_TAG");
+    public static final SoyToken DOC_COMMENT_PARAM_TAG = new SoyToken(110, "DOC_COMMENT_PARAM_TAG");
     public static final SoyToken DOC_COMMENT_IDENTIFIER = new SoyToken(104, "DOC_COMMENT_IDENTIFIER");
     public static final SoyToken DOC_COMMENT_END = new SoyToken(105, "DOC_COMMENT_END");
     public static final SoyToken DOC_COMMENT_BAD_CHARACTER = new SoyToken(108, "DOC_COMMENT_BAD_CHARACTER");

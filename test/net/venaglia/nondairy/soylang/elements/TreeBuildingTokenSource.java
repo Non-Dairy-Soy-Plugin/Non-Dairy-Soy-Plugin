@@ -116,9 +116,7 @@ public class TreeBuildingTokenSource extends TokenSource {
 
     @Override
     public void error(String message) {
-//        if (symbolIndex < 0) {
-//            throw new IllegalStateException("must call advance() before calling error()");
-//        }
+        mark("errorMessage");
         tail.error(message);
     }
 
@@ -311,10 +309,12 @@ public class TreeBuildingTokenSource extends TokenSource {
             builder.setErrorMessage(errorMessage);
             SoySymbol startSymbol = symbols.get(startSymbolIndex);
             SoySymbol endSymbol = symbols.get(endSymbolIndex - 1);
-            CharSequence text = source.subSequence(startSymbol.getPosition(),
-                                                   endSymbol.getPosition() + endSymbol.getLength());
+            int startPostiion = startSymbol.getPosition();
+            int endPosition = endSymbol.getPosition() + endSymbol.getLength();
+            CharSequence text = source.subSequence(startPostiion,
+                                                   Math.max(startPostiion, endPosition));
             builder.setText(text);
-            builder.setStartOffset(startSymbol.getPosition());
+            builder.setStartOffset(startPostiion);
             if (children != null) {
                 for (TempNode child : children) {
                     builder.addChild(child.builder());

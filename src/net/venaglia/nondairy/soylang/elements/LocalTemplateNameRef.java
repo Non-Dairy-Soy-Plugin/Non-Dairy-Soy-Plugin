@@ -23,11 +23,11 @@ import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import net.venaglia.nondairy.soylang.elements.path.TemplateNamePredicate;
 import org.jetbrains.annotations.NonNls;
@@ -113,6 +113,13 @@ public class LocalTemplateNameRef
         String localName = getName();
         String namespace = getNamespace();
         return (namespace == null) ? localName : namespace + "." + localName;
+    }
+
+    @Override
+    public String getDelegatePackage() {
+        PsiElementCollection elements = PATH_TO_DELEGATE_PACKAGE.navigate(this);
+        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
+        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
     }
 
     @Override

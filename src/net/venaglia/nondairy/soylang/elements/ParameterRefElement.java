@@ -23,7 +23,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
-import net.venaglia.nondairy.soylang.elements.path.AlwaysTruePredicate;
+import net.venaglia.nondairy.soylang.elements.path.CommandBoundaryPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
@@ -49,15 +49,21 @@ public class ParameterRefElement extends ParameterElement {
         }
     };
 
+    public static final PsiElementPath PATH_TO_TEMPLATE_DEF =
+            new PsiElementPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
+                               new ElementTypePredicate(doc_comment).onChildren(),
+                               new ElementTypePredicate(doc_comment_tag_with_description).onChildren(),
+                               new ElementTypePredicate(doc_comment_param_def).onChildren()).debug("path_to_parameter_def!template");
+
+    public static final PsiElementPath PATH_TO_ITERATOR_DEF =
+            new PsiElementPath(new ElementTypePredicate(iterator_tag_pair).onAncestors(),
+                               new ElementTypePredicate(iterator_tag).onChildren(),
+                               new CommandBoundaryPredicate(SoyCommandTag.Boundary.BEGIN),
+                               new ElementTypePredicate(tag_between_braces).onChildren(),
+                               new ElementTypePredicate(parameter_def).onChildren()).debug("path_to_parameter_def!iterator");
+
     public static final PsiElementPath PATH_TO_PARAMETER_DEF =
-                    new PsiElementPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
-                                       new ElementTypePredicate(doc_comment).onChildren(),
-                                       new ElementTypePredicate(doc_comment_param).onChildren()).debug("path_to_parameter_def!template")
-                .or(new PsiElementPath(AlwaysTruePredicate.INSTACE.onAncestors(),
-                                       new ElementTypePredicate(iterator_tag).onPreviousSiblings(true),
-                                       new ElementTypePredicate(tag_between_braces).onChildren(),
-                                       new ElementTypePredicate(parameter_def).onChildren()).debug("path_to_parameter_def!iterator"))
-                .debug("path_to_parameter_def");
+                PATH_TO_TEMPLATE_DEF.or(PATH_TO_ITERATOR_DEF).debug("path_to_parameter_def");
 
     private final ElementPredicate parameterNamePredicate;
 

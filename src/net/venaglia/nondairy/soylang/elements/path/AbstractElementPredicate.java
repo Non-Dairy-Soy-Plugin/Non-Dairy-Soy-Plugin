@@ -106,25 +106,7 @@ public abstract class AbstractElementPredicate implements ElementPredicate {
      *     acceptable by the predicate logic of this ElementPredicate.
      */
     public TraversalPredicate onFirstAncestor() {
-        return new AbstractTraversalPredicate("<<1") {
-            @NotNull
-            @Override
-            public PsiElementCollection traverse(@NotNull Collection<PsiElement> current) {
-                PsiElementCollection buffer = new PsiElementCollection();
-                for (PsiElement element : current) {
-                    element = element.getParent();
-                    if (element != null && !(element instanceof PsiDirectory)) {
-                        buffer.add(element);
-                    }
-                }
-                return buffer;
-            }
-
-            @Override
-            public boolean traverseAgainIfNoMatch() {
-                return true;
-            }
-        };
+        return new FirstAncestorTraversalPredicate();
     }
 
     /**
@@ -377,7 +359,7 @@ public abstract class AbstractElementPredicate implements ElementPredicate {
             @NotNull
             @Override
             public PsiElementCollection traverse(@NotNull Collection<PsiElement> current) {
-                return new PsiElementCollection(current);
+                return PsiElementCollection.castOrCopy(current);
             }
         };
     }
@@ -399,13 +381,30 @@ public abstract class AbstractElementPredicate implements ElementPredicate {
         }
 
         @Override
-        public boolean traverseAgainIfNoMatch() {
-            return false;
-        }
-
-        @Override
         public String toString() {
             return String.format("%-8s  %s", symbol, AbstractElementPredicate.this.toString()); //NON-NLS
         }
+    }
+
+    @NoMatchHanding(onNoMatch = TraverseEmpty.TRAVERSE_AGAIN)
+    private class FirstAncestorTraversalPredicate extends AbstractTraversalPredicate {
+
+        public FirstAncestorTraversalPredicate() {
+            super("<<1");
+        }
+
+        @NotNull
+        @Override
+        public PsiElementCollection traverse(@NotNull Collection<PsiElement> current) {
+            PsiElementCollection buffer = new PsiElementCollection();
+            for (PsiElement element : current) {
+                element = element.getParent();
+                if (element != null && !(element instanceof PsiDirectory)) {
+                    buffer.add(element);
+                }
+            }
+            return buffer;
+        }
+
     }
 }

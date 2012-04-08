@@ -18,6 +18,7 @@ package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
 import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,6 +62,13 @@ public class NamespaceDefElement
     @Override
     public String getCanonicalName() {
         return getNamespace();
+    }
+
+    @Override
+    public String getDelegatePackage() {
+        PsiElementCollection elements = PATH_TO_DELEGATE_PACKAGE.navigate(this);
+        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
+        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
     }
 
     @Override

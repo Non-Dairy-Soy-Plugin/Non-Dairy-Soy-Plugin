@@ -51,7 +51,7 @@ public class TemplatePath extends PsiElementPath {
         String namespace = templateName.substring(0, lastDot);
 //        templateName = templateName.substring(lastDot + 1);
         return new ElementPredicate[]{
-                new SoyFileElementTraversalPredicate(namespace),
+                SoyFileElementTraversalPredicate.filesForNamespace(namespace),
                 new ElementTypePredicate(SoyElement.soy_file).onChildren(),
                 new ElementTypePredicate(SoyElement.template_tag).onDescendants(2,3),
                 new TemplateNamePredicate(templateName),

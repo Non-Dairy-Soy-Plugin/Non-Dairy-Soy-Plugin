@@ -40,20 +40,25 @@ public class DocParser {
     public DocParser(TokenSource source) {
         this.source = source;
         if (source.eof()) {
-            throw new AssertionError("Cannot begin parsing a tag unless the lexer is at a '/**'");
+            throw new AssertionError("Cannot begin parsing a doc comment unless the lexer is at a '/**'");
         }
-        source.advance();
         docMarker = source.mark("docMarker");
+        source.advance();
     }
 
     public void parse() {
         PsiBuilder.Marker textMarker = source.mark("textMarker");
+        PsiBuilder.Marker tagAndText = null;
         while (!source.eof()) {
             IElementType token = source.token();
             if (token == SoyToken.DOC_COMMENT_END) {
                 if (textMarker != null) {
                     textMarker.done(doc_comment_text);
                     textMarker = null;
+                }
+                if (tagAndText != null) {
+                    tagAndText.done(doc_comment_tag_with_description);
+                    tagAndText = null;
                 }
                 source.advance();
                 break;
@@ -62,17 +67,38 @@ public class DocParser {
                     textMarker.done(doc_comment_text);
                     textMarker = null;
                 }
+                if (tagAndText != null) {
+                    tagAndText.done(doc_comment_tag_with_description);
+                    tagAndText = null;
+                }
                 source.error(I18N.msg("lexer.error.unexpected.token", token));
                 break;
+            } else if (token == SoyToken.DOC_COMMENT_PARAM_TAG) {
+                if (textMarker != null) {
+                    textMarker.done(doc_comment_text);
+                    textMarker = null;
+                }
+                if (tagAndText != null) {
+                    tagAndText.done(doc_comment_tag_with_description);
+                }
+                tagAndText = source.mark("tagAndText");
+                source.advanceAndMark(doc_comment_tag, "docTag");
+                if (!source.eof() && source.token() == SoyToken.DOC_COMMENT_IDENTIFIER) {
+                    source.advanceAndMark(doc_comment_param_def, "doc_comment_param");
+                }
+                if (!source.eof()) {
+                    textMarker = source.mark("textMarker");
+                }
             } else if (token == SoyToken.DOC_COMMENT_TAG) {
                 if (textMarker != null) {
                     textMarker.done(doc_comment_text);
                     textMarker = null;
                 }
-                source.advance();
-                if (!source.eof() && source.token() == SoyToken.DOC_COMMENT_IDENTIFIER) {
-                    source.advanceAndMark(doc_comment_param, "doc_comment_param");
+                if (tagAndText != null) {
+                    tagAndText.done(doc_comment_tag_with_description);
                 }
+                tagAndText = source.mark("tagAndText");
+                source.advanceAndMark(doc_comment_tag, "docTag");
                 if (!source.eof()) {
                     textMarker = source.mark("textMarker");
                 }
@@ -82,6 +108,9 @@ public class DocParser {
         }
         if (textMarker != null) {
             textMarker.done(doc_comment_text);
+        }
+        if (tagAndText != null) {
+            tagAndText.done(doc_comment_tag_with_description);
         }
         done();
     }

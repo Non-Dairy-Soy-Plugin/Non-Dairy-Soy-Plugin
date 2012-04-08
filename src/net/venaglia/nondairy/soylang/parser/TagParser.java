@@ -391,7 +391,10 @@ class TagParser {
             } else if (token == SoyToken.MSG) {
                 nowExpect(TagDataType.ATTRIBUTES);
                 source.advanceAndMark(command_keyword, "command_keyword");
-                requiresCloseTag = true;
+                if (!isCloseTag) {
+                    element = msg_tag;
+                    requiresCloseTag = true;
+                }
             } else if (token == SoyToken.FOR) {
                 source.advanceAndMark(command_keyword, "command_keyword");
                 if (!isCloseTag) {

@@ -57,12 +57,26 @@ public class AttributeElement extends SoyPsiElement {
     }
 
     /**
-     * @return The value of the underlying attribute.
+     * @return The value of the underlying attribute, or null if the attribute
+     *     has no value element or the value is a zero-length string.
      */
     @Nullable
     public String getAttributeValue() {
         PsiElement element = PATH_TO_ATTRIBUTE_VALUE.navigate(this).oneOrNull();
         return element instanceof Value ? ((Value)element).getValue() : null;
+    }
+
+    /**
+     * @param defaultValue value to use if this attribute has not value or a
+     *     zero-length value.
+     * @return The value of the underlying attribute, or the passed default if
+     *     the attribute has no value element or the value is a zero-length
+     *     string.
+     */
+    @NotNull
+    public String getAttributeValue(@NotNull String defaultValue) {
+        PsiElement element = PATH_TO_ATTRIBUTE_VALUE.navigate(this).oneOrNull();
+        return element instanceof Value ? ((Value)element).getValue() : defaultValue;
     }
 
     /**

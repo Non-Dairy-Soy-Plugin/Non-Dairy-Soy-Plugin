@@ -65,7 +65,10 @@ public class DelegateCache extends AbstractCache<String,NamespaceCache> {
         Set<TemplateCache> caches = new HashSet<TemplateCache>();
         NamespaceCache namespaceCache = get(delegate);
         if (namespaceCache != null) {
-            caches.add(namespaceCache.get(namespace));
+            TemplateCache templateCache = namespaceCache.get(namespace);
+            if (templateCache != null) {
+                caches.add(templateCache);
+            }
         }
         return caches;
     }

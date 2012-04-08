@@ -120,9 +120,8 @@ public abstract class TokenSource {
     }
 
     /**
-     * Marks the most recently created marker, that is not yet marked done, as
-     * an error, with the specified message.
-     * @param message The error message to associate with recent marker.
+     * Inserts an error mark into the PSI tree at the current point
+     * @param message The error message.
      */
     public abstract void error(String message);
 

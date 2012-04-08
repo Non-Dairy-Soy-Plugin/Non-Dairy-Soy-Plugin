@@ -37,4 +37,21 @@ public interface ElementPredicate {
      *     otherwise.
      */
     boolean test(PsiElement element);
+
+    /**
+     * User: ed
+     * Date: 1/22/12
+     * Time: 10:48 AM
+     *
+     * An interface used to identify predicates that always match all elements.
+     */
+    public interface AlwaysTrue extends ElementPredicate {
+
+        /**
+         * @param element The element to test.
+         * @return true, always
+         */
+        @Override
+        boolean test(PsiElement element);
+    }
 }

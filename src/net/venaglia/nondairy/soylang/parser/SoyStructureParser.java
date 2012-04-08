@@ -79,14 +79,21 @@ public class SoyStructureParser {
                 TagParser tagParser = new TagParser(source);
                 tagParser.parse();
                 processParsedTag(tagParser);
-                if (docBeginMarker != null &&
-                    unclosedTagParsers.size() == 1 &&
+                if (unclosedTagParsers.size() == 1 &&
                     unclosedTagParsers.peek() == tagParser &&
                     (tagParser.getTagToken() == SoyToken.TEMPLATE || tagParser.getTagToken() == SoyToken.DELTEMPLATE)) {
-                    this.docBeginMarker = docBeginMarker;
-                    docBeginMarker = null;
+                    if (this.docBeginMarker != null) {
+                        this.docBeginMarker.drop();
+                        this.docBeginMarker = null;
+                    }
+                    if (docBeginMarker == null) {
+                        this.docBeginMarker = tagParser.getTagMarker().precede();
+                    } else {
+                        this.docBeginMarker = docBeginMarker;
+                        docBeginMarker = null;
+                    }
                 }
-            } else if (SoyToken.DOC_COMMENT == token || SoyToken.DOC_COMMENT_BEGIN == token) {
+            } else if (SoyToken.DOC_COMMENT_TOKENS.contains(token)) {
                 if (docBeginMarker != null) {
                     docBeginMarker.drop();
                 }
@@ -177,10 +184,10 @@ public class SoyStructureParser {
         }
         if (types.contains(unclosedTagParsers.peek().getTagToken())) {
             TagParser top = unclosedTagParsers.pop();
+            if (visitBeforeDone != null) {
+                visitBeforeDone.visit(top);
+            }
             if (unclosedTagParsers.isEmpty() && docBeginMarker != null) {
-                if (visitBeforeDone != null) {
-                    visitBeforeDone.visit(top);
-                }
                 docBeginMarker.done(tag_and_doc_comment);
                 docBeginMarker = null;
             }

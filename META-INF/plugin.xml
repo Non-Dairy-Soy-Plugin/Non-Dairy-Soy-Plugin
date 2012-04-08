@@ -27,7 +27,7 @@
         my available free time.</p>
         ]]>
     </description>
-    <version>0.4.2 (beta)</version>
+    <version>0.5.0 (beta)</version>
     <vendor>Ed Venaglia</vendor>
     <idea-version since-build="111.1"/>
 
@@ -63,5 +63,6 @@
         <lang.findUsagesProvider language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyFindUsagesProvider"/>
         <lang.namesValidator language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyNamesValidator"/>
         <gotoSymbolContributor implementation="net.venaglia.nondairy.soylang.SoyGoToSymbolProvider"/>
+        <inspectionToolProvider implementation="net.venaglia.nondairy.soylang.inspection.SoyInspectionToolProvider"/>
     </extensions>
 </idea-plugin>

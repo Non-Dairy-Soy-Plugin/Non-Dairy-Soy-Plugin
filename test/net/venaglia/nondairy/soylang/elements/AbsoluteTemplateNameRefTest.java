@@ -35,7 +35,7 @@ public class AbsoluteTemplateNameRefTest extends AbstractPsiElementTest {
                                                      AbsoluteTemplateNameRef.class,
                                                      "non.dairy.sample.library.format_person",
                                                      null,
-                                                     0,
+                                                     1,
                                                      2);
         LocalTemplateNameDef def = findElement("library.soy",
                                                LocalTemplateNameDef.class,

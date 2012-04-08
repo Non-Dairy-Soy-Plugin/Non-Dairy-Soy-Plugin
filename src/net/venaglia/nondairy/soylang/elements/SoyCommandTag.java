@@ -17,6 +17,7 @@
 package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -75,6 +76,16 @@ public class SoyCommandTag extends SoyPsiElement {
 
     @Nullable
     public String getFoldedLabel() {
+        final int labelLength = 32;
+        String command = getCommand();
+        if (command != null) {
+            String text = getText();
+            String label = text.substring(command.length() + 1, text.length() - 1).trim();
+            if (label.length() > labelLength) {
+                label = label.substring(0, labelLength - 3) + "...";
+            }
+            return label;
+        }
         return null;
     }
     
@@ -91,5 +102,12 @@ public class SoyCommandTag extends SoyPsiElement {
             return Boundary.END;
         }
         return Boundary.BEGIN;
+    }
+
+    @Nullable
+    public String getDelegatePackage() {
+        PsiElementCollection elements = NamespaceMemberElement.PATH_TO_DELEGATE_PACKAGE.navigate(this);
+        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
+        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
     }
 }

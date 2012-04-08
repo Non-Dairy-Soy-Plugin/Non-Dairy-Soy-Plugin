@@ -39,6 +39,9 @@ public class AttributePredicate extends AbstractElementPredicate {
     private AttributePredicate(@Nullable String name, @Nullable Pattern matchValue) {
         this.name = name;
         this.matchValue = matchValue;
+        if (name == null && matchValue == null) {
+            throw new IllegalArgumentException();
+        }
     }
 
     @Override
@@ -46,14 +49,25 @@ public class AttributePredicate extends AbstractElementPredicate {
         if (element instanceof AttributeElement) {
             AttributeElement attr = (AttributeElement)element;
             if (name == null || name.equals(attr.getAttributeName())) {
-                String value = attr.getAttributeValue();
+                String value = attr.getAttributeValue("");
                 return this.matchValue == null ||
-                        (value != null && this.matchValue.matcher(value).matches());
+                       this.matchValue.matcher(value).matches();
             } else {
                 return false;
             }
         }
         return false; 
+    }
+
+    @Override
+    public String toString() {
+        if (name == null) {
+            return "[*=" + matchValue + "]";
+        }
+        if (matchValue == null) {
+            return "[" + name + "]";
+        }
+        return "[" + name + "=" + matchValue + "]";
     }
 
     /**

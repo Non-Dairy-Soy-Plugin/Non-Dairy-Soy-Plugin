@@ -16,6 +16,7 @@
 
 package net.venaglia.nondairy.soylang.elements;
 
+import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
@@ -29,13 +30,25 @@ import org.jetbrains.annotations.Nullable;
  * Interface to be implemented by SoyPsiElements that live within a soy
  * namespace.
  */
-public interface NamespaceMemberElement {
+public interface NamespaceMemberElement extends PsiElement {
 
     static final PsiElementPath PATH_TO_NAMESPACE_NAME =
             new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
                                new ElementTypePredicate(SoyElement.namespace_def).onChildren())
                     .debug("path_to_namespace_name");
 
+    static final PsiElementPath PATH_TO_DELEGATE_PACKAGE =
+            new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
+                               new ElementTypePredicate(SoyElement.package_def).onChildren())
+                    .debug("path_to_delegate_package");
+
+    /**
+     * @return The name of the delegate package this namespace element is
+     *     within, or null is there is no delegate package.
+     */
+    @Nullable
+    String getDelegatePackage();
+    
     /**
      * @return The fully qualified name of the namespace in which the element
      *     lives.

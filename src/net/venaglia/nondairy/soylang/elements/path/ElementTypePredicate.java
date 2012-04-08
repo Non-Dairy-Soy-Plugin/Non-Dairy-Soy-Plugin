@@ -19,6 +19,7 @@ package net.venaglia.nondairy.soylang.elements.path;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -46,6 +47,10 @@ public class ElementTypePredicate extends AbstractElementPredicate {
         this.types = new HashSet<IElementType>();
         this.types.add(type);
         this.types.addAll(Arrays.asList(types));
+    }
+
+    public ElementTypePredicate(@NotNull TokenSet types) {
+        this.types = new HashSet<IElementType>(Arrays.asList(types.getTypes()));
     }
 
     @Override

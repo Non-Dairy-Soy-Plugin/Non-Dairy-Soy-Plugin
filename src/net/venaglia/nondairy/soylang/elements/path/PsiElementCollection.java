@@ -84,6 +84,9 @@ public class PsiElementCollection extends LinkedHashSet<PsiElement> {
      *     this collection.
      */
     public PsiElementCollection applyPredicate(ElementPredicate predicate) {
+        if (predicate instanceof ElementPredicate.AlwaysTrue) {
+            return this;
+        }
         PsiElementCollection buffer = new PsiElementCollection();
         for (PsiElement element : this) {
             if (predicate.test(element)) buffer.add(element);
@@ -112,5 +115,12 @@ public class PsiElementCollection extends LinkedHashSet<PsiElement> {
             buffer.add(mapper.map(element));
         }
         return buffer;
+    }
+
+    public static PsiElementCollection castOrCopy(Collection<? extends PsiElement> c) {
+        if (c instanceof PsiElementCollection) {
+            return (PsiElementCollection)c;
+        }
+        return new PsiElementCollection(c);
     }
 }

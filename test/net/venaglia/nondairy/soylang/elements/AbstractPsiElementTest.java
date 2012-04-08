@@ -18,11 +18,16 @@ package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.mocks.MockProjectEnvironment;
+import net.venaglia.nondairy.soylang.SoyFile;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
+import net.venaglia.nondairy.soylang.lexer.SoyToken;
+import net.venaglia.nondairy.util.ImmutableCharSequence;
 import net.venaglia.nondairy.util.MockProjectEnvironmentRunner;
 import net.venaglia.nondairy.util.ProjectFiles;
+import net.venaglia.nondairy.util.SourceTuple;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +36,7 @@ import org.junit.runner.RunWith;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
@@ -44,8 +50,39 @@ import static org.junit.Assert.*;
  * definitions within them.
  */
 @RunWith(MockProjectEnvironmentRunner.class)
-@ProjectFiles({"library.soy","render1.soy","render2.soy"})
+@ProjectFiles(files = {"library.soy","render1.soy","render2.soy"})
 public abstract class AbstractPsiElementTest {
+
+    private static final AtomicInteger ANONYMOUS_SOURCE_SEQ = new AtomicInteger();
+    private static final Pattern ERROR_PATTERN = Pattern.compile("error", Pattern.CASE_INSENSITIVE);
+
+    @SuppressWarnings("HardCodedStringLiteral")
+    protected void buildAnonymousTestTemplate(@NotNull @NonNls String name,
+                                              @NotNull @NonNls String templateSource,
+                                              @NotNull @NonNls String... params) {
+        int seq = ANONYMOUS_SOURCE_SEQ.incrementAndGet();
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("{namespace unit.testing.namespace._").append(seq).append("}\n");
+        if (templateSource.contains("{template .") && templateSource.contains("{/template}") && params.length == 0) {
+            buffer.append(templateSource).append("\n");
+        } else {
+            buffer.append("/**\n");
+            for (String p : params) {
+                buffer.append(" @param ").append(p).append("\n");
+            }
+            buffer.append(" */\n");
+            buffer.append("{template .").append(name).append("}\n");
+            buffer.append(templateSource).append("\n");
+            buffer.append("{/template}\n");
+        }
+        SourceTuple tuple = new SourceTuple(name, new ImmutableCharSequence(buffer));
+        PsiElementCollection elements = flatten(tuple.psi);
+        for (PsiElement element : elements) {
+            IElementType type = element.getNode().getElementType();
+            assertFalse(SoyToken.ILLEGALS.contains(type));
+            assertFalse(ERROR_PATTERN.matcher(type.toString()).find());
+        }
+    }
 
     protected PsiElementCollection flatten(@NotNull PsiFile root) {
         PsiElementCollection elements = new PsiElementCollection();
@@ -122,25 +159,26 @@ public abstract class AbstractPsiElementTest {
                                                       @Nullable ElementPredicate predicate,
                                                       int n,
                                                       int expectedCount) {
-        assertTrue(n >= 0);
+        assertTrue(n > 0);
         assertTrue(expectedCount > 0);
-        assertTrue(n < expectedCount);
+        assertTrue(n <= expectedCount);
         PsiElementCollection elements = findElements(filename, type, text, predicate);
         for (PsiElement element : elements) {
             System.out.println(element);
         }
         assertEquals(expectedCount, elements.size());
         Iterator<PsiElement> iterator = elements.iterator();
-        for (int i = 0; i < n; i++) {
+        for (int i = 1; i < n; i++) {
             iterator.next();
         }
         return type.cast(iterator.next());
     }
 
     @NotNull
-    protected PsiFile findRootElement(@NotNull @NonNls String filename) {
+    protected SoyFile findRootElement(@NotNull @NonNls String filename) {
         PsiFile root = MockProjectEnvironment.findPsiFile(filename);
         assertNotNull(root);
-        return root;
+        assertTrue(root instanceof SoyFile);
+        return (SoyFile)root;
     }
 }

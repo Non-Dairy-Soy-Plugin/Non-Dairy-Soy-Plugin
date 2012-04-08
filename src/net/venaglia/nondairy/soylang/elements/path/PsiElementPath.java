@@ -16,8 +16,11 @@
 
 package net.venaglia.nondairy.soylang.elements.path;
 
+import static net.venaglia.nondairy.soylang.elements.path.TraverseEmpty.*;
+
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.util.TinySet;
 import org.jetbrains.annotations.NonNls;
@@ -28,9 +31,11 @@ import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -52,7 +57,7 @@ public class PsiElementPath {
     /**
      * Use this object when you wish to match any element in a PsiPath.
      */
-    public static final ElementPredicate ANY;
+    public static final AbstractElementPredicate ANY;
 
     /**
      * Use this object when you wish to match no elements in a PsiPath.
@@ -114,22 +119,7 @@ public class PsiElementPath {
     public static final String TRACE_PATH_BY_THREAD = "[dyanmic - per thread]";
 
     static {
-        AbstractElementPredicate any = new AbstractElementPredicate() {
-            @Override
-            public boolean test(PsiElement element) {
-                return true;
-            }
-
-            @Override
-            public String toString() {
-                return "*";
-            }
-
-            @Override
-            public AbstractElementPredicate not() {
-                return (AbstractElementPredicate)NONE;
-            }
-        };
+        AbstractElementPredicate any = new MyAlwaysTruePredicate();
         AbstractElementPredicate none = new AbstractElementPredicate() {
             @Override
             public boolean test(PsiElement element) {
@@ -143,7 +133,7 @@ public class PsiElementPath {
 
             @Override
             public AbstractElementPredicate not() {
-                return (AbstractElementPredicate)ANY;
+                return ANY;
             }
         };
         ANY = any;
@@ -162,6 +152,8 @@ public class PsiElementPath {
     @NonNls
     protected String name;
 
+    private final TraverseEmpty defaultTraverseEmpty;
+
     /**
      * Constructs a new path defined by the passed predicates. Predicates are
      * applied in the order passed.
@@ -172,6 +164,22 @@ public class PsiElementPath {
      * @param elementReferencePath The list of predicates to execute.
      */
     public PsiElementPath(ElementPredicate... elementReferencePath) {
+        this(ABORT, elementReferencePath);
+    }
+
+    /**
+     * Constructs a new path defined by the passed predicates. Predicates are
+     * applied in the order passed.
+     *
+     * Any or all of the passed predicates my implement
+     * {@link TraversalPredicate}. In such cases, the traversal is executed
+     * first, then the predicate is applied.
+     * @param defaultTraverseEmpty The default traversal rule to use when the
+     *     buffer becomes empty.
+     * @param elementReferencePath The list of predicates to execute.
+     */
+    public PsiElementPath(@NotNull TraverseEmpty defaultTraverseEmpty,
+                          ElementPredicate... elementReferencePath) {
         if (TraceState.TRACING_ENABLED) {
             for (StackTraceElement ste : new Throwable().getStackTrace()) {
                 name = "anonymous at " + ste;
@@ -181,6 +189,7 @@ public class PsiElementPath {
             }
         }
         this.elementReferencePath = elementReferencePath;
+        this.defaultTraverseEmpty = defaultTraverseEmpty;
     }
 
     /**
@@ -219,17 +228,37 @@ public class PsiElementPath {
     }
 
     @NotNull PsiElementCollection navigateImpl(@NotNull Collection<PsiElement> start) {
-        if (start.isEmpty()) {
-            TraceState.detailMessage("\tABORT!");
-            return PsiElementCollection.EMPTY;
-        }
+        Map<Key,Object> navigationData = null;
         PsiElementCollection current = new PsiElementCollection(start);
-        for (int i = 0, j = elementReferencePath.length; i < j && !current.isEmpty(); ++i) {
+        for (int i = 0, j = elementReferencePath.length; i < j; ++i) {
             ElementPredicate next = elementReferencePath[i];
 
             if (next == null) {
                 throw new NullPointerException("elementReferencePath[" + i + "]");
             }
+            if (next == LogElementsPredicate.INSTANCE) {
+                if (TraceState.isFineEnabled()) {
+                    TraceState.fineMessage("\telements = {");
+                    for (PsiElement element : current) {
+                        TraceState.fineMessage("\t\t%s:'%s'", element, element.getText());
+                    }
+                    TraceState.fineMessage("\t}");
+                }
+                continue;
+            }
+            if (next instanceof InstancePredicate) {
+                if (navigationData == null) {
+                    navigationData = new HashMap<Key,Object>();
+                }
+                next = ((InstancePredicate)next).getInstance(navigationData);
+            }
+            if (current.isEmpty()) {
+                if (getNoMatchOnStart(next, defaultTraverseEmpty) == ABORT) {
+                    TraceState.detailMessage("\tABORT!");
+                    return PsiElementCollection.EMPTY;
+                }
+            }
+            TraverseEmpty noMatch = getNoMatch(next, defaultTraverseEmpty);
             if (next instanceof TraversalPredicate) {
                 TraversalPredicate traversal = (TraversalPredicate)next;
                 PsiElementCollection buffer;
@@ -240,7 +269,7 @@ public class PsiElementPath {
                         break;
                     }
                     buffer = current.applyPredicate(next);
-                } while (buffer.isEmpty() && traversal.traverseAgainIfNoMatch());
+                } while (buffer.isEmpty() && noMatch == TRAVERSE_AGAIN);
                 current = buffer;
             } else {
                 current = current.applyPredicate(next);
@@ -251,15 +280,30 @@ public class PsiElementPath {
                                          current.size(),
                                          current.size() == 1 ? "element" : "elements"); //NON-NLS
                 if (!current.isEmpty() && TraceState.isFineEnabled()) {
-                    TraceState.fineMessage("\t\t" + join(current));
+                    TraceState.fineMessage("\t\t%s", join(current));
                 }
             }
-            if (i < j && current.isEmpty()) {
+            if (i < j && noMatch == ABORT && current.isEmpty()) {
                 TraceState.detailMessage("\tABORT!");
+                break;
             }
         }
         if (current.isEmpty()) return PsiElementCollection.EMPTY;
         return current;
+    }
+
+    @NotNull
+    protected TraverseEmpty getNoMatchOnStart(@NotNull Object predicate,
+                                              @NotNull TraverseEmpty defaultValue) {
+        NoMatchHanding noMatch = predicate.getClass().getAnnotation(NoMatchHanding.class);
+        return noMatch == null ? defaultValue : noMatch.onStart();
+    }
+
+    @NotNull
+    protected TraverseEmpty getNoMatch(@NotNull Object predicate,
+                                       @NotNull TraverseEmpty defaultValue) {
+        NoMatchHanding noMatch = predicate.getClass().getAnnotation(NoMatchHanding.class);
+        return noMatch == null ? defaultValue : noMatch.onNoMatch();
     }
 
     private String join(@NotNull Collection<PsiElement> current) {
@@ -271,9 +315,9 @@ public class PsiElementPath {
             if (first) first = false; else buffer.append(",");
             if (node != null && node.getElementType() != null) {
                 buffer.append(node.getElementType());
-//                buffer.append("=\"");
-//                buffer.append(node.getText());
-//                buffer.append("\"");
+                buffer.append(":\'");
+                buffer.append(node.getText().replace("\\","\\\\").replace("\n","\\n")); //NON-NLS
+                buffer.append("\'");
             } else {
                 buffer.append("[null]"); // NON-NLS
             }
@@ -282,6 +326,41 @@ public class PsiElementPath {
         return buffer.toString();
     }
 
+    /**
+     * Builds a view of this path that behaves as a traversal predicate. Each 
+     * element passed into the 
+     * {@link TraversalPredicate#traverse(java.util.Collection)} method 
+     * performs a discrete "forked" navigation.
+     * 
+     * Normally it is not necessary to fork traversal operations, and doing so
+     * may be less efficient. However, it is sometimes necessary when using
+     * {@link InstancePredicate}.
+     * @return A view of this path that can be used as a traversal predicate.
+     */
+    public TraversalPredicate asForkingTraversalPredicate() {
+        return new TraversalPredicate.AlwaysTrue() {
+            @NotNull
+            @Override
+            public PsiElementCollection traverse(@NotNull Collection<PsiElement> current) {
+                PsiElementCollection result = new PsiElementCollection();
+                for (PsiElement element : current) {
+                    result.addAll(navigate(element));
+                }
+                return result;
+            }
+
+            @Override
+            public boolean test(PsiElement element) {
+                return true;
+            }
+
+            @Override
+            public String toString() {
+                return "fork!    "; // NON-NLS
+            }
+        };
+    }
+    
     /**
      * Creates a compound predicate, by OR-ing navigation results of this path
      * with navigation results of the passed path. The combined results will
@@ -405,6 +484,24 @@ public class PsiElementPath {
                 }
             }
             return buffer;
+        }
+    }
+
+    private static class MyAlwaysTruePredicate extends AbstractElementPredicate implements ElementPredicate.AlwaysTrue {
+
+        @Override
+        public boolean test(PsiElement element) {
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "*";
+        }
+
+        @Override
+        public AbstractElementPredicate not() {
+            return (AbstractElementPredicate)NONE;
         }
     }
 
@@ -622,8 +719,17 @@ public class PsiElementPath {
                 Level level;
                 if (name == null || name.startsWith("anonymous at ")) {
                     level = Level.INHERIT;
-                } else if (TRACING_FOR.contains(name.toLowerCase())) {
+                } else if (checkIfTracingEnabled(name)) {
                     String override = System.getProperty(TRACE_PATH_PROPERTY_NAME + "." + name);
+                    for (String partialName = name; override == null; ) {
+                        int lastBang = partialName.lastIndexOf('!');
+                        if (lastBang >= 0) {
+                            partialName = partialName.substring(0, lastBang);
+                            override = System.getProperty(TRACE_PATH_PROPERTY_NAME + "." + partialName + "!*");
+                        } else {
+                            break;
+                        }
+                    }
                     try {
                         level = override != null ? Level.valueOf(override.toUpperCase()) : Level.DETAIL;
                     } catch (IllegalArgumentException e) {
@@ -638,6 +744,23 @@ public class PsiElementPath {
                 int nextDepth = before.depth + (nextLevel == Level.NONE ? 0 : 1);
                 TRACE_STATE.set(new TraceState(nextLevel, before, name, nextDepth));
             }
+        }
+
+        private static boolean checkIfTracingEnabled(String name) {
+            name = name.toLowerCase();
+            if (TRACING_FOR.contains(name)) return true;
+            int until = name.length();
+            int lastBang;
+            do {
+                lastBang = name.lastIndexOf('!', until - 1);
+                if (lastBang >= 0) {
+                    if (TRACING_FOR.contains(name.substring(0, lastBang) + "!*")) {
+                        return true;
+                    }
+                    until = lastBang;
+                }
+            } while (lastBang >= 0);
+            return false;
         }
 
         /**

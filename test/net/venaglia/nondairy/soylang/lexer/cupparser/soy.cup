@@ -38,7 +38,8 @@ terminal String                        TAG_LBRACE, TAG_RBRACE, TAG_END_LBRACE, T
 
 // lexicographical structures
 terminal String                        WHITESPACE, COMMENT, LINE_COMMENT;
-terminal String                        DOC_COMMENT, DOC_COMMENT_WHITESPACE, DOC_COMMENT_TAG, DOC_COMMENT_IDENTIFIER, DOC_COMMENT_BEGIN, DOC_COMMENT_END, DOC_COMMENT_BAD_CHARACTER;
+terminal String                        DOC_COMMENT, DOC_COMMENT_EOL, DOC_COMMENT_WHITESPACE, DOC_COMMENT_TAG, DOC_COMMENT_PARAM_TAG;
+terminal String                        DOC_COMMENT_IDENTIFIER, DOC_COMMENT_BEGIN, DOC_COMMENT_END, DOC_COMMENT_BAD_CHARACTER;
 
 // identifier tokens
 terminal String                        PARAMETER_REF, STRING_PARAMETER_REF, PACKAGE_IDENTIFIER, NAMESPACE_IDENTIFIER, TEMPLATE_IDENTIFIER;
@@ -240,12 +241,18 @@ template_doc_comment ::= template_doc_buffer:buf DOC_COMMENT_END
                    ;
 template_doc_buffer ::= template_doc_buffer:buf DOC_COMMENT:doc
                        {: buf.append(doc); RESULT = buf; :}
+                   | template_doc_buffer:buf DOC_COMMENT_EOL:doc
+                       {: buf.append(doc); RESULT = buf; :}
                    | template_doc_buffer:buf DOC_COMMENT_BEGIN:doc
                        {: buf.append(doc); RESULT = buf; :}
                    | template_doc_buffer:buf DOC_COMMENT_TAG:doc
                        {: buf.append(doc); RESULT = buf; :}
+                   | template_doc_buffer:buf DOC_COMMENT_PARAM_TAG:doc
+                       {: buf.append(doc); RESULT = buf; :}
                    | template_doc_buffer:buf DOC_COMMENT_IDENTIFIER:doc
                        {: buf.append(doc); RESULT = buf; :}
+                   | template_doc_buffer:buf LINE_COMMENT:doc
+                       {: RESULT = buf; :}
                    | DOC_COMMENT:doc
                        {: SoyDocCommentBuffer buf = new SoyDocCommentBuffer(); buf.append(doc); RESULT = buf; :}
                    | DOC_COMMENT_BEGIN:doc

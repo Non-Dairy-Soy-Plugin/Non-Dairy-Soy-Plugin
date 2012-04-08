@@ -111,6 +111,8 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 %state HTML_ATTRIBUTE_VALUE, HTML_ATTRIBUTE_VALUE_1, HTML_ATTRIBUTE_VALUE_2, HTML_COMMENT
 %state HTML_DOCTYPE, HTML_DIRECTIVE, HTML_CDATA
 
+%state AFTER_WHITESPACE
+
 %%
 
 <YYINITIAL> {
@@ -138,7 +140,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    return symbol(TAG_END_LBRACE, yytext().toString());
                                  }
 
-  {WhiteSpace}+                  { return symbol(WHITESPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
   [^{}/ \r\n\t\f] ( [^{}\r\n]* [^{} \r\n\t\f] )? |
   [^\r\n{}/]+ | [^\r\n]          { return symbol(IGNORED_TEXT, yytext().toString()); }
   <<EOF>>                        { return null; }
@@ -161,13 +165,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    currentCommand = closeTag ? null : yytext().toString();
                                    boolean ok = closeTag || currentTemplate == null;
                                    if (closeTag) {
-                                     activeDocCommentBuffer = null;
                                      currentTemplate = null;
                                      nextStateAfterCloseTag = YYINITIAL;
                                    } else {
-                                     if (activeDocCommentBuffer != null) {
-                                       activeDocCommentBuffer.setTemplateDeclarationLine(tagStartLine);
-                                     }
                                      nextStateAfterCloseTag = HTML_INITIAL;
                                    }
                                    return symbol(ok ? TEMPLATE : UNTERMINATED_TEMPLATE); }
@@ -176,13 +176,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    currentCommand = closeTag ? null : yytext().toString();
                                    boolean ok = closeTag || currentTemplate == null;
                                    if (closeTag) {
-                                     activeDocCommentBuffer = null;
                                      currentTemplate = null;
                                      nextStateAfterCloseTag = YYINITIAL;
                                    } else {
-                                     if (activeDocCommentBuffer != null) {
-                                       activeDocCommentBuffer.setTemplateDeclarationLine(tagStartLine);
-                                     }
                                      nextStateAfterCloseTag = HTML_INITIAL;
                                    }
                                    return symbol(ok ? DELTEMPLATE : UNTERMINATED_TEMPLATE); }
@@ -282,7 +278,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <CLOSE_TAG> {
-  {WhiteSpace}+                  { return symbol(WHITESPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
   "/}}"                          { yybegin(nextStateAfterCloseTag);
                                    if (!doubleBraceTag) yypushback(1);
                                    return symbol(TAG_END_RBRACE);
@@ -309,7 +307,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <NAMESPACE_TAG> {
-  {WhiteSpace}+                  { return symbol(WHITESPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
   {Identifier} {ParameterDotRef}* { yybegin(SOY_TAG);
                                     if (currentNamespace == null) currentNamespace = yytext().toString();
                                     return symbol(NAMESPACE_IDENTIFIER, yytext().toString());
@@ -320,7 +320,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <DELPACKAGE_TAG> {
-  {WhiteSpace}+                  { return symbol(WHITESPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
   {Identifier} {ParameterDotRef}* { yybegin(SOY_TAG);
                                     if (currentNamespace == null) currentNamespace = yytext().toString();
                                     return symbol(PACKAGE_IDENTIFIER, yytext().toString());
@@ -331,10 +333,11 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <TEMPLATE_TAG> {
-  {WhiteSpace}+                  { return symbol(WHITESPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
   ("."{Identifier})+             { yybegin(SOY_TAG);
                                    currentTemplate = yytext().toString();
-                                   if (activeDocCommentBuffer != null) activeDocCommentBuffer.setTemplateName(currentTemplate);
                                    return symbol(TEMPLATE_IDENTIFIER, currentTemplate); }
   "}"                            { yybegin(CLOSE_TAG); yypushback(1); }
   .                              { yybegin(SOY_TAG); yypushback(1); return symbol(ILLEGAL_TAG_DECLARATION); }
@@ -342,7 +345,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <IDENTIFIER_TAG> {
-  {WhiteSpace}+                  { return symbol(WHITESPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
   {Identifier} |
   {ParameterDotRef} |
   {CompoundIdentifier}           { yybegin(SOY_TAG);
@@ -459,12 +464,13 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   {Comment}                      { return symbol(COMMENT, yytext().toString()); }
 
   /* whitespace */
-  {WhiteSpace}                   { return symbol(WHITESPACE); }
+  {WhiteSpace}                   { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
 
   /* identifiers */
   {ParameterRef}                 { return symbol(PARAMETER_REF, yytext().toString().substring(1)); }
   /* function calls & identifiers */
-//  {CompoundIdentifier} {WhiteSpace}* "(" |
   {Identifier} {WhiteSpace}* "(" { Matcher matcher = MATCH_NON_IDENTIFIER_CHAR.matcher(yytext());
                                    if (matcher.find()) {
                                      yypushback(yylength() - matcher.start());
@@ -489,7 +495,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <TAG_DIRECTIVE> {
-  {WhiteSpace}+                  { return symbol(WHITESPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
 
   /* print directives */
 //  "noAutoescape"                 { return symbol(NO_AUTOESCAPE); }
@@ -546,7 +554,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <DOCS> {
-  {LineTerminator}               { yybegin(DOCS_BOL); return symbol(DOC_COMMENT); }
+  {LineTerminator}               { yybegin(DOCS_BOL); return symbol(DOC_COMMENT_EOL); }
   [ \t\f]+                       { return symbol(DOC_COMMENT_WHITESPACE); }
   [^* \r\n\t\f]+ ( [ \t\f]+ [^* \r\n\t\f]+ )* |
   .                              { return symbol(DOC_COMMENT, yytext().toString()); }
@@ -555,8 +563,10 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <DOCS_BOL> {
-  "@param" "?"?                  { yybegin(DOCS_IDENT); return symbol(DOC_COMMENT_TAG, yytext().toString()); }
+  "@param" "?"?                  { yybegin(DOCS_IDENT); return symbol(DOC_COMMENT_PARAM_TAG, yytext().toString()); }
   {DocTag}                       { yybegin(DOCS); return symbol(DOC_COMMENT_TAG, yytext().toString()); }
+  {EndOfLineComment}             { return symbol(LINE_COMMENT, yytext().toString()); }
+  {LineTerminator}               { return symbol(DOC_COMMENT_EOL); }
   {BeginOfLineComment} |
   {WhiteSpace}+                  { return symbol(DOC_COMMENT_WHITESPACE); }
   .                              { yybegin(DOCS); yypushback(1); }
@@ -568,8 +578,11 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   "$" {Identifier}               { yypushback(yylength() - 1);
                                    return symbol(DOC_COMMENT_BAD_CHARACTER); }
   {Identifier}                   { yybegin(DOCS); return symbol(DOC_COMMENT_IDENTIFIER, yytext().toString()); }
-  {LineTerminator}               { yybegin(DOCS_BOL); return symbol(DOC_COMMENT, yytext().toString()); }
-  [ \t\f]+                       { return symbol(DOC_COMMENT_WHITESPACE, yytext().toString()); }
+  {LineTerminator}               { yybegin(DOCS_BOL);
+                                   return symbol(DOC_COMMENT_EOL, yytext().toString()); }
+  [ \t\f]+                       { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(DOC_COMMENT_WHITESPACE, yytext().toString()); }
   [^a-zA-Z_ \t\f\r\n]            { yybegin(DOCS); yypushback(1); }
   "*/"                           { yybegin(DOCS); yypushback(2); }
   <<EOF>>                        { yybegin(YYINITIAL); }
@@ -656,7 +669,6 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <HTML_INITIAL> {
-  {EndOfLineComment}             { return symbol(LINE_COMMENT, yytext().toString()); }
   {DocComment} |
   {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
 
@@ -696,7 +708,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    return symbol(XML_DECL_START); }
   "<" | ">"                      { return symbol(XML_BAD_CHARACTER); }
 
-  {WhiteSpace}+                  { return symbol(XML_WHITE_SPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(XML_WHITE_SPACE); }
   {HtmlEntityRef}                { return symbol(XML_CHAR_ENTITY_REF, yytext()); }
   [^{}<>&/ \r\n\t\f] ( [^{}<>&\r\n]* [^{}<>& \r\n\t\f] )? |
   [^\r\n&{}<>/]+ | [^&\r\n]      { return symbol(XML_DATA_CHARACTERS, yytext()); }
@@ -720,14 +734,20 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <HTML_TAG_END> {
-  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(TAG_WHITE_SPACE); }
   ">"                            { yybegin(HTML_INITIAL); return symbol(XML_TAG_END); }
   .                              { return symbol(XML_BAD_CHARACTER); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
 
 <HTML_ATTRIBUTE_NAME> {
-  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  {DocComment} |
+  {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(TAG_WHITE_SPACE); }
   {HtmlIdentifier}               { yybegin(HTML_ATTRIBUTE_EQ); return symbol(XML_NAME); }
   "{" "{"?                       { return symbol(LBRACE_ERROR); }
   "}" "}"?                       { return symbol(RBRACE_ERROR); }
@@ -756,7 +776,11 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <HTML_ATTRIBUTE_NAME_RESUME> {
-  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  {DocComment} |
+  {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(TAG_WHITE_SPACE); }
   [-a-zA-Z0-9_-]+                { yybegin(HTML_ATTRIBUTE_EQ); return symbol(XML_EQ); }
   "="                            { yypushback(1); yybegin(HTML_ATTRIBUTE_EQ); return symbol(XML_EQ); }
   "{" "{"?                       { return symbol(LBRACE_ERROR); }
@@ -786,16 +810,24 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <HTML_ATTRIBUTE_EQ> {
+  {DocComment} |
+  {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
   "="                            { nextStateAfterHtmlAttribute = HTML_ATTRIBUTE_NAME;
                                    yybegin(HTML_ATTRIBUTE_VALUE);
                                    return symbol(XML_EQ); }
-  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(TAG_WHITE_SPACE); }
   .                              { yypushback(1); yybegin(HTML_ATTRIBUTE_NAME); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
 
 <HTML_ATTRIBUTE_VALUE> {
-  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  {DocComment} |
+  {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(TAG_WHITE_SPACE); }
   {HtmlIdentifier}               { yybegin(nextStateAfterHtmlAttribute); yypushback(yylength()); }
   \'                             { yybegin(HTML_ATTRIBUTE_VALUE_1);
                                    return symbol(XML_ATTRIBUTE_VALUE_START_DELIMITER); }
@@ -807,6 +839,8 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <HTML_ATTRIBUTE_VALUE_1> {
+  {DocComment} |
+  {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
   "{" "{"?                       { return symbol(LBRACE_ERROR); }
   "}" "}"?                       { return symbol(RBRACE_ERROR); }
   "{" "{"? [^ \t\f\r\n}]         { yybegin(OPEN_TAG);
@@ -837,6 +871,8 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <HTML_ATTRIBUTE_VALUE_2> {
+  {DocComment} |
+  {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
   "{" "{"?                       { return symbol(LBRACE_ERROR); }
   "}" "}"?                       { return symbol(RBRACE_ERROR); }
   "{" "{"? [^ \t\f\r\n}]         { yybegin(OPEN_TAG);
@@ -867,6 +903,8 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 }
 
 <HTML_DOCTYPE> {
+  {DocComment} |
+  {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
   "{" "{"?                       { return symbol(LBRACE_ERROR); }
   "}" "}"?                       { return symbol(RBRACE_ERROR); }
   "{" "{"? [^ \t\f\r\n} ]        { yybegin(OPEN_TAG);
@@ -893,13 +931,17 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    return symbol(XML_EQ); }
   \" [^\"]* \"                   { return symbol(XML_ATTRIBUTE_VALUE_TOKEN); }
   \' [^\']* \'                   { return symbol(XML_ATTRIBUTE_VALUE_TOKEN); }
-  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(TAG_WHITE_SPACE); }
   ">"                            { yybegin(HTML_INITIAL); return symbol(XML_DOCTYPE_END); }
   .                              { return symbol(XML_BAD_CHARACTER); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
 
 <HTML_DIRECTIVE> {
+  {DocComment} |
+  {TraditionalComment}           { return symbol(COMMENT, yytext().toString()); }
   "{" "{"?                       { return symbol(LBRACE_ERROR); }
   "}" "}"?                       { return symbol(RBRACE_ERROR); }
   "{" "{"? [^ \t\f\r\n} ]        { yybegin(OPEN_TAG);
@@ -925,7 +967,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   \" | \'                        { yypushback(1);
                                    nextStateAfterCloseTag = HTML_DIRECTIVE;
                                    yybegin(HTML_ATTRIBUTE_VALUE); }
-  {WhiteSpace}+                  { return symbol(TAG_WHITE_SPACE); }
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(TAG_WHITE_SPACE); }
   "?>"                           { yybegin(HTML_INITIAL); return symbol(XML_DECL_END); }
   ">"                            { yybegin(HTML_INITIAL); return symbol(XML_DECL_END); }
   .                              { return symbol(XML_BAD_CHARACTER); }
@@ -953,5 +997,12 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    return symbol(TAG_END_LBRACE, yytext().toString()); }
   "]]>"                          { yybegin(HTML_INITIAL); return symbol(XML_CDATA_END); }
   {HtmlCDataText}+               { return symbol(XML_PCDATA); }
+  <<EOF>>                        { yybegin(YYINITIAL); }
+}
+
+<AFTER_WHITESPACE> {
+  {EndOfLineComment}             { return symbol(LINE_COMMENT, yytext().toString()); }
+  . | [\f\r\n]                   { yypushback(1);
+                                   yybegin(nextStateAfterWhitespace); }
   <<EOF>>                        { yybegin(YYINITIAL); }
 }

@@ -81,7 +81,7 @@ public class LocalTemplateNameDefTest extends AbstractPsiElementTest {
     }
 
     @Test
-    @ProjectFiles({"example.soy"})
+    @ProjectFiles(files = {"example.soy"}, inherit = false  )
     public void testGetPresentation_private() throws Exception {
         LocalTemplateNameDef def = findElement("example.soy",
                                                LocalTemplateNameDef.class,
@@ -99,7 +99,7 @@ public class LocalTemplateNameDefTest extends AbstractPsiElementTest {
     }
 
     @Test
-    @ProjectFiles({"delegates.soy"})
+    @ProjectFiles(files = {"delegates.soy"}, inherit = false)
     public void testGetPresentation_deltemplate() throws Exception {
         LocalTemplateNameDef def = findElement("delegates.soy",
                                                LocalTemplateNameDef.class,

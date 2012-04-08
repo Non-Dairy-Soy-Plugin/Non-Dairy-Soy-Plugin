@@ -65,6 +65,11 @@ public class I18NTest {
     }
 
     @Test
+    public void testClassInit() throws Exception {
+       assertNotNull(I18N.msg("soy.language.display_name"));
+    }
+
+    @Test
     public void testForConsistentKeys() throws Exception {
         assertFalse(supportedLocales.isEmpty());
         System.out.println(String.format("Testing for consistency on %d supported locales: %s", supportedLocales.size(), supportedLocales.keySet()));

@@ -15,6 +15,11 @@
 
 ===============================================================================
 
+ver 0.5.0
+* Seven inspections to make soy development easier and less error prone
+* Fixed lexer problems detecting line and block comments in several situations
+* Improved parsing for doc comments now has better structure
+
 ver 0.4.2
 * HTML/XML syntax now supports DOCTYPE, preprocessor directives, and CDATA
 * A parameter definition starting with $, now shows as an error.

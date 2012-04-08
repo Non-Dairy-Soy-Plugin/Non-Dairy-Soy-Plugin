@@ -51,7 +51,7 @@ public class ParameterDefElement extends ParameterElement implements ItemPresent
 
     @Override
     public Icon getIcon(boolean open) {
-        return getNode().getElementType() == SoyElement.doc_comment_param ? SoyIcons.PARAMETER : null;
+        return getNode().getElementType() == SoyElement.doc_comment_param_def ? SoyIcons.PARAMETER : null;
     }
 
     @Override

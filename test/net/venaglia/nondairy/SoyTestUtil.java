@@ -38,6 +38,7 @@ import net.venaglia.nondairy.soylang.parser.SoyStructureParser;
 import net.venaglia.nondairy.util.SourceTuple;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -153,9 +154,22 @@ public class SoyTestUtil {
         return tuple.psi;
     }
 
-    public static PsiElement getPsiTreeFor(@NotNull PsiFile fileNode, @NotNull @NonNls String name) {
+    public static PsiElement getPsiTreeFor(@NotNull PsiFile fileNode,
+                                           @NotNull @NonNls String name) {
+        return getPsiTreeImpl(fileNode, name, null);
+    }
+
+    public static PsiElement getPsiTreeFor(@NotNull PsiFile fileNode,
+                                           @NotNull @NonNls String name,
+                                           @NotNull @NonNls CharSequence source) {
+        return getPsiTreeImpl(fileNode, name, source);
+    }
+
+    private static PsiElement getPsiTreeImpl(@NotNull PsiFile fileNode,
+                                             @NotNull @NonNls String name,
+                                             @Nullable @NonNls CharSequence source) {
         try {
-            String source = getTestSourceBuffer(name);
+            source = source == null ? getTestSourceBuffer(name) : source;
             TestableSoyScanner scanner = SoyScannerTest.buildScanner(source, "YYINITIAL");
             Iterator<SoySymbol> iterator = new WhitespaceFilteringIterator(scanner.iterator());
             TreeBuildingTokenSource tokenSource = new TreeBuildingTokenSource(source, iterator);

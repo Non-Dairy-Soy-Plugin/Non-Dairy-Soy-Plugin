@@ -53,7 +53,7 @@ public class LocalTemplateNameDef
     private static final PsiElementPath PARAMETER_DECLARATION_PATH =
             new PsiElementPath(new ElementTypePredicate(SoyElement.tag_and_doc_comment).onFirstAncestor(),
                                new ElementTypePredicate(SoyElement.doc_comment).onChildren(),
-                               new ElementTypePredicate(SoyElement.doc_comment_param).onChildren());
+                               new ElementTypePredicate(SoyElement.doc_comment_param_def).onChildren());
     private static final PsiElementPath PRIVATE_ATTRIBUTE_PATH =
             new PsiElementPath(new ElementTypePredicate(SoyElement.template_tag).onFirstAncestor(),
                                new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
@@ -111,6 +111,14 @@ public class LocalTemplateNameDef
         return namespace instanceof NamespaceMemberElement
                ? ((NamespaceMemberElement)namespace).getNamespace()
                : null;
+    }
+
+    @Override
+    @Nullable
+    public String getDelegatePackage() {
+        PsiElementCollection elements = PATH_TO_DELEGATE_PACKAGE.navigate(this);
+        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
+        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
     }
 
     private boolean isPrivate() {
