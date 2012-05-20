@@ -26,6 +26,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import net.venaglia.nondairy.soylang.elements.TreeNavigator;
 import net.venaglia.nondairy.util.SourceTuple;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static org.junit.Assert.*;
 
@@ -36,32 +38,37 @@ import static org.junit.Assert.*;
  */
 public class MockTreeNavigator extends TreeNavigator {
 
+    @Nullable
     @Override
-    public PsiElement getParent(ASTNode node) {
+    public PsiElement getParent(@NotNull ASTNode node) {
         ASTNode child = node.getTreeParent();
         return child == null ? null : child.getPsi();
     }
 
+    @Nullable
     @Override
-    public PsiElement getFirstChild(ASTNode node) {
+    public PsiElement getFirstChild(@NotNull ASTNode node) {
         ASTNode child = node.getFirstChildNode();
         return child == null ? null : child.getPsi();
     }
 
+    @Nullable
     @Override
-    public PsiElement getLastChild(ASTNode node) {
+    public PsiElement getLastChild(@NotNull ASTNode node) {
         ASTNode child = node.getLastChildNode();
         return child == null ? null : child.getPsi();
     }
 
+    @Nullable
     @Override
-    public PsiElement getNthChild(ASTNode node, int n) {
+    public PsiElement getNthChild(@NotNull ASTNode node, int n) {
         ASTNode child = node.findLeafElementAt(n);
         return child == null ? null : child.getPsi();
     }
 
+    @NotNull
     @Override
-    public PsiElement[] getAllChildren(ASTNode node) {
+    public PsiElement[] getAllChildren(@NotNull ASTNode node) {
         ASTNode[] childNodes = node.getChildren(null);
         if (childNodes.length == 0) {
             return PsiElement.EMPTY_ARRAY;
@@ -73,40 +80,52 @@ public class MockTreeNavigator extends TreeNavigator {
         return children;
     }
 
+    @Nullable
     @Override
-    public PsiElement getNextSibling(ASTNode node) {
+    public PsiElement getNextSibling(@NotNull ASTNode node) {
         ASTNode sibling = node.getTreeNext();
         return sibling == null ? null : sibling.getPsi();
     }
 
+    @Nullable
     @Override
-    public PsiElement getPrevSibling(ASTNode node) {
+    public PsiElement getPrevSibling(@NotNull ASTNode node) {
         ASTNode sibling = node.getTreePrev();
         return sibling == null ? null : sibling.getPsi();
     }
 
+    @NotNull
     @Override
-    public PsiManager getPsiManager(Project project) {
+    public PsiManager getPsiManager(@NotNull Project project) {
         return MockProjectEnvironment.getUnitTestPsiManager();
     }
 
+    @NotNull
     @Override
-    public ProjectFileIndex getProjectFileIndex(Project project) {
+    public ProjectFileIndex getProjectFileIndex(@NotNull Project project) {
         return MockProjectEnvironment.getUnitTestProjectFileIndex();
     }
 
+    @NotNull
     @Override
-    public Module[] getModules(Project project) {
+    public Module[] getModules(@NotNull Project project) {
         if (MockProjectEnvironment.getUnitTestProject() == project) {
             return new Module[]{MockProjectEnvironment.getUnitTestModule()};
         }
         return new Module[0];
     }
 
+    @Nullable
     @Override
-    public Document getDocument(VirtualFile file) {
+    public Document getDocument(@NotNull VirtualFile file) {
         SourceTuple tuple = MockProjectEnvironment.getTuple(file);
         assertNotNull(tuple);
         return tuple.document;
+    }
+
+    @Nullable
+    @Override
+    public VirtualFile getFile(@NotNull String fileUrl) {
+        return MockProjectEnvironment.findVirtualFile(fileUrl);
     }
 }

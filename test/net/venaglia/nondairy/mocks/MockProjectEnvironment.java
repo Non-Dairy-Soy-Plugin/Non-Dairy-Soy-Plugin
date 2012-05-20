@@ -132,6 +132,13 @@ public class MockProjectEnvironment {
         return tuple == null ? null : tuple.psi;
     }
 
+    @Nullable
+    public static VirtualFile findVirtualFile(String fileUrl) {
+        Map<String,SourceTuple> files = get().parsedFiles;
+        SourceTuple tuple = files == null ? null : files.get(fileUrl.substring(fileUrl.lastIndexOf("//") + 2));
+        return tuple == null ? null : tuple.file;
+    }
+
     public static PsiManager getUnitTestPsiManager() {
         return get().psiManager;
     }

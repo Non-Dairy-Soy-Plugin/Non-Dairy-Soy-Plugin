@@ -102,6 +102,7 @@ public class SoySyntaxHighlighter extends SyntaxHighlighterBase {
         keys1.put(SoyToken.PARAMETER_REF, SOY_TEMPLATE_PARAMETER);
         keys1.put(SoyToken.NAMESPACE_IDENTIFIER, SOY_NAMESPACE_ID);
         keys1.put(SoyToken.TEMPLATE_IDENTIFIER, SOY_TEMPLATE_ID);
+        keys1.put(SoyToken.DELTEMPLATE_IDENTIFIER, SOY_TEMPLATE_ID);
         keys1.put(SoyToken.CAPTURED_FUNCTION_IDENTIFIER, SOY_FUNCTION);
 
         keys2.put(SoyToken.DOC_COMMENT_TAG, SOY_DOC_COMMENT_TAG);

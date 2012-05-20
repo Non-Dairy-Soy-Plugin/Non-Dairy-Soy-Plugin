@@ -1,4 +1,3 @@
-
   Copyright 2010 - 2012 Ed Venaglia
 
      Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,6 +48,7 @@ Editor:
         Do not permit renaming of $ij
         Find/Highlight usages of $ij should show ALL references in ALL templates
     Copy/paste of a template or call should optimize the called name for namespace
+    Support for indentation and code formatting
 
 Code Folding:
     Collapse commands: if, switch, for, foreach, literal, msg, call

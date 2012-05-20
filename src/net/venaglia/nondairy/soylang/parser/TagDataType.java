@@ -26,7 +26,7 @@ import net.venaglia.nondairy.util.Assert;
 */
 enum TagDataType {
 
-    COMMAND, NAME, EXPRESSION, ATTRIBUTES, DIRECTIVES;
+    COMMAND, NAME, EXPRESSION, EXPRESSION_LIST, ATTRIBUTES, DIRECTIVES, DIRECTIVE_ARG;
 
     public static final TagDataType[] TAG_DATA_TYPES = TagDataType.class.getEnumConstants();
 

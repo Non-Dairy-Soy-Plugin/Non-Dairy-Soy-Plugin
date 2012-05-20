@@ -25,6 +25,7 @@ import net.venaglia.nondairy.i18n.I18N;
 import net.venaglia.nondairy.i18n.MessageBuffer;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
+import org.jetbrains.annotations.NonNls;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -45,6 +46,7 @@ class TagParser {
 
     private int expected = TagDataType.COMMAND.value();
     private SoyElement element = tag;
+    private String command = null;
     private IElementType tagToken = null;
     private Deque<SectionTag> companions = new LinkedList<SectionTag>();
     private boolean requiresCloseTag = false;
@@ -78,7 +80,7 @@ class TagParser {
                 errorMessage = I18N.msg("syntax.error.expected.command");
             } else if (isExpecting(TagDataType.NAME)) {
                 errorMessage = I18N.msg("syntax.error.expected.name");
-            } else if (isExpecting(TagDataType.EXPRESSION)) {
+            } else if (isExpecting(TagDataType.EXPRESSION) || isExpecting(TagDataType.EXPRESSION_LIST)) {
                 errorMessage = I18N.msg("syntax.error.expected.expression");
             }
             innerMarker.done(tag_between_braces);
@@ -145,6 +147,8 @@ class TagParser {
                 case NAME:
                     if (SoyToken.NAME_TOKENS.contains(token)) {
                         parser = parser.parseName();
+                    } else if (tagToken == SoyToken.TEMPLATE || tagToken == SoyToken.DELTEMPLATE) {
+                        source.advanceAndMarkBad(token, "token", I18N.msg("syntax.error.expected.template.definition"));
                     } else {
                         source.advanceAndMarkBad(token, "token", I18N.msg("syntax.error.expected.name"));
                     }
@@ -161,6 +165,14 @@ class TagParser {
                     }
                     new ExpressionParser(source).parse();
                     break;
+                case EXPRESSION_LIST:
+                    if (token == SoyToken.COMMA) {
+                        source.advance();
+                        nowExpect(TagDataType.EXPRESSION);
+                    } else {
+                        notExpect(TagDataType.EXPRESSION_LIST);
+                    }
+                    break;
                 case ATTRIBUTES:
                     if (!SoyToken.ATTRIBUTE_TOKENS.contains(token)) {
                         notExpect(TagDataType.ATTRIBUTES);
@@ -175,7 +187,13 @@ class TagParser {
                         break;
                     }
                     mayExpect(TagDataType.DIRECTIVES);
+                    if (token == SoyToken.DIRECTIVE_COLON || token == SoyToken.DIRECTIVE_COMMA) {
+                        nowExpect(TagDataType.EXPRESSION);
+                    }
                     parseDirective();
+                    break;
+                case DIRECTIVE_ARG:
+
                     break;
             }
             if (parser.expected == 0) {
@@ -351,6 +369,7 @@ class TagParser {
         if (isExpecting(TagDataType.COMMAND)) {
             notExpect(TagDataType.COMMAND);
             IElementType token = source.token();
+            @NonNls String command = source.text();
             if (token == SoyToken.DELPACKAGE) {
                 nowExpect(TagDataType.NAME);
                 source.advanceAndMark(command_keyword, "command_keyword");
@@ -359,10 +378,15 @@ class TagParser {
                 nowExpect(TagDataType.NAME, TagDataType.ATTRIBUTES);
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = namespace_def;
-            } else if (token == SoyToken.TEMPLATE ||  token == SoyToken.DELTEMPLATE) {
+            } else if (token == SoyToken.TEMPLATE) {
                 nowExpect(TagDataType.NAME, TagDataType.ATTRIBUTES);
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = template_tag;
+                requiresCloseTag = true;
+            } else if (token == SoyToken.DELTEMPLATE) {
+                nowExpect(TagDataType.NAME, TagDataType.ATTRIBUTES);
+                source.advanceAndMark(command_keyword, "command_keyword");
+                element = deltemplate_tag;
                 requiresCloseTag = true;
             } else if (token == SoyToken.IF) {
                 nowExpect(TagDataType.EXPRESSION);
@@ -372,11 +396,18 @@ class TagParser {
             } else if (token == SoyToken.ELSE_IF) {
                 nowExpect(TagDataType.EXPRESSION);
                 source.advanceAndMark(command_keyword, "command_keyword");
+            } else if (token == SoyToken.ELSE) {
+                source.advanceAndMark(command_keyword, "command_keyword");
             } else if (token == SoyToken.SWITCH) {
                 nowExpect(TagDataType.EXPRESSION);
                 source.advanceAndMark(command_keyword, "command_keyword");
                 setCompanions(SoyToken.CASE, SoyToken.DEFAULT);
                 requiresCloseTag = true;
+            } else if (token == SoyToken.CASE) {
+                nowExpect(TagDataType.EXPRESSION, TagDataType.EXPRESSION_LIST);
+                source.advanceAndMark(command_keyword, "command_keyword");
+            } else if (token == SoyToken.DEFAULT) {
+                source.advanceAndMark(command_keyword, "command_keyword");
             } else if (token == SoyToken.FOREACH) {
                 source.advanceAndMark(command_keyword, "command_keyword");
                 if (!isCloseTag) {
@@ -385,6 +416,8 @@ class TagParser {
                     setCompanions(SoyToken.IF_EMPTY);
                     requiresCloseTag = true;
                 }
+            } else if (token == SoyToken.IF_EMPTY) {
+                source.advanceAndMark(command_keyword, "command_keyword");
             } else if (token == SoyToken.LITERAL) {
                 source.advanceAndMark(command_keyword, "command_keyword");
                 requiresCloseTag = true;
@@ -437,6 +470,7 @@ class TagParser {
                 nowExpect(TagDataType.EXPRESSION, TagDataType.DIRECTIVES);
                 source.advanceAndMark(command_keyword, "command_keyword");
             } else if (token == SoyToken.PRINT_IMPLICIT) {
+                command = "print";
                 nowExpect(TagDataType.EXPRESSION, TagDataType.DIRECTIVES);
                 source.advance();
             } else if (token == SoyToken.CSS) {
@@ -448,6 +482,7 @@ class TagParser {
                 return null;
             }
             tagToken = token;
+            this.command = command;
             return this;
         } else {
             source.advanceAndMarkBad(command_keyword, "command_keyword");
@@ -506,6 +541,10 @@ class TagParser {
 
     private void parseToTagRBrace(SoyToken rBraceToken1, SoyToken rBraceToken2) {
         IElementType token = source.token();
+        if (token == tagToken) {
+            source.advance();
+            token = source.token();
+        }
         if (token == rBraceToken1 || token == rBraceToken2) {
             done();
             return;
@@ -516,7 +555,13 @@ class TagParser {
             if (END_OF_TAG_TOKENS.contains(source.token())) break;
             source.advance();
         }
-        errorMarker.done(SoyToken.ILLEGAL_CLOSE_TAG);
+        if (element == package_def || element == namespace_def || element == template_tag) {
+            errorMarker.error(I18N.msg("syntax.error.unexpected.tokens.in.declaration.tag", command));
+        } else if (command == null) {
+            errorMarker.error(I18N.msg("syntax.error.unexpected.tokens.in.unknown.tag"));
+        } else {
+            errorMarker.error(I18N.msg("syntax.error.unexpected.tokens.in.tag", command));
+        }
         done();
     }
 
@@ -535,10 +580,19 @@ class TagParser {
                                     ? template_name_ref
                                     : template_name_ref_absolute;
                 source.advanceAndMark(type, "type");
+            } else if (token == SoyToken.DELTEMPLATE_IDENTIFIER) {
+                SoyElement type = element == deltemplate_tag
+                                  ? deltemplate_name
+                                  : deltemplate_name_ref;
+                source.advanceAndMark(type, "type");
             } else if (token == SoyToken.PARAMETER_REF) {
                 source.advanceAndMark(parameter_ref, "parameter_ref");
             } else if (token == SoyToken.CAPTURED_IDENTIFIER) {
-                source.advanceAndMarkBad(member_property_ref, "member_property_ref");
+                if (element == template_tag) {
+                    source.advanceAndMarkBad(member_property_ref, "member_property_ref", I18N.msg("syntax.error.expected.template.definition"));
+                } else {
+                    source.advanceAndMarkBad(member_property_ref, "member_property_ref");
+                }
             } else {
                 return this;
             }

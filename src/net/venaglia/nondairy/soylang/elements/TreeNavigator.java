@@ -25,6 +25,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.source.SourceTreeToPsiMap;
@@ -32,6 +33,8 @@ import com.intellij.psi.impl.source.tree.CompositeElement;
 import com.intellij.psi.impl.source.tree.SharedImplUtil;
 import com.intellij.psi.util.PsiUtilCore;
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,52 +75,71 @@ public abstract class TreeNavigator {
         INSTANCE = instance;
     }
 
-    public abstract PsiElement getParent(ASTNode node);
+    @Nullable
+    public abstract PsiElement getParent(@NotNull ASTNode node);
 
-    public abstract PsiElement getFirstChild(ASTNode node);
+    @Nullable
+    public abstract PsiElement getFirstChild(@NotNull ASTNode node);
 
-    public abstract PsiElement getLastChild(ASTNode node);
+    @Nullable
+    public abstract PsiElement getLastChild(@NotNull ASTNode node);
 
-    public abstract PsiElement getNthChild(ASTNode node, int n);
+    @Nullable
+    public abstract PsiElement getNthChild(@NotNull ASTNode node, int n);
 
-    public abstract PsiElement[] getAllChildren(ASTNode node);
+    @NotNull
+    public abstract PsiElement[] getAllChildren(@NotNull ASTNode node);
 
-    public abstract PsiElement getNextSibling(ASTNode node);
+    @Nullable
+    public abstract PsiElement getNextSibling(@NotNull ASTNode node);
 
-    public abstract PsiElement getPrevSibling(ASTNode node);
+    @Nullable
+    public abstract PsiElement getPrevSibling(@NotNull ASTNode node);
 
-    public abstract PsiManager getPsiManager(Project project);
+    @NotNull
+    public abstract PsiManager getPsiManager(@NotNull Project project);
 
-    public abstract ProjectFileIndex getProjectFileIndex(Project project);
+    @NotNull
+    public abstract ProjectFileIndex getProjectFileIndex(@NotNull Project project);
 
-    public abstract Module[] getModules(Project project);
+    @NotNull
+    public abstract Module[] getModules(@NotNull Project project);
 
-    public abstract Document getDocument(VirtualFile file);
-    
+    @Nullable
+    public abstract Document getDocument(@NotNull VirtualFile file);
+
+    @Nullable
+    public abstract VirtualFile getFile(@NotNull String fileUrl);
+
     private static class DefaultTreeNavigator extends TreeNavigator {
 
+        @Nullable
         @Override
-        public PsiElement getParent(ASTNode node) {
+        public PsiElement getParent(@NotNull ASTNode node) {
             return SharedImplUtil.getParent(node);
         }
 
+        @Nullable
         @Override
-        public PsiElement getFirstChild(ASTNode node) {
+        public PsiElement getFirstChild(@NotNull ASTNode node) {
             return SharedImplUtil.getFirstChild(node);
         }
 
+        @Nullable
         @Override
-        public PsiElement getLastChild(ASTNode node) {
+        public PsiElement getLastChild(@NotNull ASTNode node) {
             return SharedImplUtil.getLastChild(node);
         }
 
+        @Nullable
         @Override
-        public PsiElement getNthChild(ASTNode node, int n) {
+        public PsiElement getNthChild(@NotNull ASTNode node, int n) {
             return SourceTreeToPsiMap.treeElementToPsi(node.findLeafElementAt(n));
         }
 
+        @NotNull
         @Override
-        public PsiElement[] getAllChildren(ASTNode node) {
+        public PsiElement[] getAllChildren(@NotNull ASTNode node) {
             PsiElement psiChild = getFirstChild(node);
             if (psiChild == null) return PsiElement.EMPTY_ARRAY;
 
@@ -131,34 +153,46 @@ public abstract class TreeNavigator {
             return PsiUtilCore.toPsiElementArray(result);
         }
 
+        @Nullable
         @Override
-        public PsiElement getNextSibling(ASTNode node) {
+        public PsiElement getNextSibling(@NotNull ASTNode node) {
             return SharedImplUtil.getNextSibling(node);
         }
 
+        @Nullable
         @Override
-        public PsiElement getPrevSibling(ASTNode node) {
+        public PsiElement getPrevSibling(@NotNull ASTNode node) {
             return SharedImplUtil.getPrevSibling(node);
         }
 
+        @NotNull
         @Override
-        public PsiManager getPsiManager(Project project) {
+        public PsiManager getPsiManager(@NotNull Project project) {
             return PsiManager.getInstance(project);
         }
 
+        @NotNull
         @Override
-        public ProjectFileIndex getProjectFileIndex(Project project) {
+        public ProjectFileIndex getProjectFileIndex(@NotNull Project project) {
             return ProjectRootManager.getInstance(project).getFileIndex();
         }
 
+        @NotNull
         @Override
-        public Module[] getModules(Project project) {
+        public Module[] getModules(@NotNull Project project) {
             return ModuleManager.getInstance(project).getModules();
         }
 
+        @Nullable
         @Override
-        public Document getDocument(VirtualFile file) {
+        public Document getDocument(@NotNull VirtualFile file) {
             return FileDocumentManager.getInstance().getDocument(file);
+        }
+
+        @Nullable
+        @Override
+        public VirtualFile getFile(@NotNull String fileUrl) {
+            return VirtualFileManager.getInstance().findFileByUrl(fileUrl);
         }
     }
 }

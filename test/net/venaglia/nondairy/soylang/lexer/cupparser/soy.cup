@@ -42,7 +42,8 @@ terminal String                        DOC_COMMENT, DOC_COMMENT_EOL, DOC_COMMENT
 terminal String                        DOC_COMMENT_IDENTIFIER, DOC_COMMENT_BEGIN, DOC_COMMENT_END, DOC_COMMENT_BAD_CHARACTER;
 
 // identifier tokens
-terminal String                        PARAMETER_REF, STRING_PARAMETER_REF, PACKAGE_IDENTIFIER, NAMESPACE_IDENTIFIER, TEMPLATE_IDENTIFIER;
+terminal String                        PARAMETER_REF, STRING_PARAMETER_REF, PACKAGE_IDENTIFIER, NAMESPACE_IDENTIFIER;
+terminal String                        TEMPLATE_IDENTIFIER, DELTEMPLATE_IDENTIFIER;
 terminal String                        CAPTURED_IDENTIFIER, CAPTURED_FUNCTION_IDENTIFIER;
 
 // command tag pairs
@@ -485,6 +486,10 @@ begin_call_tag     ::= begin_call_tag:b TEMPLATE_TEXT
                        {: RESULT = new BeginCallTag(id,att); :}
                    |   TAG_LBRACE CALL TEMPLATE_IDENTIFIER:id TAG_RBRACE
                        {: RESULT = new BeginCallTag(id,null); :}
+                   |   TAG_LBRACE CALL DELTEMPLATE_IDENTIFIER:id attribute_list:att TAG_RBRACE
+                       {: RESULT = new BeginCallTag(id,att); :}
+                   |   TAG_LBRACE CALL DELTEMPLATE_IDENTIFIER:id TAG_RBRACE
+                       {: RESULT = new BeginCallTag(id,null); :}
                    |   TAG_LBRACE CALL attribute_list:att TAG_RBRACE
                        {: RESULT = new BeginCallTag(null,att); :}
                    |   TAG_LBRACE CALL TAG_RBRACE
@@ -702,6 +707,8 @@ namespace_ident    ::= CAPTURED_IDENTIFIER:id
 template_ident     ::= DOT CAPTURED_IDENTIFIER:id
                        {: RESULT = "." + id; :}
                    |   TEMPLATE_IDENTIFIER:id
+                       {: RESULT = id; :}
+                   |   DELTEMPLATE_IDENTIFIER:id
                        {: RESULT = id; :}
                    |   template_ident:t DOT CAPTURED_IDENTIFIER:id
                        {: RESULT = t + "." + id; :}

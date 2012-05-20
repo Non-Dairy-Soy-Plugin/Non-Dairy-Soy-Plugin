@@ -71,6 +71,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken PACKAGE_IDENTIFIER = new SoyToken(206, "PACKAGE_IDENTIFIER");
     public static final SoyToken NAMESPACE_IDENTIFIER = new SoyToken(201, "NAMESPACE_IDENTIFIER");
     public static final SoyToken TEMPLATE_IDENTIFIER = new SoyToken(202, "TEMPLATE_IDENTIFIER");
+    public static final SoyToken DELTEMPLATE_IDENTIFIER = new SoyToken(207, "DELTEMPLATE_IDENTIFIER");
     public static final SoyToken CAPTURED_IDENTIFIER = new SoyToken(203, "CAPTURED_IDENTIFIER");
     public static final SoyToken CAPTURED_FUNCTION_IDENTIFIER = new SoyToken(204, "CAPTURED_FUNCTION_IDENTIFIER");
     public static final SoyToken STRING_PARAMETER_REF = new SoyToken(205, "STRING_PARAMETER_REF");

@@ -15,6 +15,11 @@
 
 ===============================================================================
 
+ver 0.5.1
+* Fixed problem with stale VFS entries in cache
+* Error message given for template name missing "." is now more helpful
+* Implemented expression parsing for elseif and case
+
 ver 0.5.0
 * Seven inspections to make soy development easier and less error prone
 * Fixed lexer problems detecting line and block comments in several situations

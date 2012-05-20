@@ -46,7 +46,7 @@ import javax.swing.*;
  *
  * SoyPsiElement that represents the template name within a soy template tag.
  */
-public class LocalTemplateNameDef
+public class AbsoluteTemplateNameDef
         extends SoyPsiElement
         implements SoyNamedElement, ItemPresentation, TemplateMemberElement {
 
@@ -62,19 +62,15 @@ public class LocalTemplateNameDef
             new PsiElementPath(PsiElementPath.PARENT_ELEMENT,
                                new ElementTypePredicate(SoyElement.command_keyword).onFirstChild(),
                                new ElementTextPredicate("deltemplate"));
-    
-    public LocalTemplateNameDef(@NotNull ASTNode node) {
+
+    public AbsoluteTemplateNameDef(@NotNull ASTNode node) {
         super(node);
     }
 
     @Override
     @NotNull
     public String getName() {
-        String name = getText();
-        if (name.startsWith(".")) {
-            name = name.substring(1);
-        }
-        return name;
+        return getText();
     }
 
     @Override
@@ -95,22 +91,23 @@ public class LocalTemplateNameDef
 
     @Override
     public String getCanonicalName() {
-        return getTemplateName();
+        return getName();
     }
 
     @Override
     public String getTemplateName() {
-        String namespace = getNamespace();
-        return namespace == null ? getName() : namespace + "." + getName();
+        return getName();
     }
 
     @Override
     @Nullable
     public String getNamespace() {
-        PsiElement namespace = PATH_TO_NAMESPACE_NAME.navigate(this).oneOrNull();
-        return namespace instanceof NamespaceMemberElement
-               ? ((NamespaceMemberElement)namespace).getNamespace()
-               : null;
+        String name = getName();
+        int lastDot = name.lastIndexOf('.');
+        if (lastDot >= 0) {
+            return name.substring(0, lastDot);
+        }
+        return "";
     }
 
     @Override
@@ -131,16 +128,7 @@ public class LocalTemplateNameDef
 
     @Override
     public String getPresentableText() {
-        String namespace = getNamespace();
-        String name = getText();
-        boolean dotted = name.startsWith(".");
-        if ((namespace == null || namespace.length() == 0) && dotted) {
-            return name.substring(1);
-        }
-        if (dotted) {
-            return namespace + name;
-        }
-        return namespace + "." + name;
+        return getName();
     }
 
     @Override
@@ -150,10 +138,7 @@ public class LocalTemplateNameDef
 
     @Override
     public Icon getIcon(boolean open) {
-        RowIcon icon = new RowIcon(2);
-        icon.setIcon(SoyIcons.TEMPLATE, 0);
-        icon.setIcon(isPrivate() ? PlatformIcons.PRIVATE_ICON : PlatformIcons.PUBLIC_ICON, 1);
-        return icon;
+        return SoyIcons.DELTEMPLATE;
     }
 
     @Override

@@ -304,6 +304,11 @@ public class MockTreeNode implements ASTNode {
     }
 
     @Override
+    public ASTNode findChildByType(@NotNull IElementType type, @Nullable ASTNode anchor) {
+        return findChildByType(TokenSet.create(type), anchor);
+    }
+
+    @Override
     public ASTNode findChildByType(@NotNull TokenSet typesSet, @Nullable ASTNode anchor) {
         if (children != null && anchor instanceof MockTreeNode) {
             for (int i = indexOfChild(anchor), l = children.size(); i < l; i++) {

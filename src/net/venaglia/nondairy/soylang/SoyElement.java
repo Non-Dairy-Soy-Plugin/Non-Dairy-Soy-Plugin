@@ -74,6 +74,14 @@ public final class SoyElement extends IElementType {
     public static final SoyElement template_name_ref_absolute = new SoyElement(1203, "template_name_ref_absolute");
     public static final SoyElement template_tag_pair = new SoyElement(1204, "template_tag_pair");
 
+    @ElementClass(TemplateDefElement.class)
+    public static final SoyElement deltemplate_tag = new SoyElement(1205, "deltemplate_tag");
+    @ElementClass(AbsoluteTemplateNameDef.class)
+    public static final SoyElement deltemplate_name = new SoyElement(1206, "deltemplate_name");
+    @ElementClass(AbsoluteTemplateNameRef.class)
+    public static final SoyElement deltemplate_name_ref = new SoyElement(1207, "deltemplate_name_ref");
+    public static final SoyElement deltemplate_tag_pair = new SoyElement(1208, "deltemplate_tag_pair");
+
     @ElementClass(SoyDocCommentElement.class)
     public static final SoyElement doc_comment = new SoyElement(1300, "doc_comment");
     public static final SoyElement doc_comment_text = new SoyElement(1301, "doc_comment_text");

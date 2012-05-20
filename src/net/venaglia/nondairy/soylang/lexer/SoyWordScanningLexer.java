@@ -40,6 +40,7 @@ public class SoyWordScanningLexer extends FlexAdapter {
     private static final TokenSet TOKENS_TO_FRAGMENT = TokenSet.create(
             SoyToken.NAMESPACE_IDENTIFIER,
             SoyToken.TEMPLATE_IDENTIFIER,
+            SoyToken.DELTEMPLATE_IDENTIFIER,
             SoyToken.PARAMETER_REF,
             SoyToken.STRING_PARAMETER_REF
     );

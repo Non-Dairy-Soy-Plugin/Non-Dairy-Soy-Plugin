@@ -104,7 +104,7 @@ HtmlDecimalEntityId = "#" [1-9] [0-9] {0,4} + "#0"
 HtmlHexEntityId = "#x" [1-9a-fA-F] [0-9a-fA-F] {0,3} | "#x0"
 HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexEntityId} ) ";"
 
-%state OPEN_TAG, CLOSE_TAG, SOY_TAG, LITERAL_BLOCK, DELPACKAGE_TAG, NAMESPACE_TAG, TEMPLATE_TAG, IDENTIFIER_TAG, TAG_DIRECTIVE
+%state OPEN_TAG, CLOSE_TAG, SOY_TAG, LITERAL_BLOCK, DELPACKAGE_TAG, NAMESPACE_TAG, TEMPLATE_TAG, DELTEMPLATE_TAG, IDENTIFIER_TAG, TAG_DIRECTIVE
 %state DOCS, DOCS_BOL, DOCS_IDENT, STRING, STRING_PARAM, STRING_IN_SINGLE_BRACES, STRING_IN_DOUBLE_BRACES
 
 %state HTML_INITIAL, HTML_TAG_START, HTML_TAG_END, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_NAME_RESUME, HTML_ATTRIBUTE_EQ
@@ -172,7 +172,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    }
                                    return symbol(ok ? TEMPLATE : UNTERMINATED_TEMPLATE); }
   "deltemplate" [^a-zA-Z0-9_]    { yypushback(1);
-                                   yybegin(closeTag ? CLOSE_TAG : TEMPLATE_TAG);
+                                   yybegin(closeTag ? CLOSE_TAG : DELTEMPLATE_TAG);
                                    currentCommand = closeTag ? null : yytext().toString();
                                    boolean ok = closeTag || currentTemplate == null;
                                    if (closeTag) {
@@ -241,7 +241,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    currentCommand = closeTag ? null : yytext().toString();
                                    return symbol(CALL); }
   "delcall" [^a-zA-Z0-9_]        { yypushback(1);
-                                   capturedIdentifierType = TEMPLATE_IDENTIFIER;
+                                   capturedIdentifierType = DELTEMPLATE_IDENTIFIER;
                                    yybegin(closeTag ? CLOSE_TAG : IDENTIFIER_TAG);
                                    currentCommand = closeTag ? null : yytext().toString();
                                    return symbol(DELCALL); }
@@ -336,9 +336,23 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
                                    yybegin(AFTER_WHITESPACE);
                                    return symbol(WHITESPACE); }
-  ("."{Identifier})+             { yybegin(SOY_TAG);
+  "."{Identifier}                { yybegin(SOY_TAG);
                                    currentTemplate = yytext().toString();
                                    return symbol(TEMPLATE_IDENTIFIER, currentTemplate); }
+  "}"                            { yybegin(CLOSE_TAG); yypushback(1); }
+  {Identifier}                   { yybegin(SOY_TAG); yypushback(yylength()); }
+  .                              { yybegin(SOY_TAG); yypushback(1); return symbol(ILLEGAL_TAG_DECLARATION); }
+  <<EOF>>                        { yybegin(YYINITIAL); }
+}
+
+<DELTEMPLATE_TAG> {
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
+  {Identifier} |
+  {CompoundIdentifier}           { yybegin(SOY_TAG);
+                                   currentTemplate = yytext().toString();
+                                   return symbol(DELTEMPLATE_IDENTIFIER, currentTemplate); }
   "}"                            { yybegin(CLOSE_TAG); yypushback(1); }
   .                              { yybegin(SOY_TAG); yypushback(1); return symbol(ILLEGAL_TAG_DECLARATION); }
   <<EOF>>                        { yybegin(YYINITIAL); }

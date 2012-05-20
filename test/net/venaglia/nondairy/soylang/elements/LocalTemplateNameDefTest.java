@@ -101,18 +101,15 @@ public class LocalTemplateNameDefTest extends AbstractPsiElementTest {
     @Test
     @ProjectFiles(files = {"delegates.soy"}, inherit = false)
     public void testGetPresentation_deltemplate() throws Exception {
-        LocalTemplateNameDef def = findElement("delegates.soy",
-                                               LocalTemplateNameDef.class,
-                                               ".foo",
-                                               null);
+        AbsoluteTemplateNameDef def = findElement("delegates.soy",
+                                                  AbsoluteTemplateNameDef.class,
+                                                  "test.deltemplate.foo",
+                                                  null);
         ItemPresentation presentation = def.getPresentation();
         assertNotNull(presentation);
-        assertEquals("my.namespace", presentation.getLocationString());
-        assertEquals("my.namespace.foo", presentation.getPresentableText());
+        assertEquals("test.deltemplate", presentation.getLocationString());
+        assertEquals("test.deltemplate.foo", presentation.getPresentableText());
         Icon icon = presentation.getIcon(true);
-        assertTrue(icon instanceof RowIcon);
-        assertEquals(2, ((RowIcon)icon).getIconCount());
-        assertEquals(SoyIcons.DELTEMPLATE, ((RowIcon)icon).getIcon(0));
-        assertEquals(PlatformIcons.PUBLIC_ICON, ((RowIcon)icon).getIcon(1));
+        assertEquals(SoyIcons.DELTEMPLATE, icon);
     }
 }

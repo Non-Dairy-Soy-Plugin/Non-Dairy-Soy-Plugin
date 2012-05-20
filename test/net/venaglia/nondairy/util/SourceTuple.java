@@ -57,6 +57,7 @@ public class SourceTuple {
     public final PsiElement root;
     public final PsiFile psi;
     public final VirtualFile file;
+    public final String fileUrl;
     public final Document document;
 
     public SourceTuple(@NonNls String name) {
@@ -77,6 +78,7 @@ public class SourceTuple {
                                     text,
                                     Charset.defaultCharset(),
                                     System.currentTimeMillis());
+        fileUrl = file.getUrl();
         document = new MockDocument(text);
         MockProjectEnvironment.add(this);
     }
