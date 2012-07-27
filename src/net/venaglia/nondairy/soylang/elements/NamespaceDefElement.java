@@ -65,13 +65,6 @@ public class NamespaceDefElement
     }
 
     @Override
-    public String getDelegatePackage() {
-        PsiElementCollection elements = PATH_TO_DELEGATE_PACKAGE.navigate(this);
-        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
-        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
-    }
-
-    @Override
     public String getNamespace() {
         return getText();
     }

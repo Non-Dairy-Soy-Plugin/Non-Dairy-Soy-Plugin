@@ -110,14 +110,6 @@ public class AbsoluteTemplateNameDef
         return "";
     }
 
-    @Override
-    @Nullable
-    public String getDelegatePackage() {
-        PsiElementCollection elements = PATH_TO_DELEGATE_PACKAGE.navigate(this);
-        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
-        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
-    }
-
     private boolean isPrivate() {
         return !PRIVATE_ATTRIBUTE_PATH.navigate(this).isEmpty();
     }

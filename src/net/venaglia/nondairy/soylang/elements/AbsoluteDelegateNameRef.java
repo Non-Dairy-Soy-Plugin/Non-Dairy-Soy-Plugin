@@ -23,85 +23,66 @@ import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
-import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
-import net.venaglia.nondairy.soylang.elements.path.TemplatePath;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
+import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
 /**
  * User: ed
- * Date: Aug 24, 2010
- * Time: 5:37:04 PM
- *
- * PsiElement implementation that represents the fully qualified template name
- * in a call soy tag.
+ * Date: 5/22/12
+ * Time: 6:25 PM
  */
-public class AbsoluteTemplateNameRef extends SoyPsiElement implements SoyNamedElement, ItemPresentation, TemplateMemberElement {
+public class AbsoluteDelegateNameRef extends SoyPsiElement implements SoyNamedElement, ItemPresentation, DelegateMemberElement {
 
-    public AbsoluteTemplateNameRef(@NotNull ASTNode node) {
+    public AbsoluteDelegateNameRef(@NotNull ASTNode node) {
         super(node);
     }
 
     @Override
-    @NotNull
     public String getName() {
-        String text = getText();
-        int i = text.lastIndexOf('.');
-        if (i >= 0) {
-            text = text.substring(i + 1);
-        }
-        return text;
+        return getText();
     }
 
     @Override
     public PsiElement setName(@NotNull @NonNls String name) throws IncorrectOperationException {
-        String prefix = getText();
-        int i = prefix.lastIndexOf('.');
-        prefix = prefix.substring(0, i + 1);
         TextRange range = getTextRange().shiftRight(0 - getTextOffset());
-        return ElementManipulators.getManipulator(this).handleContentChange(this, range, prefix + name);
+        return ElementManipulators.getManipulator(this).handleContentChange(this, range, name);
     }
 
     @Override
     public PsiReference getReference() {
-        String templateName = getTemplateName();
-        if (templateName == null) return null;
-        PsiElementPath pathToTemplateName = TemplatePath.forTemplateName(templateName)
-                .debug("for_template_name!absolute");
-        return new SoyPsiElementReference(this, pathToTemplateName, null);
-    }
-
-    @Override
-    public String getPresentableText() {
-        return getTemplateName();
-    }
-
-    @Override
-    public String getLocationString() {
-        return getNamespace();
-    }
-
-    @Override
-    public Icon getIcon(boolean open) {
+//        String templateName = getTemplateName();
+//        if (templateName == null) return null;
+//        PsiElementPath pathToTemplateName = TemplatePath.forTemplateName(templateName)
+//                .debug("for_template_name!absolute");
+//        return new SoyPsiElementReference(this, pathToTemplateName, null);
         return null;
     }
 
     @Override
-    public String getCanonicalName() {
-        return getText();
+    public String getPresentableText() {
+        return getName();
     }
 
     @Override
-    public String getTemplateName() {
-        return getText();
+    public String getLocationString() {
+        return getDelegatePackage();
     }
 
     @Override
-    public String getNamespace() {
-        String name = getText();
-        int index = name.lastIndexOf('.');
-        return index > 1 ? name.substring(0, index) : null;
+    public Icon getIcon(boolean open) {
+        return SoyIcons.DELTEMPLATE;
+    }
+
+    @Override
+    @Nullable
+    public String getDelegatePackage() {
+        PsiElementCollection elements = PATH_TO_DELEGATE_PACKAGE.navigate(this);
+        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
+        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
     }
 }

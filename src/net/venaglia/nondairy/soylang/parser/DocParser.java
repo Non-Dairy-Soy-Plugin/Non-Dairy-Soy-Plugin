@@ -22,6 +22,10 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.i18n.I18N;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
+import org.jetbrains.annotations.NonNls;
+
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * User: ed
@@ -47,72 +51,91 @@ public class DocParser {
     }
 
     public void parse() {
-        PsiBuilder.Marker textMarker = source.mark("textMarker");
+        Map<PsiBuilder.Marker,Integer> indexByMarker = new HashMap<PsiBuilder.Marker,Integer>();
+        PsiBuilder.Marker textMarker = markWithIndex(indexByMarker, source, "textMarker");
         PsiBuilder.Marker tagAndText = null;
         while (!source.eof()) {
             IElementType token = source.token();
             if (token == SoyToken.DOC_COMMENT_END) {
                 if (textMarker != null) {
-                    textMarker.done(doc_comment_text);
+                    dropOrDone(indexByMarker, textMarker, doc_comment_text);
                     textMarker = null;
                 }
                 if (tagAndText != null) {
-                    tagAndText.done(doc_comment_tag_with_description);
+                    dropOrDone(indexByMarker, tagAndText, doc_comment_tag_with_description);
                     tagAndText = null;
                 }
                 source.advance();
                 break;
             } else if (!SoyToken.DOC_COMMENT_TOKENS.contains(token)) {
                 if (textMarker != null) {
-                    textMarker.done(doc_comment_text);
+                    dropOrDone(indexByMarker, textMarker, doc_comment_text);
                     textMarker = null;
                 }
                 if (tagAndText != null) {
-                    tagAndText.done(doc_comment_tag_with_description);
+                    dropOrDone(indexByMarker, tagAndText, doc_comment_tag_with_description);
                     tagAndText = null;
                 }
                 source.error(I18N.msg("lexer.error.unexpected.token", token));
                 break;
             } else if (token == SoyToken.DOC_COMMENT_PARAM_TAG) {
                 if (textMarker != null) {
-                    textMarker.done(doc_comment_text);
+                    dropOrDone(indexByMarker, textMarker, doc_comment_text);
                     textMarker = null;
                 }
                 if (tagAndText != null) {
-                    tagAndText.done(doc_comment_tag_with_description);
+                    dropOrDone(indexByMarker, tagAndText, doc_comment_tag_with_description);
                 }
-                tagAndText = source.mark("tagAndText");
+                tagAndText = markWithIndex(indexByMarker, source, "tagAndText");
                 source.advanceAndMark(doc_comment_tag, "docTag");
                 if (!source.eof() && source.token() == SoyToken.DOC_COMMENT_IDENTIFIER) {
                     source.advanceAndMark(doc_comment_param_def, "doc_comment_param");
                 }
-                if (!source.eof()) {
-                    textMarker = source.mark("textMarker");
+                if (!source.eof() && source.token() != SoyToken.DOC_COMMENT_END) {
+                    textMarker = markWithIndex(indexByMarker, source, "textMarker");
                 }
             } else if (token == SoyToken.DOC_COMMENT_TAG) {
                 if (textMarker != null) {
-                    textMarker.done(doc_comment_text);
+                    dropOrDone(indexByMarker, textMarker, doc_comment_text);
                     textMarker = null;
                 }
                 if (tagAndText != null) {
-                    tagAndText.done(doc_comment_tag_with_description);
+                    dropOrDone(indexByMarker, tagAndText, doc_comment_tag_with_description);
                 }
-                tagAndText = source.mark("tagAndText");
+                tagAndText = markWithIndex(indexByMarker, source, "tagAndText");
                 source.advanceAndMark(doc_comment_tag, "docTag");
-                if (!source.eof()) {
-                    textMarker = source.mark("textMarker");
+                if (!source.eof() && source.token() != SoyToken.DOC_COMMENT_END) {
+                    textMarker = markWithIndex(indexByMarker, source, "textMarker");
                 }
             } else {
                 source.advance();
             }
         }
         if (textMarker != null) {
-            textMarker.done(doc_comment_text);
+            dropOrDone(indexByMarker, textMarker, doc_comment_text);
         }
         if (tagAndText != null) {
-            tagAndText.done(doc_comment_tag_with_description);
+            dropOrDone(indexByMarker, tagAndText, doc_comment_tag_with_description);
         }
         done();
+    }
+
+    private PsiBuilder.Marker markWithIndex(Map<PsiBuilder.Marker,Integer> indexByMarker,
+                                            TokenSource tokenSource,
+                                            @NonNls String name) {
+        PsiBuilder.Marker marker = tokenSource.mark(name);
+        indexByMarker.put(marker, tokenSource.index());
+        return marker;
+    }
+
+    private void dropOrDone(Map<PsiBuilder.Marker,Integer> indexByMarker,
+                            PsiBuilder.Marker textMarker,
+                            IElementType element) {
+        if (indexByMarker.get(textMarker) == source.index()) {
+            textMarker.drop();
+        } else {
+            textMarker.done(element);
+        }
     }
 
     private void done() {

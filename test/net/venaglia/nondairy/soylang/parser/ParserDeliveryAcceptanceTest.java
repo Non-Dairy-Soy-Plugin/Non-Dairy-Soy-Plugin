@@ -16,20 +16,24 @@
 
 package net.venaglia.nondairy.soylang.parser;
 
+import static org.junit.Assert.assertEquals;
+
+import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.SoyTestUtil;
+import net.venaglia.nondairy.soylang.elements.TreeBuildingTokenSource;
 import net.venaglia.nondairy.soylang.lexer.SoyScannerTest;
 import net.venaglia.nondairy.soylang.lexer.SoySymbol;
 import net.venaglia.nondairy.soylang.parser.permutations.PermutationProducer;
 import net.venaglia.nondairy.soylang.parser.permutations.Permutator;
 import net.venaglia.nondairy.soylang.parser.permutations.impl.ASyncPermutator;
 import net.venaglia.nondairy.soylang.parser.permutations.impl.TemplatesOneCharacterAtATime;
+import net.venaglia.nondairy.util.SourceTuple;
 import org.jetbrains.annotations.NonNls;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -37,6 +41,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -269,14 +274,135 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
         new SoyStructureParser(tokenSource).parse();
     }
 
-    private void testPermutatedParse(String resourceName) throws Exception {
-        try {
-            testParseSequence(SoyTestUtil.getTestSourceBuffer(resourceName), "YYINITIAL", resourceName);
-        } catch (AssertionError e) {
-            if (failState == FailState.RETRY_VERBOSE) throw e;
-            failState = FailState.FAIL;
+    private static final Pattern MATCH_HOMOGENEOUS_ELEMENT = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*|[1-9]\\d+|.");
+
+    private String mutateRemove(SourceTuple source, int left, int right) throws Exception {
+        StringBuilder buffer = new StringBuilder(source.document.getText());
+        buffer.replace(left, right, "");
+        return buffer.toString();
+    }
+
+    private void testPermutatedParse(SourceTuple source, PsiElement permuteElement, Count count) throws Exception {
+        String t = permuteElement.getText();
+        if (t.length() == 0) {
+            return;
         }
-        System.out.println();
+        for (PsiElement child : permuteElement.getChildren()) {
+            testPermutatedParse(source, child, count);
+        }
+        if (permuteElement.getParent() == null || !permuteElement.getParent().getTextRange().equals(permuteElement.getTextRange())) {
+            int left = permuteElement.getParent() == null ? 0 : permuteElement.getTextOffset();
+            int right = left + permuteElement.getTextLength();
+            quietParseVerboseIfFail(source, left, right);
+            count.increment();
+            if (t.length() > 1) {
+                Matcher matcher = MATCH_HOMOGENEOUS_ELEMENT.matcher(t);
+                if (!matcher.matches()) {
+                    if (matcher.find()) {
+                        quietParseVerboseIfFail(source, left + matcher.start(), left + matcher.end());
+                        count.increment();
+                        if (matcher.start() > 0) {
+                            quietParseVerboseIfFail(source, left, left + matcher.start());
+                            count.increment();
+                        }
+                        if (matcher.end() < t.length()) {
+                            quietParseVerboseIfFail(source, left + matcher.end(), right);
+                            count.increment();
+                        }
+                        int last = -1;
+                        while (matcher.find()) {
+                            last = matcher.start();
+                        }
+                        if (last > 0) {
+                            matcher.find(last);
+                            quietParseVerboseIfFail(source, left + matcher.start(), left + matcher.end());
+                            count.increment();
+                            if (matcher.start() > 0) {
+                                quietParseVerboseIfFail(source, left, left + matcher.start());
+                                count.increment();
+                            }
+                            if (matcher.end() < t.length()) {
+                                quietParseVerboseIfFail(source, left + matcher.end(), right);
+                                count.increment();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void quietParseVerboseIfFail(SourceTuple source, int left, int right) throws Exception {
+        boolean track = TreeBuildingTokenSource.TRACK_WHERE_MARKERS_ARE_CREATED.get();
+        String mutatedSource = mutateRemove(source, left, right);
+        try {
+            failState = FailState.PASS;
+            TreeBuildingTokenSource.TRACK_WHERE_MARKERS_ARE_CREATED.set(false);
+            new SourceTuple(source.name, mutatedSource);
+        } catch (Exception e) {
+            try {
+                System.out.println(mutatedSource);
+                TreeBuildingTokenSource.TRACK_WHERE_MARKERS_ARE_CREATED.set(true);
+                failState = FailState.RETRY_VERBOSE;
+                new SourceTuple(source.name, mutatedSource);
+            } finally {
+                failState = FailState.FAIL;
+            }
+        } finally {
+            TreeBuildingTokenSource.TRACK_WHERE_MARKERS_ARE_CREATED.set(track);
+        }
+    }
+
+    private int countPermutatedParse(PsiElement permuteElement) throws Exception {
+        int count = 0;
+        String t = permuteElement.getText();
+        if (t.length() == 0) {
+            return count;
+        }
+        if (permuteElement.getParent() == null || !permuteElement.getParent().getTextRange().equals(permuteElement.getTextRange())) {
+            count++;
+            if (t.length() > 1) {
+                Matcher matcher = MATCH_HOMOGENEOUS_ELEMENT.matcher(t);
+                if (!matcher.matches()) {
+                    if (matcher.find()) {
+                        count++;
+                        if (matcher.start() > 0) {
+                            count++;
+                        }
+                        if (matcher.end() < t.length()) {
+                            count++;
+                        }
+                        int last = -1;
+                        while (matcher.find()) {
+                            last = matcher.start();
+                        }
+                        if (last > 0)  {
+                            matcher.find(last);
+                            count++;
+                            if (matcher.start() > 0) {
+                                count++;
+                            }
+                            if (matcher.end() < t.length()) {
+                                count++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (PsiElement child : permuteElement.getChildren()) {
+            count += countPermutatedParse(child);
+        }
+        return count;
+    }
+
+    private void testPermutatedParse(String resourceName) throws Exception {
+        SourceTuple tuple = new SourceTuple(resourceName);
+        Count count = new Count(resourceName, countPermutatedParse(tuple.psi));
+        System.out.println("expecting " + count.getExpected() + " permutations of " + resourceName);
+        testPermutatedParse(tuple, tuple.psi, count);
+        System.out.println("tested " + count.getCurrent() + " permutations of " + resourceName);
+        assertEquals("Expected count is not equal to the actual count", count.getExpected(), count.getCurrent());
     }
 
     @Test
@@ -290,7 +416,7 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
     }
 
     @Test
-    @Ignore("This test takes several minutes")
+//    @Ignore("This test takes several minutes")
     public void testFeatures() throws Exception {
         testPermutatedParse("features.soy");
     }
@@ -457,6 +583,69 @@ public class ParserDeliveryAcceptanceTest extends BaseParserTest {
                     return nextSet;
             }
             return null;
+        }
+    }
+
+    private static class Count {
+
+        private final long start;
+        private final String name;
+        private final int expected;
+
+        private int current;
+
+        private Count(String name, int expected) {
+            this.start = System.currentTimeMillis();
+            this.name = name;
+            this.expected = expected;
+        }
+
+        public void increment() {
+            current++;
+            if (current % 250 == 0) {
+                System.out.printf("Permutation testing on %s: %s\n", name, this);
+            }
+            if (current == expected + 1) {
+                System.err.printf("Permutation testing on %s has overrun the number of expected permutations: n > %d\n",
+                                  name,
+                                  expected);
+            }
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getExpected() {
+            return expected;
+        }
+
+        public int getCurrent() {
+            return current;
+        }
+
+        @Override
+        public String toString() {
+            long elapsed = System.currentTimeMillis() - start;
+            double pct = (current * 100.0) / expected;
+            if (elapsed > 10000 && pct > 0.0 && pct < 100.0) {
+                double remaining = (100.0 - pct) * elapsed / pct / 1000.0;
+                if (remaining >= 60) {
+                    double mins = Math.floor(remaining / 60.0);
+                    remaining -= mins * 60.0;
+                    if (mins >= 60 ) {
+                        double hrs = Math.floor(mins / 60.0);
+                        mins -= hrs * 60.0;
+                        return String.format("%d/%d (%.2f%%) %d:%02d:%04.1f remaining", current, expected, pct, Math.round(hrs), Math.round(mins), remaining);
+                    } else {
+                        return String.format("%d/%d (%.2f%%) %d:%04.1f remaining", current, expected, pct, Math.round(mins), remaining);
+                    }
+                } else {
+                    return String.format("%d/%d (%.2f%%) 0:%04.1f remaining", current, expected, pct, remaining);
+                }
+            } else {
+                return String.format("%d/%d (%.2f%%)", current, expected, pct);
+            }
         }
     }
 }

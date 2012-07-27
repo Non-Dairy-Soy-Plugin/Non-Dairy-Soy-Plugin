@@ -30,18 +30,18 @@ import org.jetbrains.annotations.Nullable;
  * Interface to be implemented by SoyPsiElements that live within a soy
  * namespace.
  */
-public interface NamespaceMemberElement extends PsiElement {
+public interface DelegateMemberElement extends PsiElement {
 
-    static final PsiElementPath PATH_TO_NAMESPACE_NAME =
+    static final PsiElementPath PATH_TO_DELEGATE_PACKAGE =
             new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),
-                               new ElementTypePredicate(SoyElement.namespace_def).onChildren())
-                    .debug("path_to_namespace_name");
+                               new ElementTypePredicate(SoyElement.package_def).onChildren())
+                    .debug("path_to_delegate_package");
 
     /**
-     * @return The fully qualified name of the namespace in which the element
-     *     lives.
+     * @return The name of the delegate package this namespace element is
+     *     within, or null is there is no delegate package.
      */
     @Nullable
-    String getNamespace();
+    String getDelegatePackage();
 
 }

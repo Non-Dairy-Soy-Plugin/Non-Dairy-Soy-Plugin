@@ -22,38 +22,30 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * User: ed
- * Date: 1/30/12
- * Time: 9:17 PM
- *
- * This cache stores a Collection of {@link CacheEntry} objects for each
- * template name.
+ * Date: 5/22/12
+ * Time: 8:37 AM
  */
-public class TemplateCache extends AbstractTemplateCache<TemplateCache> {
+public class DelegateTemplateCache extends AbstractTemplateCache<DelegateTemplateCache> {
 
-    private static final Key<TemplateCache> TEMPLATE_CACHE_KEY =
-            new Key<TemplateCache>("non-dairy.template-cache");
+    private static final Key<DelegateTemplateCache> DELEGATE_TEMPLATE_CACHE_KEY =
+            new Key<DelegateTemplateCache>("non-dairy.delegate-template-cache");
 
-    public TemplateCache(NamespaceCache parent, String namespace) {
-        super(parent, namespace);
+    public DelegateTemplateCache(DelegatePackageCache parent, String delegatePackage) {
+        super(parent, delegatePackage);
     }
 
-    public String getNamespace() {
+    @Override
+    Key<DelegateTemplateCache> getCacheKey() {
+        return DELEGATE_TEMPLATE_CACHE_KEY;
+    }
+
+    public String getDelegatePackage() {
         return place;
     }
 
-    @Override
-    Key<TemplateCache> getCacheKey() {
-        return TEMPLATE_CACHE_KEY;
-    }
-
-    @SuppressWarnings("HardCodedStringLiteral")
-    @Override
-    public String toString() {
-        return String.format("TemplateCache{namespace=\"%s\",templates=%d}", place, size());
-    }
 
     @Nullable
-    public static TemplateCache fromFile(VirtualFile file) {
-        return file.getUserData(TEMPLATE_CACHE_KEY);
+    public static DelegateTemplateCache fromFile(VirtualFile file) {
+        return file.getUserData(DELEGATE_TEMPLATE_CACHE_KEY);
     }
 }

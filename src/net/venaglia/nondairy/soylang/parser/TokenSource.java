@@ -81,6 +81,11 @@ public abstract class TokenSource {
     public abstract void advance();
 
     /**
+     * @return the current index within this token source;
+     */
+    public abstract int index();
+
+    /**
      * Shortcut to skip over the current element and mark it with the specified
      * IElementType.
      * @param type The type to mark the current element with.
@@ -131,5 +136,10 @@ public abstract class TokenSource {
      */
     public void errorBadToken() {
         error(I18N.msg("lexer.error.unexpected.token", token()));
+    }
+
+    public interface MarkerAndIndex {
+        int getIndex();
+        PsiBuilder.Marker getMarker();
     }
 }

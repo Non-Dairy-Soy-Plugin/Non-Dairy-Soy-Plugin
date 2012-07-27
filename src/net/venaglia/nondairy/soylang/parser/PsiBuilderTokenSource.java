@@ -20,6 +20,8 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NonNls;
 
+import java.util.Map;
+
 /**
  * User: ed
  * Date: Aug 14, 2010
@@ -30,6 +32,8 @@ public class PsiBuilderTokenSource extends TokenSource {
     public static final boolean DEBUG_PSI_BUILDER = true;
 
     private final PsiBuilder builder;
+
+    private int symbolIndex = 0;
 
     public PsiBuilderTokenSource(PsiBuilder builder) {
         this.builder = builder;
@@ -59,11 +63,16 @@ public class PsiBuilderTokenSource extends TokenSource {
     @Override
     public void advance() {
         builder.advanceLexer();
+        symbolIndex++;
+    }
+
+    @Override
+    public int index() {
+        return symbolIndex;
     }
 
     @Override
     public void error(String message) {
         builder.error(message);
     }
-
 }

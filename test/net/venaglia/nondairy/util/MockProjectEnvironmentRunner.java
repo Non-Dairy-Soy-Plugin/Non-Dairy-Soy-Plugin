@@ -56,7 +56,7 @@ public class MockProjectEnvironmentRunner extends BlockJUnit4ClassRunner {
                     Collections.addAll(files, pf.files());
                 }
                 for (String name : files) {
-                    new SourceTuple(name);
+                    MockProjectEnvironment.add(new SourceTuple(name));
                 }
                 if (PsiElementPath.TraceState.isDebugPerThread()) {
                     TracePsiElementPath trace = method.getMethod().getAnnotation(TracePsiElementPath.class);

@@ -150,6 +150,11 @@ public class MockTokenSource extends TokenSource {
     }
 
     @Override
+    public int index() {
+        return seq;
+    }
+
+    @Override
     public void error(String message) {
         event(new MockParseMetaToken("error", message, this));
     }

@@ -14,13 +14,13 @@
  *    limitations under the License.
  */
 
-{delpackage my.experiment}
+{namespace delegate.test.namespace}
 
-{namespace my.namespace}
-
-{deltemplate test.deltemplate.foo}
-    {delcall my.namespace.dummy}
+/**
+ */
+{template .test}
+    {delcall test.deltemplate.foo}
         {param option: true/}
         {param text}Some text{/param}
     {/delcall}
-{/deltemplate}
+{/template}

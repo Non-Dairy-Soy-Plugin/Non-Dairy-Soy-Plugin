@@ -320,7 +320,7 @@ class TagParser {
             return;
         }
 
-        PsiBuilder.Marker beginValueList;
+        PsiBuilder.Marker beginValueList = null;
         PsiBuilder.Marker beginValue;
         if (!source.eof()) {
             token = source.token();
@@ -329,7 +329,6 @@ class TagParser {
                 return;
             } else if (token == SoyToken.DIRECTIVE_COLON) {
                 source.advance();
-                beginValueList = source.mark("beginValueList");
                 beginValue = source.mark("beginValue");
             } else {
                 beginDirective.done(directive);
@@ -337,6 +336,7 @@ class TagParser {
                 return;
             }
         } else {
+            beginDirective.drop();
             return;
         }
 
@@ -345,24 +345,36 @@ class TagParser {
             if (SoyToken.EXPRESSION_TOKENS.contains(token)) {
                 new ExpressionParser(source).parse();
                 if (!source.eof() && source.token() == SoyToken.COMMA) {
+                    if (beginValueList == null) {
+                        beginValueList = beginValue.precede();
+                    }
                     beginValue.done(directive_value);
                     source.advance();
                     beginValue = source.mark("beginValue");
                 } else {
                     beginValue.done(directive_value);
-                    beginValueList.done(directive_value_list);
+                    if (beginValueList != null) {
+                        beginValueList.done(directive_value_list);
+                    }
                     beginDirective.done(directive);
                     return;
                 }
             } else if (!SoyToken.DIRECTIVE_TOKENS.contains(token)) {
                 beginValue.drop();
+                if (beginValueList != null) {
+                    beginValueList.done(directive_value_list);
+                }
                 beginDirective.done(directive);
                 return;
+            } else {
+                source.advance();
             }
         }
-        beginDirective.done(directive);
         beginValue.done(directive_value);
-        beginValueList.done(directive_value_list);
+        if (beginValueList != null) {
+            beginValueList.done(directive_value_list);
+        }
+        beginDirective.done(directive);
     }
 
     private TagParser parseInitial() {
@@ -540,6 +552,10 @@ class TagParser {
     }
 
     private void parseToTagRBrace(SoyToken rBraceToken1, SoyToken rBraceToken2) {
+        if (source.eof()) {
+            done();
+            return;
+        }
         IElementType token = source.token();
         if (token == tagToken) {
             source.advance();

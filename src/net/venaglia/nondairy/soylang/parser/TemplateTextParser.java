@@ -55,7 +55,9 @@ public class TemplateTextParser {
                 if (htmlTagMarker != null) htmlTagMarker.done(template_content);
                 htmlTagMarker = null;
             }
-            token = source.token();
+            if (!source.eof()) {
+                token = source.token();
+            }
         }
         if (htmlTagMarker != null) htmlTagMarker.done(template_content);
         htmlMarker.done(template_content);

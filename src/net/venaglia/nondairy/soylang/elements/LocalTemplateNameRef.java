@@ -116,13 +116,6 @@ public class LocalTemplateNameRef
     }
 
     @Override
-    public String getDelegatePackage() {
-        PsiElementCollection elements = PATH_TO_DELEGATE_PACKAGE.navigate(this);
-        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
-        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
-    }
-
-    @Override
     public String getNamespace() {
         PsiElement namespace = PATH_TO_NAMESPACE_NAME.navigate(this).oneOrNull();
         return namespace instanceof NamespaceMemberElement

@@ -76,6 +76,7 @@ public abstract class AbstractPsiElementTest {
             buffer.append("{/template}\n");
         }
         SourceTuple tuple = new SourceTuple(name, new ImmutableCharSequence(buffer));
+        MockProjectEnvironment.add(tuple);
         PsiElementCollection elements = flatten(tuple.psi);
         for (PsiElement element : elements) {
             IElementType type = element.getNode().getElementType();

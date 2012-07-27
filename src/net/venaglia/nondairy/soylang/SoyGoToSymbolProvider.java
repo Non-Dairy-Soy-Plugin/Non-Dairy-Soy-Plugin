@@ -27,7 +27,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.xml.model.gotosymbol.GoToSymbolProvider;
 import net.venaglia.nondairy.soylang.cache.CacheEntry;
-import net.venaglia.nondairy.soylang.cache.DelegateCache;
+//import net.venaglia.nondairy.soylang.cache.DelegatePackageCache;
 import net.venaglia.nondairy.soylang.cache.NamespaceCache;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.NamePredicate;
@@ -72,8 +72,8 @@ public class SoyGoToSymbolProvider extends GoToSymbolProvider {
         ConcurrentNavigableMap<String,Collection<CacheEntry>> cacheEntries =
                 project.getUserData(KEY_TO_FLAT_CACHE_ENTRIES);
         if (cacheEntries == null) {
-            DelegateCache delegateCache = DelegateCache.getDelegateCache(module);
-            cacheEntries = delegateCache.getFlatCache();
+            NamespaceCache namespaceCache = NamespaceCache.getCache(module);
+            cacheEntries = namespaceCache.getFlatCache();
             project.putUserData(KEY_TO_FLAT_CACHE_ENTRIES, cacheEntries);
         }
         return cacheEntries;

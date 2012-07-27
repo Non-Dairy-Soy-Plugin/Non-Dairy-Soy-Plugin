@@ -103,11 +103,4 @@ public class SoyCommandTag extends SoyPsiElement {
         }
         return Boundary.BEGIN;
     }
-
-    @Nullable
-    public String getDelegatePackage() {
-        PsiElementCollection elements = NamespaceMemberElement.PATH_TO_DELEGATE_PACKAGE.navigate(this);
-        DelegatePackageElement delegatePackageElement = (DelegatePackageElement)elements.oneOrNull();
-        return delegatePackageElement != null ? delegatePackageElement.getDelegatePackage() : null;
-    }
 }

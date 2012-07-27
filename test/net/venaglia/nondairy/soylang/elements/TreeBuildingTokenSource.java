@@ -23,6 +23,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.mocks.MockTreeNode;
+import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.SoyLanguage;
 import net.venaglia.nondairy.soylang.SoyParserDefinition;
 import net.venaglia.nondairy.soylang.elements.factory.PsiElementFactory;
@@ -44,6 +45,14 @@ import java.util.NoSuchElementException;
  */
 public class TreeBuildingTokenSource extends TokenSource {
 
+    public static final ThreadLocal<Boolean> TRACK_WHERE_MARKERS_ARE_CREATED =
+            new ThreadLocal<Boolean>() {
+                @Override
+                protected Boolean initialValue() {
+                    return Boolean.FALSE;
+                }
+            };
+
     static {
         LanguageParserDefinitions.INSTANCE.addExplicitExtension(SoyLanguage.INSTANCE, new SoyParserDefinition());
     }
@@ -51,8 +60,10 @@ public class TreeBuildingTokenSource extends TokenSource {
     private final CharSequence source;
     private final List<SoySymbol> symbols;
     private final int symbolCount;
+    private final boolean trackWhereCreated;
 
     private int symbolIndex = 0;
+    private int readTokenCallsSinceLastAdvance = 0;
 
     private TempNode head;
     private TempNode tail;
@@ -64,6 +75,7 @@ public class TreeBuildingTokenSource extends TokenSource {
             symbols.add(iterator.next());
         }
         symbolCount = symbols.size();
+        this.trackWhereCreated = TRACK_WHERE_MARKERS_ARE_CREATED.get();
     }
 
     @Override
@@ -83,6 +95,9 @@ public class TreeBuildingTokenSource extends TokenSource {
 //        }
         if (symbolIndex >= symbolCount) {
             throw new NoSuchElementException();
+        }
+        if (++readTokenCallsSinceLastAdvance > 1000) {
+            throw new IllegalStateException("Parser is not advancing, too many successive calls to token()");
         }
         return symbols.get(symbolIndex).getToken();
     }
@@ -112,12 +127,19 @@ public class TreeBuildingTokenSource extends TokenSource {
             throw new NoSuchElementException();
         }
         symbolIndex++;
+        readTokenCallsSinceLastAdvance = 0;
+    }
+
+    @Override
+    public int index() {
+        return symbolIndex;
     }
 
     @Override
     public void error(String message) {
         mark("errorMessage");
         tail.error(message);
+        readTokenCallsSinceLastAdvance = 0;
     }
 
     public PsiElement buildNode(@NotNull PsiFile fileNode, @NotNull final PsiElementFactory factory) {
@@ -133,6 +155,8 @@ public class TreeBuildingTokenSource extends TokenSource {
     private class TempNode implements PsiBuilder.Marker {
 
         private final String nodeName;
+        private final StackTraceElement[] createdAt;
+        private final int createdAtMore;
 
         private int startSymbolIndex = symbolIndex;
         private int endSymbolIndex = -1;
@@ -149,6 +173,24 @@ public class TreeBuildingTokenSource extends TokenSource {
         
         private TempNode(@NotNull @NonNls String nodeName) {
             this.nodeName = nodeName;
+            int createdAtMore = 0;
+            if (trackWhereCreated) {
+                List<StackTraceElement> createdAt = new ArrayList<StackTraceElement>(5);
+                for (StackTraceElement ste : new Exception().getStackTrace()) {
+                    if (!createdAt.isEmpty() || !ste.toString().contains(TreeBuildingTokenSource.class.getSimpleName())) {
+                        if (createdAt.size() < 5) {
+                            createdAt.add(ste);
+                        } else {
+                            createdAtMore++;
+                        }
+                    }
+                }
+                this.createdAt = createdAt.toArray(new StackTraceElement[createdAt.size()]);
+                this.createdAtMore = createdAtMore;
+            } else {
+                this.createdAt = null;
+                this.createdAtMore = -1;
+            }
         }
 
         private void addChild(TempNode child) {
@@ -161,16 +203,16 @@ public class TreeBuildingTokenSource extends TokenSource {
         private void assertNotDone() {
             if (done) {
                 if (type != null) {
-                    throw new IllegalStateException("marker is already done");
+                    throw new IllegalStateException("marker is already done" + createdAtTrace());
                 } else {
-                    throw new IllegalStateException("marker is dropped");
+                    throw new IllegalStateException("marker is dropped" + createdAtTrace());
                 }
             }
         }
 
         private void assertDone() {
             if (!done) {
-                throw new IllegalStateException("unclosed marker: " + nodeName);
+                throw new IllegalStateException("unclosed marker: " + nodeName + createdAtTrace());
             }
         }
 
@@ -182,7 +224,7 @@ public class TreeBuildingTokenSource extends TokenSource {
 
         private void assertTokenWasAdvanced() {
             if (symbolIndex == startSymbolIndex) {
-                throw new IllegalStateException("marker was created and closed without advancing");
+                throw new IllegalStateException("marker was created and closed without advancing" + createdAtTrace());
             }
         }
 
@@ -190,7 +232,7 @@ public class TreeBuildingTokenSource extends TokenSource {
         public PsiBuilder.Marker precede() {
             TempNode tn = new TempNode(nodeName);
             tn.startSymbolIndex = startSymbolIndex;
-            if (done) {
+            if (done && parent != null) {
                 int l = parent.children.indexOf(this);
                 int r = parent.children.size();
                 tn.parent = parent;
@@ -271,7 +313,9 @@ public class TreeBuildingTokenSource extends TokenSource {
         public void done(IElementType type) {
             assertNotDone();
             assertAllChildrenDone();
-            assertTokenWasAdvanced();
+            if (type != SoyElement.soy_file) { // could be an empty file
+                assertTokenWasAdvanced();
+            }
             this.type = type;
             close(true);
         }
@@ -307,20 +351,42 @@ public class TreeBuildingTokenSource extends TokenSource {
             MockTreeNode.Builder builder = new MockTreeNode.Builder();
             builder.setType(type);
             builder.setErrorMessage(errorMessage);
-            SoySymbol startSymbol = symbols.get(startSymbolIndex);
-            SoySymbol endSymbol = symbols.get(endSymbolIndex - 1);
-            int startPostiion = startSymbol.getPosition();
-            int endPosition = endSymbol.getPosition() + endSymbol.getLength();
-            CharSequence text = source.subSequence(startPostiion,
-                                                   Math.max(startPostiion, endPosition));
-            builder.setText(text);
-            builder.setStartOffset(startPostiion);
+            if (symbolCount == 0 || startSymbolIndex == endSymbolIndex) {
+                builder.setText("");
+                builder.setStartOffset(0);
+            } else {
+                SoySymbol startSymbol = symbols.get(startSymbolIndex);
+                SoySymbol endSymbol = symbols.get(endSymbolIndex - 1);
+                int startPostiion = startSymbol.getPosition();
+                int endPosition = endSymbol.getPosition() + endSymbol.getLength();
+                CharSequence text = source.subSequence(startPostiion,
+                                                       Math.max(startPostiion, endPosition));
+                builder.setText(text);
+                builder.setStartOffset(startPostiion);
+            }
             if (children != null) {
                 for (TempNode child : children) {
                     builder.addChild(child.builder());
                 }
             }
             return builder;
+        }
+
+        private String createdAtTrace() {
+            if (createdAt == null || createdAt.length == 0) {
+                return "";
+            } else {
+                @NonNls StringBuilder buf = new StringBuilder();
+                buf.append("\n\tMarker '").append(nodeName).append("' created:");
+                for (StackTraceElement ste : createdAt) {
+                    buf.append("\n\t\tat ");
+                    buf.append(ste);
+                }
+                if (createdAtMore > 0) {
+                    buf.append("\n\t\t").append(createdAtMore).append(" more...");
+                }
+                return buf.toString();
+            }
         }
     }
 

@@ -24,8 +24,12 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import net.venaglia.nondairy.soylang.SoyFileType;
-import net.venaglia.nondairy.soylang.cache.DelegateCache;
+//import net.venaglia.nondairy.soylang.cache.DelegatePackageCache;
+import net.venaglia.nondairy.soylang.cache.DelegatePackageCache;
+import net.venaglia.nondairy.soylang.cache.DelegateTemplateCache;
+import net.venaglia.nondairy.soylang.cache.NamespaceCache;
 import net.venaglia.nondairy.soylang.cache.TemplateCache;
+import net.venaglia.nondairy.soylang.elements.DelegateMemberElement;
 import net.venaglia.nondairy.soylang.elements.NamespaceMemberElement;
 import net.venaglia.nondairy.soylang.elements.TreeNavigator;
 import net.venaglia.nondairy.util.TinySet;
@@ -59,13 +63,25 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
     public PsiElementCollection traverse(@NotNull Collection<PsiElement> current) {
         Set<Module> search = new HashSet<Module>();
         PsiElementCollection files = new PsiElementCollection();
-        Set<NamespaceAndPackage> naps = new TinySet<NamespaceAndPackage>();
+        Set<NamespaceOrDeltemplate> nops = new TinySet<NamespaceOrDeltemplate>();
         for (PsiElement element : current) {
             if (element instanceof NamespaceMemberElement) {
                 NamespaceMemberElement nme = (NamespaceMemberElement)element;
                 String namespace = nme.getNamespace();
                 if (namespace != null) {
-                    naps.add(new NamespaceAndPackage(nme.getDelegatePackage(), namespace));
+                    nops.add(new NamespaceOrDeltemplate(null, namespace));
+                    getModulesToSearch(element, search);
+                    PsiFile containingFile = element.getContainingFile();
+                    if (containingFile != null) {
+                        files.add(containingFile);
+                    }
+                }
+            }
+            if (element instanceof DelegateMemberElement) {
+                DelegateMemberElement nme = (DelegateMemberElement)element;
+                String delegatePackage = nme.getDelegatePackage();
+                if (delegatePackage != null) {
+                    nops.add(new NamespaceOrDeltemplate(delegatePackage, delegatePackage));
                     getModulesToSearch(element, search);
                     PsiFile containingFile = element.getContainingFile();
                     if (containingFile != null) {
@@ -74,16 +90,16 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
                 }
             }
         }
-        traverseImpl(search, files, naps);
+        traverseImpl(search, files, nops);
         return files;
     }
 
     void traverseImpl(@NotNull Set<Module> search,
                       @NotNull PsiElementCollection buffer,
-                      @NotNull Collection<NamespaceAndPackage> naps) {
+                      @NotNull Collection<NamespaceOrDeltemplate> nops) {
         for (Module module : search) {
             PsiManager manager = TreeNavigator.INSTANCE.getPsiManager(module.getProject());
-            for (VirtualFile file : findFiles(module, naps)) {
+            for (VirtualFile file : findFiles(module, nops)) {
                 PsiFile psiFile = manager.findFile(file);
                 if (psiFile != null) {
                     buffer.add(psiFile);
@@ -117,23 +133,41 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
     }
     
     private Collection<VirtualFile> findFiles(@NotNull Module module,
-                                              @NotNull Collection<NamespaceAndPackage> naps) {
+                                              @NotNull Collection<NamespaceOrDeltemplate> nops) {
         Collection<VirtualFile> files = new HashSet<VirtualFile>();
-        for (TemplateCache cache : getTemplateCaches(module, naps)) {
+        for (TemplateCache cache : getTemplateCaches(module, nops)) {
+            files.addAll(cache.getFiles());
+        }
+        for (DelegateTemplateCache cache : getDelegateTemplateCaches(module, nops)) {
             files.addAll(cache.getFiles());
         }
         return files;
     }
 
     private Set<TemplateCache> getTemplateCaches(@NotNull Module module,
-                                                 @NotNull Collection<NamespaceAndPackage> naps) {
-        DelegateCache delegateCache = DelegateCache.getDelegateCache(module);
+                                                 @NotNull Collection<NamespaceOrDeltemplate> nops) {
+        NamespaceCache namespaceCache = NamespaceCache.getCache(module);
         Set<TemplateCache> caches = new TinySet<TemplateCache>();
-        for (NamespaceAndPackage nap : naps) {
-            if (nap.delpackage != null) {
-                caches.addAll(delegateCache.getTemplateCaches(nap.delpackage, nap.namespace));
+        for (NamespaceOrDeltemplate nop : nops) {
+            if (nop.namespace != null) {
+                caches.add(namespaceCache.getOrCreate(nop.namespace));
             }
-            caches.addAll(delegateCache.getTemplateCaches(nap.namespace));
+        }
+        return caches;
+    }
+
+    private Set<DelegateTemplateCache> getDelegateTemplateCaches(@NotNull Module module,
+                                                                 @NotNull Collection<NamespaceOrDeltemplate> nops) {
+        DelegatePackageCache delegatePackageCache = DelegatePackageCache.getCache(module);
+        Set<DelegateTemplateCache> caches = new TinySet<DelegateTemplateCache>();
+        for (NamespaceOrDeltemplate nop : nops) {
+            if (nop.deltemplate != null) {
+                for (DelegateTemplateCache dtc : delegatePackageCache.values()) {
+                    if (dtc.containsKey(nop.deltemplate)) {
+                        caches.add(dtc);
+                    }
+                }
+            }
         }
         return caches;
     }
@@ -148,14 +182,17 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
         return "*." + SoyFileType.INSTANCE.getDefaultExtension();
     }
 
-    private static class NamespaceAndPackage {
-        @Nullable @NonNls final String delpackage;
-        @NotNull @NonNls final String namespace;
+    private static class NamespaceOrDeltemplate {
+        @Nullable @NonNls final String deltemplate;
+        @Nullable @NonNls final String namespace;
 
-        private NamespaceAndPackage(@Nullable @NonNls String delpackage,
-                                    @NotNull @NonNls String namespace) {
-            this.delpackage = delpackage;
+        private NamespaceOrDeltemplate(@Nullable @NonNls String deltemplate,
+                                       @Nullable @NonNls String namespace) {
+            this.deltemplate = deltemplate;
             this.namespace = namespace;
+            if (deltemplate == null && namespace == null) {
+                throw new IllegalArgumentException("deltemplate and namespace cannot both be null");
+            }
         }
 
         @Override
@@ -163,36 +200,39 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            NamespaceAndPackage that = (NamespaceAndPackage)o;
+            NamespaceOrDeltemplate that = (NamespaceOrDeltemplate)o;
 
-            if (delpackage != null ? !delpackage.equals(that.delpackage) : that.delpackage != null) return false;
-            if (!namespace.equals(that.namespace)) return false;
+            if (deltemplate != null ? !deltemplate.equals(that.deltemplate) : that.deltemplate != null) return false;
+            if (namespace != null ? !namespace.equals(that.namespace) : that.namespace != null) return false;
 
             return true;
         }
 
         @Override
         public int hashCode() {
-            int result = delpackage != null ? delpackage.hashCode() : 0;
-            result = 31 * result + namespace.hashCode();
+            int result = deltemplate != null ? deltemplate.hashCode() : 0;
+            result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
             return result;
         }
 
         @Override
         public String toString() {
-            if (delpackage != null) {
-                return delpackage + "::" + namespace;
+            if (deltemplate != null) {
+                return deltemplate;
             }
             return namespace;
         }
     }
 
     public static TraversalPredicate filesForNamespace(@NotNull @NonNls String namespace) {
-        return filesForNamespace(namespace, null);
+        return filesForNamespaceOrDeltemplate(new NamespaceOrDeltemplate(null, namespace));
     }
     
-    public static TraversalPredicate filesForNamespace(@NotNull @NonNls final String namespace,
-                                                       @Nullable @NonNls final String delpackage) {
+    public static TraversalPredicate filesForDelegateTemplate(@NotNull @NonNls final String deltemplate) {
+        return filesForNamespaceOrDeltemplate(new NamespaceOrDeltemplate(deltemplate, null));
+    }
+
+    private static TraversalPredicate filesForNamespaceOrDeltemplate(@NotNull final NamespaceOrDeltemplate nop) {
         return new SoyFileElementTraversalPredicate() {
             @NotNull
             @Override
@@ -206,8 +246,7 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
                         files.add(containingFile);
                     }
                 }
-                Set<NamespaceAndPackage> naps =
-                        Collections.singleton(new NamespaceAndPackage(delpackage, namespace));
+                Set<NamespaceOrDeltemplate> naps = Collections.singleton(nop);
                 traverseImpl(search, files, naps);
                 return files;
             }

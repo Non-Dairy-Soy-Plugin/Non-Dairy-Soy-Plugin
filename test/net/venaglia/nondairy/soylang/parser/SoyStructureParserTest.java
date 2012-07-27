@@ -103,8 +103,18 @@ public class SoyStructureParserTest extends BaseParserTest {
     }
 
     @Test
-    public void testDelegates() throws Exception {
-        testNoErrorsImpl("delegates.soy");
+    public void testDelegatesDefault() throws Exception {
+        testNoErrorsImpl("delegates-default.soy");
+    }
+
+    @Test
+    public void testDelegatesOverride() throws Exception {
+        testNoErrorsImpl("delegates-override.soy");
+    }
+
+    @Test
+    public void testDelegatesCall() throws Exception {
+        testNoErrorsImpl("delegates-call.soy");
     }
 
     @Test

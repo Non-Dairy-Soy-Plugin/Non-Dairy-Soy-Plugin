@@ -66,7 +66,7 @@ public abstract class AbstractCache<K,V> extends ConcurrentSkipListMap<K,V> {
      * Implementing clases should <strong>not</strong> call
      * {@link #put(Object, Object)} to add the newly created value.
      * @param key The key of the new value.
-     * @return A new value for the speified key.
+     * @return A new value for the specified key.
      * @throws UnsupportedOperationException in the default implementation.
      */
     @NotNull

@@ -28,22 +28,16 @@ import net.venaglia.nondairy.soylang.elements.TreeNavigator;
  */
 public class CacheEntry {
 
-    private final String delegate;
     private final String namespace;
     private final String template;
     private final boolean deltemplate;
     private final String fileUrl;
 
-    public CacheEntry(String delegate, String namespace, String template, boolean deltemplate, VirtualFile file) {
-        this.delegate = delegate;
+    public CacheEntry(String namespace, String template, boolean deltemplate, VirtualFile file) {
         this.namespace = namespace;
         this.template = template;
         this.deltemplate = deltemplate;
         this.fileUrl = file.getUrl();
-    }
-
-    public String getDelegate() {
-        return delegate;
     }
 
     public String getNamespace() {
@@ -70,7 +64,6 @@ public class CacheEntry {
         CacheEntry that = (CacheEntry)o;
 
         if (deltemplate != that.deltemplate) return false;
-        if (delegate != null ? !delegate.equals(that.delegate) : that.delegate != null) return false;
         if (fileUrl != null ? !fileUrl.equals(that.fileUrl) : that.fileUrl != null) return false;
         if (namespace != null ? !namespace.equals(that.namespace) : that.namespace != null) return false;
         if (template != null ? !template.equals(that.template) : that.template != null) return false;
@@ -80,8 +73,7 @@ public class CacheEntry {
 
     @Override
     public int hashCode() {
-        int result = delegate != null ? delegate.hashCode() : 0;
-        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
+        int result = namespace != null ? namespace.hashCode() : 0;
         result = 31 * result + (template != null ? template.hashCode() : 0);
         result = 31 * result + (deltemplate ? 1 : 0);
         result = 31 * result + (fileUrl != null ? fileUrl.hashCode() : 0);
@@ -91,9 +83,12 @@ public class CacheEntry {
     @SuppressWarnings("HardCodedStringLiteral")
     @Override
     public String toString() {
-        String del = DelegateCache.DEFAULT_DELEGATE.equals(delegate) ? "*" : delegate;
-        String ns = NamespaceCache.DEFAULT_NAMESPACE.equals(namespace) ? "" : namespace;
-        String dt = deltemplate ? "deltemplate" : "template";
-        return String.format("CacheEntry{delegate=%s,%s=%s.%s,file=%s}", del, dt, ns, template, fileUrl);
+        if (deltemplate) {
+            String del = DelegatePackageCache.DEFAULT_DELEGATE.equals(namespace) ? "*" : namespace;
+            return String.format("CacheEntry{delpacakge=%s,deltemplate=%s,file=%s}", del, template, fileUrl);
+        } else {
+            String ns = NamespaceCache.DEFAULT_NAMESPACE.equals(namespace) ? "" : namespace;
+            return String.format("CacheEntry{template=%s.%s,file=%s}", ns, template, fileUrl);
+        }
     }
 }

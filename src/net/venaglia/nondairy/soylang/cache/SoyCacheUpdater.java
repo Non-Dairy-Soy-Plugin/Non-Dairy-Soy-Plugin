@@ -114,10 +114,16 @@ public class SoyCacheUpdater implements CacheUpdater {
             return;
         }
         if (isCacheableSoyFile(file)) {
-            DelegateCache delegateCache = getDelegateCache(file);
-            if (delegateCache != null) {
-                removeFromCacheImpl(delegateCache, file);
-                updateCacheImpl(delegateCache, file);
+            NamespaceCache namespaceCache = getNamespaceCache(file);
+            DelegatePackageCache delegatePackageCache = getDelegatePackageCache(file);
+            if (namespaceCache != null) {
+                removeFromCacheImpl(namespaceCache, file);
+            }
+            if (delegatePackageCache != null) {
+                removeFromCacheImpl(delegatePackageCache, file);
+            }
+            if (namespaceCache != null || delegatePackageCache != null) {
+                updateCacheImpl(namespaceCache, delegatePackageCache, file);
             }
             lastUpdate.set(System.currentTimeMillis());
         }
@@ -132,18 +138,20 @@ public class SoyCacheUpdater implements CacheUpdater {
     }
 
     @SuppressWarnings("StringEquality")
-    private void updateCacheImpl(@NotNull DelegateCache delegateCache, @NotNull VirtualFile file) {
+    private void updateCacheImpl(@Nullable NamespaceCache namespaceCache,
+                                 @Nullable DelegatePackageCache delegatePackageCache,
+                                 @NotNull VirtualFile file) {
         Document document = TreeNavigator.INSTANCE.getDocument(file);
         Collection<String> templates = new ArrayList<String>(16);
         Collection<String> deltemplates = new ArrayList<String>(16);
-        String delegate = DelegateCache.DEFAULT_DELEGATE;
+        String delegate = DelegatePackageCache.DEFAULT_DELEGATE;
         String namespace = NamespaceCache.DEFAULT_NAMESPACE;
         if (document != null) {
             Matcher matcher = MATCH_COMMANDS.matcher(document.getCharsSequence());
             while (matcher.find()) {
                 String command = matcher.group(1);
                 if ("delpackage".equals(command)) { //NON-NLS
-                    if (delegate == DelegateCache.DEFAULT_DELEGATE) {
+                    if (delegate == DelegatePackageCache.DEFAULT_DELEGATE) {
                         delegate = matcher.group(2);
                     }
                 } else if ("namespace".equals(command)) { //NON-NLS
@@ -157,59 +165,88 @@ public class SoyCacheUpdater implements CacheUpdater {
                 }
             }
         }
-        TemplateCache templateCache = delegateCache.getOrCreate(delegate).getOrCreate(namespace);
-        templateCache.addFile(file);
-        Collection<CacheEntry> newEntries = new ArrayList<CacheEntry>(templates.size());
-        for (String template : templates) {
-            CacheEntry cacheEntry = new CacheEntry(delegate, namespace, template, false, file);
-            templateCache.getOrCreate(template).add(cacheEntry);
-            newEntries.add(cacheEntry);
+        if (namespaceCache != null) {
+            TemplateCache templateCache = namespaceCache.getOrCreate(namespace);
+            templateCache.addFile(file);
+            Collection<CacheEntry> newEntries = new ArrayList<CacheEntry>(templates.size());
+            for (String template : templates) {
+                CacheEntry cacheEntry = new CacheEntry(namespace, template, false, file);
+                templateCache.getOrCreate(template).add(cacheEntry);
+                newEntries.add(cacheEntry);
+            }
+            namespaceCache.added(newEntries.iterator());
         }
-        for (String template : deltemplates) {
-            CacheEntry cacheEntry = new CacheEntry(delegate, namespace, template, true, file);
-            templateCache.getOrCreate(template).add(cacheEntry);
-            newEntries.add(cacheEntry);
+        if (delegatePackageCache != null) {
+            DelegateTemplateCache templateCache = delegatePackageCache.getOrCreate(delegate);
+            templateCache.addFile(file);
+            Collection<CacheEntry> newEntries = new ArrayList<CacheEntry>(templates.size());
+            for (String template : deltemplates) {
+                CacheEntry cacheEntry = new CacheEntry(delegate, template, true, file);
+                templateCache.getOrCreate(template).add(cacheEntry);
+                newEntries.add(cacheEntry);
+            }
+            delegatePackageCache.added(newEntries.iterator());
         }
-        delegateCache.added(newEntries.iterator());
     }
 
     public void removeFromCache(@NotNull VirtualFile file) {
         if (disposed) {
             return;
         }
-        DelegateCache delegateCache = getDelegateCache(file);
-        if (delegateCache != null) {
-            removeFromCacheImpl(delegateCache, file);
+        NamespaceCache namespaceCache = getNamespaceCache(file);
+        if (namespaceCache != null) {
+            removeFromCacheImpl(namespaceCache, file);
         } else {
             for (Module module : TreeNavigator.INSTANCE.getModules(project)) {
-                removeFromCacheImpl(DelegateCache.getDelegateCache(module), file);
+                removeFromCacheImpl(NamespaceCache.getCache(module), file);
+            }
+        }
+        DelegatePackageCache delegatePackageCache = getDelegatePackageCache(file);
+        if (namespaceCache != null) {
+            removeFromCacheImpl(delegatePackageCache, file);
+        } else {
+            for (Module module : TreeNavigator.INSTANCE.getModules(project)) {
+                removeFromCacheImpl(DelegatePackageCache.getCache(module), file);
             }
         }
     }
 
-    private void removeFromCacheImpl(@NotNull DelegateCache delegateCache, @NotNull VirtualFile file) {
+    private void removeFromCacheImpl(@NotNull NamespaceCache namespaceCache, @NotNull VirtualFile file) {
         TemplateCache templateCacheToRemove = TemplateCache.fromFile(file);
         if (templateCacheToRemove != null) {
-            NamespaceCache namespaceCache = delegateCache.get(templateCacheToRemove.getDelegate());
-            if (namespaceCache != null) {
-                TemplateCache templateCache = namespaceCache.get(templateCacheToRemove.getNamespace());
-                if (templateCache == templateCacheToRemove) {
+            TemplateCache templateCache = namespaceCache.get(templateCacheToRemove.getNamespace());
+            if (templateCache == templateCacheToRemove) {
+                namespaceCache.remove(templateCacheToRemove.getNamespace());
+                if (namespaceCache.isEmpty()) {
                     namespaceCache.remove(templateCacheToRemove.getNamespace());
-                    if (namespaceCache.isEmpty()) {
-                        delegateCache.remove(templateCacheToRemove.getNamespace());
-                    }
                 }
             }
         }
     }
 
-    private DelegateCache getDelegateCache(VirtualFile file) {
+    private void removeFromCacheImpl(@NotNull DelegatePackageCache delegatePackageCache, @NotNull VirtualFile file) {
+        DelegateTemplateCache templateCacheToRemove = DelegateTemplateCache.fromFile(file);
+        if (templateCacheToRemove != null) {
+            delegatePackageCache.remove(templateCacheToRemove.getDelegatePackage());
+        }
+    }
+
+    private NamespaceCache getNamespaceCache(VirtualFile file) {
         if (disposed) {
             return null;
         }
         ProjectFileIndex fileIndex = TreeNavigator.INSTANCE.getProjectFileIndex(project);
         Module module = fileIndex.getModuleForFile(file);
-        return module == null ? null : DelegateCache.getDelegateCache(module);
+        return module == null ? null : NamespaceCache.getCache(module);
+    }
+
+    private DelegatePackageCache getDelegatePackageCache(VirtualFile file) {
+        if (disposed) {
+            return null;
+        }
+        ProjectFileIndex fileIndex = TreeNavigator.INSTANCE.getProjectFileIndex(project);
+        Module module = fileIndex.getModuleForFile(file);
+        return module == null ? null : DelegatePackageCache.getCache(module);
     }
 
     public void dispose() {
@@ -225,7 +262,7 @@ public class SoyCacheUpdater implements CacheUpdater {
 
         private final Reference<Project> project;
         private final long offset = System.currentTimeMillis() % 250;
-        private final Map<Module,DelegateCache> lastVersions = new HashMap<Module,DelegateCache>();
+        private final Map<Module,NamespaceCache> lastVersions = new HashMap<Module,NamespaceCache>();
 
         private long lastUpdate = 0L;
 
@@ -274,12 +311,12 @@ public class SoyCacheUpdater implements CacheUpdater {
             lastVersions.keySet().retainAll(modules);
             modules.removeAll(lastVersions.keySet());
             for (Module module : modules) {
-                lastVersions.put(module, new DelegateCache(module));
+                lastVersions.put(module, new NamespaceCache(module));
             }
             
             for (Module module : lastVersions.keySet()) {
-                DelegateCache current = DelegateCache.getDelegateCache(module);
-                DelegateCache previous = lastVersions.get(module);
+                NamespaceCache current = NamespaceCache.getCache(module);
+                NamespaceCache previous = lastVersions.get(module);
                 logChanges(current, current, previous, log, "");
                 lastVersions.put(module, current.clone());
             }
@@ -294,14 +331,7 @@ public class SoyCacheUpdater implements CacheUpdater {
                     return "TemplateCache for {namespace " + namespace + "}";
                 }
             } else if (obj instanceof NamespaceCache) {
-                String delegate = ((NamespaceCache)obj).getDelegate();
-                if (DelegateCache.DEFAULT_DELEGATE.equals(delegate)) {
-                    return "NamespaceCache for default delegate";
-                } else {
-                    return "NamespaceCache for {delpackage " + delegate + "}";
-                }
-            } else if (obj instanceof DelegateCache) {
-                return "DelegateCache for module '" + ((DelegateCache)obj).getModule().getName() + "'";
+                return "NamespaceCache for module '" + ((NamespaceCache)obj).getModule().getName() + "'";
             } else {
                 return String.valueOf(obj);
             }

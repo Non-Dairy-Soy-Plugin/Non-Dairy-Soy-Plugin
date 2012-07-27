@@ -25,34 +25,29 @@ import org.jetbrains.annotations.Nullable;
 /**
  * User: ed
  * Date: 1/30/12
- * Time: 9:19 PM
- *
- * This cache stores a {@link TemplateCache} object for each namespace.
+ * Time: 9:21 PM
+ * 
+ * Top-level cache object, associated with an IntelliJ module. This cache
+ * stores a {@link NamespaceCache} object for each unique delpackage found in
+ * the module.
  */
-public class NamespaceCache extends AbstractChangeAwareCache<TemplateCache> {
-
-    private static final Key<NamespaceCache> DELEGATE_CACHE_KEY = new Key<NamespaceCache>("non-dairy.namesapce-cache");
+public class DelegatePackageCache extends AbstractChangeAwareCache<DelegateTemplateCache> {
 
     @NonNls
-    public static final String DEFAULT_NAMESPACE = "\u001a [ns]";
+    public static final String DEFAULT_DELEGATE = "\u001a [del]";
 
-    @NotNull
+    private static final Key<DelegatePackageCache> DELEGATE_CACHE_KEY = new Key<DelegatePackageCache>("non-dairy.delegate-cache");
+
     private final Module module;
 
-    public NamespaceCache(@NotNull Module module) {
+    public DelegatePackageCache(@NotNull Module module) {
         this.module = module;
     }
 
     @NotNull
     @Override
-    protected TemplateCache create(String namespace) {
-        return new TemplateCache(this, namespace);
-    }
-
-    @Override
-    @Nullable
-    public String getKeyFor(@NotNull TemplateCache value) {
-        return value.getNamespace();
+    protected DelegateTemplateCache create(String delegate) {
+        return new DelegateTemplateCache(this, delegate);
     }
 
     @NotNull
@@ -60,21 +55,19 @@ public class NamespaceCache extends AbstractChangeAwareCache<TemplateCache> {
         return module;
     }
 
+    @Override
+    @Nullable
+    public String getKeyFor(@NotNull DelegateTemplateCache value) {
+        return value.getDelegatePackage();
+    }
+
     @NotNull
-    public static NamespaceCache getCache(@NotNull Module module) {
-        NamespaceCache cache = module.getUserData(DELEGATE_CACHE_KEY);
+    public static DelegatePackageCache getCache(@NotNull Module module) {
+        DelegatePackageCache cache = module.getUserData(DELEGATE_CACHE_KEY);
         if (cache == null) {
-            cache = new NamespaceCache(module);
+            cache = new DelegatePackageCache(module);
             module.putUserData(DELEGATE_CACHE_KEY, cache);
         }
         return cache;
     }
-
-    @Override
-    public NamespaceCache clone() {
-        NamespaceCache cache = (NamespaceCache)super.clone();
-        cache.flatCache = flatCache.clone();
-        return cache;
-    }
-
 }

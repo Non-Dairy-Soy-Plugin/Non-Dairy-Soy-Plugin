@@ -37,6 +37,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,7 +73,9 @@ public class SourceTuple {
                          ? SoyTestUtil.getPsiTreeFor(psi, name)
                          : SoyTestUtil.getPsiTreeFor(psi, name, source);
         children[0] = root;
-        String text = root.getText();
+        String text = source == SOURCE_AS_RESOURCE
+                      ? loadSource(name)
+                      : source.toString();
         file = new LightVirtualFile(name,
                                     SoyFileType.INSTANCE,
                                     text,
@@ -80,7 +83,14 @@ public class SourceTuple {
                                     System.currentTimeMillis());
         fileUrl = file.getUrl();
         document = new MockDocument(text);
-        MockProjectEnvironment.add(this);
+    }
+
+    private String loadSource(String name) {
+        try {
+            return SoyTestUtil.getTestSourceBuffer(name);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private class MyFileViewProvider implements FileViewProvider {
