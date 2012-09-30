@@ -1,0 +1,15 @@
+{namespace example.soy}
+
+/**
+ * Template with misspellings in the body.
+ */
+{template .myTemplate}
+  <div>
+  <strong>{call .subTemplate}{/call}{sp}</strong>
+  Misspelled <TYPO descr="Typo: In word 'woord'">woord</TYPO>.
+  </div>
+{/template}
+
+/***/
+{template .subTemplate}
+{/template}
