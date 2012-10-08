@@ -46,8 +46,8 @@ public class TemplateTagPairSplitter extends BaseSplitter {
   private static final Pattern TEMPLATE =
       Pattern.compile("\\{template[^\\}]*?\\}(.*?)\\{/template\\s*\\}");
   private static final Pattern SOY_CMD_TAG =
-      Pattern.compile("\\{/?\\S+?[^\\}]*?\\}(.*)");
-  private static final Pattern HTML = Pattern.compile("</?\\S+?[^<>]*?>(.*)");
+      Pattern.compile("\\{/?\\S+?[^\\}]*?\\}([^\\{]*)");
+  private static final Pattern HTML = Pattern.compile("</?\\S+?[^>]*?>([^<]*)");
 
   @Override
   public void split(@Nullable String text, @NotNull TextRange range,
