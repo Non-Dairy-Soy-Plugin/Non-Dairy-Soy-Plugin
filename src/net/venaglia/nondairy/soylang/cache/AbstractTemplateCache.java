@@ -64,7 +64,7 @@ public abstract class AbstractTemplateCache<ME extends AbstractTemplateCache<ME>
         if (!files.contains(file)) {
             ME old = file.getUserData(getCacheKey());
             if (old != null) {
-                old.getFiles().remove(file);
+                old.removeFile(file);
             }
             file.replace(getCacheKey(), old, self());
             files.add(file);
