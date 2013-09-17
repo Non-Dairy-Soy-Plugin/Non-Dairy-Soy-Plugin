@@ -99,6 +99,12 @@ public class SourceTuple {
 
         @NotNull
         @Override
+        public PsiFile getStubBindingRoot() {
+            return getManager().findFile(getVirtualFile());
+        }
+
+        @NotNull
+        @Override
         public PsiManager getManager() {
             return MockProjectEnvironment.getUnitTestPsiManager();
         }
