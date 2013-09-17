@@ -125,11 +125,11 @@ public class ParameterNotUsedInspection extends AbstractSoyInspectionWithSingleQ
             if (element instanceof ParameterElement) {
                 String name = ((ParameterElement)element).getName();
                 problems.add(manager.createProblemDescriptor(element,
-                                                             getMessage(name),
-                                                             ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-                                                             null,
-                                                             true,
-                                                             getQuickFix(name)));
+                        getMessage(name),
+                        getQuickFix(name),
+                        ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+                        true));
+
             }
         }
     }
