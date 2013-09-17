@@ -18,6 +18,7 @@ package net.venaglia.nondairy.soylang.inspection;
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.InspectionManager;
+import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.psi.PsiElement;
@@ -113,10 +114,10 @@ public class CallMissingRequiredParamInspection extends AbstractSoyInspection {
                     checkCanceled();
                     if (!passedParams.contains(param)) {
                         problems.add(manager.createProblemDescriptor(element,
-                                                                     getMessage(getTextFor(templateName), param),
-                                                                     ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-                                                                     null,
-                                                                     isOnTheFly));
+                                getMessage(getTextFor(templateName), param),
+                                (LocalQuickFix) null,
+                                ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+                                isOnTheFly));
                     }
                 }
             }
@@ -171,9 +172,9 @@ public class CallMissingRequiredParamInspection extends AbstractSoyInspection {
                     pathToTemplateParameters = PATH_TO_REQUIRED_TEMPLATE_PARAMS;
                 }
                 else if (templateNameElement instanceof AbsoluteTemplateNameRef) {
-                    templateNameElement = (TemplateMemberElement)TemplatePath.forTemplateName(myTemplateName)
-                                                                             .navigate(templateNameElement)
-                                                                             .oneOrNull();
+                    templateNameElement = (TemplateMemberElement) TemplatePath.forTemplateName(myTemplateName)
+                            .navigate(templateNameElement)
+                            .oneOrNull();
                     if (templateNameElement == null) {
                         return Collections.emptySet();
                     }
