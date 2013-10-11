@@ -18,6 +18,7 @@ package net.venaglia.nondairy.soylang.inspection;
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.InspectionManager;
+import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.psi.PsiElement;
@@ -76,9 +77,9 @@ public class CallToUndeclaredTemplateInspection extends AbstractSoyInspection {
 
     private static final PsiElementPath PATH_TO_TEMPLATE_DEFS =
             new PsiElementPath(new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildrenOfChildren(),
-                               new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
-                               new ElementTypePredicate(SoyElement.template_tag).onChildren(),
-                               new ElementTypePredicate(SoyElement.template_name).onChildrenOfChildren()).debug("call_to_undeclared!local");
+                    new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
+                    new ElementTypePredicate(SoyElement.template_tag).onChildren(),
+                    new ElementTypePredicate(SoyElement.template_name).onChildrenOfChildren()).debug("call_to_undeclared!local");
 
     private static final PsiElementPath PATH_TO_CALLS =
             new PsiElementPath(new ElementTypePredicate(SoyElement.call_tag).onAllDescendants(),
@@ -119,10 +120,10 @@ public class CallToUndeclaredTemplateInspection extends AbstractSoyInspection {
             }
             if (isProblem) {
                 problems.add(manager.createProblemDescriptor(element,
-                                                             getMessage(element.getText()),
-                                                             ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-                                                             null,
-                                                             isOnTheFly));
+                        getMessage(element.getText()),
+                        (LocalQuickFix) null,
+                        ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+                        isOnTheFly));
             }
         }
     }

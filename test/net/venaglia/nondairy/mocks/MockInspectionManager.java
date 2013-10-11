@@ -16,14 +16,8 @@
 
 package net.venaglia.nondairy.mocks;
 
-import com.intellij.codeInspection.CommonProblemDescriptor;
-import com.intellij.codeInspection.CommonProblemDescriptorImpl;
-import com.intellij.codeInspection.HintAction;
-import com.intellij.codeInspection.InspectionManager;
-import com.intellij.codeInspection.LocalQuickFix;
-import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.codeInspection.ProblemHighlightType;
-import com.intellij.codeInspection.QuickFix;
+import com.intellij.codeInspection.*;
+import com.intellij.codeInspection.ex.GlobalInspectionContextBase;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -36,6 +30,17 @@ import org.jetbrains.annotations.Nullable;
  * Time: 1:27 PM
  */
 public class MockInspectionManager extends InspectionManager {
+
+    GlobalInspectionContext context = null;
+    @NotNull
+    @Override
+    public GlobalInspectionContext createNewGlobalContext(boolean b) {
+        if( b || context == null )
+        {
+            context = new GlobalInspectionContextBase(getProject());
+        }
+        return context;
+    }
 
     @NotNull
     @Override
@@ -104,16 +109,6 @@ public class MockInspectionManager extends InspectionManager {
     @Override
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      @NotNull String descriptionTemplate,
-                                                     ProblemHighlightType highlightType,
-                                                     @Nullable HintAction hintAction,
-                                                     boolean onTheFly,
-                                                     LocalQuickFix... fixes) {
-        return new MockProblemDescriptor(psiElement, psiElement, descriptionTemplate, fixes, highlightType, false, null, false, hintAction, onTheFly);
-    }
-
-    @Override
-    public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
-                                                     @NotNull String descriptionTemplate,
                                                      boolean showTooltip,
                                                      ProblemHighlightType highlightType,
                                                      boolean onTheFly,
@@ -169,16 +164,6 @@ public class MockInspectionManager extends InspectionManager {
                                                      TextRange rangeInElement,
                                                      @NotNull String descriptionTemplate,
                                                      ProblemHighlightType highlightType,
-                                                     LocalQuickFix... fixes) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    @Deprecated
-    public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
-                                                     @NotNull String descriptionTemplate,
-                                                     ProblemHighlightType highlightType,
-                                                     @Nullable HintAction hintAction,
                                                      LocalQuickFix... fixes) {
         throw new UnsupportedOperationException();
     }

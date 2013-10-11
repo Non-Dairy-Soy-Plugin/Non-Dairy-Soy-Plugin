@@ -16,6 +16,7 @@
 
 package net.venaglia.nondairy.soylang;
 
+import com.intellij.ide.startup.StartupManagerEx;
 import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
@@ -56,7 +57,7 @@ public class SoyProjectComponent extends AbstractProjectComponent implements Per
 
     @Override
     public void projectOpened() {
-        final StartupManager startupManager = StartupManager.getInstance(myProject);
+        final StartupManagerEx startupManager = StartupManagerEx.getInstanceEx(myProject);
         startupManager.registerStartupActivity(new Runnable() {
             @Override
             public void run() {

@@ -18,6 +18,7 @@ package net.venaglia.nondairy.soylang.inspection;
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.InspectionManager;
+import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.psi.PsiElement;
@@ -74,10 +75,10 @@ public class MsgTagInIteratorInspection extends AbstractSoyInspection {
         for (PsiElement element : elements) {
             checkCanceled();
             problems.add(manager.createProblemDescriptor(element,
-                                                         getMessage(),
-                                                         ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-                                                         null,
-                                                         true));
+                    getMessage(),
+                    (LocalQuickFix) null,
+                    ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+                    true));
         }
     }
 }

@@ -21,10 +21,12 @@ import com.intellij.codeInspection.HintAction;
 import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.lang.annotation.ProblemGroup;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.jetbrains.annotations.Nullable;
 
 import static org.junit.Assert.*;
 
@@ -161,5 +163,17 @@ public class MockProblemDescriptor extends CommonProblemDescriptorImpl implement
             source = startElement.getText();
         }
         return "Problem: " + getDescriptionTemplate() + " -> \"" + source + "\" with fixes " + Arrays.asList(getFixes());
+    }
+
+    ProblemGroup problemGroup = null;
+    @Override
+    public void setProblemGroup(@Nullable ProblemGroup problemGroup) {
+        this.problemGroup = problemGroup;
+    }
+
+    @Nullable
+    @Override
+    public ProblemGroup getProblemGroup() {
+        return problemGroup;
     }
 }
