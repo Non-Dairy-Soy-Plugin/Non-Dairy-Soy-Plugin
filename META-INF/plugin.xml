@@ -64,5 +64,6 @@
         <lang.namesValidator language="ClosureTemplate" implementationClass="net.venaglia.nondairy.soylang.SoyNamesValidator"/>
         <gotoSymbolContributor implementation="net.venaglia.nondairy.soylang.SoyGoToSymbolProvider"/>
         <inspectionToolProvider implementation="net.venaglia.nondairy.soylang.inspection.SoyInspectionToolProvider"/>
+        <spellchecker.support language="ClosureTemplate" implementationClass="net.venaglia.nondairy.spellchecker.SoySpellcheckingStrategy"/>
     </extensions>
 </idea-plugin>
