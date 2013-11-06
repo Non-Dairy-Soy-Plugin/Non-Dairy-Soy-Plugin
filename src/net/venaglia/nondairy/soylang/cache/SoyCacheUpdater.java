@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,8 +25,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.FilenameIndex;
+import net.venaglia.nondairy.i18n.I18N;
+import net.venaglia.nondairy.soylang.ModuleRef;
+import net.venaglia.nondairy.soylang.NamespaceRef;
 import net.venaglia.nondairy.soylang.SoyFileType;
 import net.venaglia.nondairy.soylang.elements.TreeNavigator;
+import net.venaglia.nondairy.util.SimpleRef;
 import net.venaglia.nondairy.util.TinySet;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +64,7 @@ import java.util.regex.Pattern;
 public class SoyCacheUpdater implements CacheUpdater {
 
     @NonNls
-    private static final String MATCH_COMMANDS_PATTERN = "\\{(delpackage|namespace|deltemplate|template)\\s+\\.?([a-z0-9_.]+)";
+    private static final String MATCH_COMMANDS_PATTERN = "\\{(delpackage|namespace|alias|deltemplate|template)\\s+\\.?([a-z0-9_.]+)";
     private static final Pattern MATCH_COMMANDS = Pattern.compile(MATCH_COMMANDS_PATTERN, Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     @NonNls
@@ -74,8 +78,14 @@ public class SoyCacheUpdater implements CacheUpdater {
 
     public SoyCacheUpdater(Project project) {
         this.project = project;
-        if ("true".equals(System.getProperty(DEBUG_CACHE_PROPERTY))) { //NON-NLS
-            Thread thread = new Thread(new CacheDebugger(project), "Soy Template Cache Debugger - " + project); //NON-NLS
+        String property = System.getProperty(DEBUG_CACHE_PROPERTY, "");
+        if ("true".equals(property) || property.contains("namespace")) { //NON-NLS
+            Thread thread = new Thread(new NamespaceCacheDebugger(project), "Soy Template Cache Debugger - " + project); //NON-NLS
+            thread.setDaemon(true);
+            thread.start();
+        }
+        if ("true".equals(property) || property.contains("alias")) { //NON-NLS
+            Thread thread = new Thread(new AliasCacheDebugger(project), "Soy Alias Cache Debugger - " + project); //NON-NLS
             thread.setDaemon(true);
             thread.start();
         }
@@ -116,14 +126,18 @@ public class SoyCacheUpdater implements CacheUpdater {
         if (isCacheableSoyFile(file)) {
             NamespaceCache namespaceCache = getNamespaceCache(file);
             DelegatePackageCache delegatePackageCache = getDelegatePackageCache(file);
+            AliasCache aliasCache = getAliasCache(file);
             if (namespaceCache != null) {
                 removeFromCacheImpl(namespaceCache, file);
+            }
+            if (aliasCache != null) {
+                removeFromCacheImpl(aliasCache, file);
             }
             if (delegatePackageCache != null) {
                 removeFromCacheImpl(delegatePackageCache, file);
             }
             if (namespaceCache != null || delegatePackageCache != null) {
-                updateCacheImpl(namespaceCache, delegatePackageCache, file);
+                updateCacheImpl(namespaceCache, aliasCache, delegatePackageCache, file);
             }
             lastUpdate.set(System.currentTimeMillis());
         }
@@ -139,6 +153,7 @@ public class SoyCacheUpdater implements CacheUpdater {
 
     @SuppressWarnings("StringEquality")
     private void updateCacheImpl(@Nullable NamespaceCache namespaceCache,
+                                 @Nullable AliasCache aliasCache,
                                  @Nullable DelegatePackageCache delegatePackageCache,
                                  @NotNull VirtualFile file) {
         Document document = TreeNavigator.INSTANCE.getDocument(file);
@@ -158,6 +173,9 @@ public class SoyCacheUpdater implements CacheUpdater {
                     if (namespace == NamespaceCache.DEFAULT_NAMESPACE) {
                         namespace = matcher.group(2);
                     }
+                } else if ("alias".equals(command)) { //NON-NLS
+                    AliasCacheEntry aliasCacheEntry = aliasCache.getOrCreate(matcher.group(2));
+                    aliasCacheEntry.add(file);
                 } else if ("deltemplate".equals(command)) { //NON-NLS
                     deltemplates.add(matcher.group(2));
                 } else {
@@ -211,6 +229,10 @@ public class SoyCacheUpdater implements CacheUpdater {
         }
     }
 
+    public <T> SimpleRef<T> getCachedRef(final SimpleRef<T> source) {
+        return new CachingRef<T>(source);
+    }
+
     private void removeFromCacheImpl(@NotNull NamespaceCache namespaceCache, @NotNull VirtualFile file) {
         TemplateCache templateCacheToRemove = TemplateCache.fromFile(file);
         if (templateCacheToRemove != null) {
@@ -222,6 +244,10 @@ public class SoyCacheUpdater implements CacheUpdater {
                 }
             }
         }
+    }
+
+    private void removeFromCacheImpl(@NotNull AliasCache aliasCache, @NotNull VirtualFile file) {
+        aliasCache.removeAllReferencingAliasCaches(file);
     }
 
     private void removeFromCacheImpl(@NotNull DelegatePackageCache delegatePackageCache, @NotNull VirtualFile file) {
@@ -240,6 +266,12 @@ public class SoyCacheUpdater implements CacheUpdater {
         return module == null ? null : NamespaceCache.getCache(module);
     }
 
+    private AliasCache getAliasCache(VirtualFile file) {
+        ProjectFileIndex fileIndex = TreeNavigator.INSTANCE.getProjectFileIndex(project);
+        Module module = fileIndex.getModuleForFile(file);
+        return module == null ? null : AliasCache.getCache(module);
+    }
+
     private DelegatePackageCache getDelegatePackageCache(VirtualFile file) {
         if (disposed) {
             return null;
@@ -253,18 +285,45 @@ public class SoyCacheUpdater implements CacheUpdater {
         disposed = true;
     }
 
+    private class CachingRef<T> implements SimpleRef<T> {
+
+        @NotNull
+        private final SimpleRef<T> source;
+        private final AtomicLong cleanUpdate = new AtomicLong();
+
+        private T value;
+
+        private CachingRef(@NotNull SimpleRef<T> source) {
+            this.source = source;
+        }
+
+        @Override
+        @Nullable
+        public T get() {
+            long current = lastUpdate.get();
+            if (cleanUpdate.getAndSet(current) != current) {
+                value = source.get();
+            }
+            return value;
+        }
+    }
+
     /**
      * Diagnostic class, run in a separate thread, that monitors the cache and
      * logs changes for a single project.
      */
     @SuppressWarnings("HardCodedStringLiteral")
-    private class CacheDebugger implements Runnable {
+    private abstract class CacheDebugger<V,E extends NavigableMap<String,V>> implements Runnable {
 
         private final Reference<Project> project;
         private final long offset = System.currentTimeMillis() % 250;
-        private final Map<Module,NamespaceCache> lastVersions = new HashMap<Module,NamespaceCache>();
+        private final Map<Module,E> lastVersions = new HashMap<Module,E>();
 
         private long lastUpdate = 0L;
+
+        protected String defaultNamespaceKey = "cache.debugger.format.default.namespace";
+        protected String namespaceKey = "cache.debugger.format.namespace";
+        protected String moduleKey = "cache.debugger.format.module";
 
         public CacheDebugger(@NotNull Project project) {
             this.project = new WeakReference<Project>(project);
@@ -311,30 +370,43 @@ public class SoyCacheUpdater implements CacheUpdater {
             lastVersions.keySet().retainAll(modules);
             modules.removeAll(lastVersions.keySet());
             for (Module module : modules) {
-                lastVersions.put(module, new NamespaceCache(module));
+                lastVersions.put(module, createEmpty(module));
             }
             
             for (Module module : lastVersions.keySet()) {
-                NamespaceCache current = NamespaceCache.getCache(module);
-                NamespaceCache previous = lastVersions.get(module);
-                logChanges(current, current, previous, log, "");
-                lastVersions.put(module, current.clone());
+                E current = getForModule(module);
+                E previous = lastVersions.get(module);
+                logChanges(current, current.getClass().getSimpleName(), current, previous, log, "");
+                lastVersions.put(module, cloneElement(current));
             }
         }
 
-        private String getLabel(@NotNull Object obj) {
-            if (obj instanceof TemplateCache) {
-                String namespace = ((TemplateCache)obj).getNamespace();
+        @NotNull
+        protected abstract E createEmpty(@NotNull Module module);
+
+        @NotNull
+        protected abstract E getForModule(@NotNull Module module);
+
+        @NotNull
+        protected abstract E cloneElement(@NotNull E value);
+
+        @NotNull
+        protected String getLabel(@NotNull String simpleName, @NotNull Object obj) {
+            if (obj instanceof NamespaceRef) {
+                String namespace = ((NamespaceRef)obj).getNamespace();
                 if (NamespaceCache.DEFAULT_NAMESPACE.equals(namespace)) {
-                    return "TemplateCache for default namespace";
-                } else {
-                    return "TemplateCache for {namespace " + namespace + "}";
+                    return I18N.msg(defaultNamespaceKey, simpleName);
+                } else if (namespace != null) {
+                    return I18N.msg(namespaceKey, simpleName, namespace);
                 }
-            } else if (obj instanceof NamespaceCache) {
-                return "NamespaceCache for module '" + ((NamespaceCache)obj).getModule().getName() + "'";
-            } else {
-                return String.valueOf(obj);
             }
+            if (obj instanceof ModuleRef) {
+                Module module = ((ModuleRef)obj).getModule();
+                if (module != null) {
+                    return I18N.msg(moduleKey, simpleName, module.getName());
+                }
+            }
+            return String.valueOf(obj);
         }
         
         @SuppressWarnings("unchecked")
@@ -347,6 +419,7 @@ public class SoyCacheUpdater implements CacheUpdater {
         } 
         
         private <V> int logChanges(@Nullable Object parent,
+                                   @Nullable String parentSimpleName,
                                    @Nullable NavigableMap<String,V> current,
                                    @Nullable NavigableMap<String,V> previous,
                                    PrintWriter log,
@@ -385,7 +458,7 @@ public class SoyCacheUpdater implements CacheUpdater {
                     if (p.getValue().equals(c.getValue())) {
                         // identical, no changes in this sub-tree
                     } else if (pValue != null && cValue != null) {
-                        changeCount += logChanges(cValue, cValue, pValue, log, nextIndent);
+                        changeCount += logChanges(cValue, cValue.getClass().getSimpleName(), cValue, pValue, log, nextIndent);
                     } else {
                         changeCount++;
                         logReplaced(nextIndent, p.getValue(), c.getValue(), log);
@@ -395,35 +468,44 @@ public class SoyCacheUpdater implements CacheUpdater {
                 }
             }
             while (c != null) {
-                if (c.getValue() instanceof NavigableMap) {
+                Object v = getValue(c);
+                if (v instanceof NavigableMap) {
                     @SuppressWarnings("unchecked")
-                    NavigableMap<String,Object> cValue = (NavigableMap<String,Object>)c.getValue();
-                    changeCount += logChanges(cValue, cValue, null, log, nextIndent);
+                    NavigableMap<String,Object> cValue = (NavigableMap<String,Object>)v;
+                    changeCount += logChanges(cValue, c.getValue().getClass().getSimpleName(), cValue, null, log, nextIndent);
                 } else {
                     changeCount++;
-                    logAdded(nextIndent, c.getValue(), log);
+                    logAdded(nextIndent, v, log);
                 }
                 c = cIter.hasNext() ? cIter.next() : null;
             }
             while (p != null) {
-                if (p.getValue() instanceof NavigableMap) {
+                Object v = getValue(p);
+                if (v instanceof NavigableMap) {
                     @SuppressWarnings("unchecked")
-                    NavigableMap<String,Object> pValue = (NavigableMap<String,Object>)p.getValue();
-                    changeCount += logChanges(pValue, null, pValue, log, nextIndent);
+                    NavigableMap<String,Object> pValue = (NavigableMap<String,Object>)v;
+                    changeCount += logChanges(pValue, p.getValue().getClass().getSimpleName(), null, pValue, log, nextIndent);
                 } else {
                     changeCount++;
-                    logRemoved(nextIndent, p.getValue(), log);
+                    logRemoved(nextIndent, v, log);
                 }
                 p = pIter.hasNext() ? pIter.next() : null;
             }
             if (changeCount > 0 && parent != null) {
+                if (parentSimpleName == null) {
+                    parentSimpleName = parent.getClass().getSimpleName();
+                }
                 log.print(indent);
                 log.print("recorded ");
                 log.print(changeCount);
                 log.print(changeCount == 1 ? " change to " : " changes to ");
-                log.println(getLabel(parent));
+                log.println(getLabel(parentSimpleName, parent));
             }
             return changeCount;
+        }
+
+        protected Object getValue(Map.Entry<String,?> entry) {
+            return entry.getValue();
         }
 
         @SuppressWarnings("unchecked")
@@ -456,6 +538,66 @@ public class SoyCacheUpdater implements CacheUpdater {
             log.print(indent);
             log.print("+ ");
             log.println(replacement);
+        }
+    }
+
+    private class NamespaceCacheDebugger extends CacheDebugger<TemplateCache,NamespaceCache> {
+
+        public NamespaceCacheDebugger(Project project) {
+            super(project);
+        }
+
+        @Override
+        @NotNull
+        protected NamespaceCache createEmpty(@NotNull Module module) {
+            return new NamespaceCache(module);
+        }
+
+        @Override
+        @NotNull
+        protected NamespaceCache getForModule(@NotNull Module module) {
+            return NamespaceCache.getCache(module);
+        }
+
+        @Override
+        @NotNull
+        protected NamespaceCache cloneElement(@NotNull NamespaceCache value) {
+            return value.clone();
+        }
+    }
+
+    private class AliasCacheDebugger extends CacheDebugger<AliasCacheEntry,AliasCache> {
+
+        public AliasCacheDebugger(Project project) {
+            super(project);
+            namespaceKey = "cache.debugger.format.alias";
+        }
+
+        @Override
+        @NotNull
+        protected AliasCache createEmpty(@NotNull Module module) {
+            return new AliasCache(module);
+        }
+
+        @Override
+        @NotNull
+        protected AliasCache getForModule(@NotNull Module module) {
+            return AliasCache.getCache(module);
+        }
+
+        @Override
+        @NotNull
+        protected AliasCache cloneElement(@NotNull AliasCache value) {
+            return value.clone();
+        }
+
+        @Override
+        protected Object getValue(Map.Entry<String,?> entry) {
+            Object value = super.getValue(entry);
+            if (value instanceof AliasCacheEntry) {
+                value = ((AliasCacheEntry)value).getDebugMap();
+            }
+            return value;
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,19 +15,15 @@
  */
 package net.venaglia.nondairy.spellchecker;
 
-import com.intellij.spellchecker.inspection.SpellcheckerInspectionTestCase;
+import com.intellij.spellchecker.inspections.SpellCheckingInspection;
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase;
 import net.venaglia.nondairy.SoyTestUtil;
+import org.jetbrains.annotations.NonNls;
 
 import java.io.IOException;
 import java.net.URLDecoder;
 
 /**
- * NOTE: To resolve the dependency {@link SpellcheckerInspectionTestCase},
- * make the Community Edition plugin module "spellchecker". The
- * module dependencies must include:
- * [community_edition_home]/out/test/spellchecker.
- *
  * @author cpeisert{at}gmail{dot}com (Christopher Peisert)
  */
 public abstract class SoySpellcheckerInspectionTestCase
@@ -42,9 +38,8 @@ public abstract class SoySpellcheckerInspectionTestCase
     }
   }
 
-  protected void doTest(String file) {
-    myFixture.enableInspections(
-        SpellcheckerInspectionTestCase.getInspectionTools());
+  protected void doTest(@NonNls String file) {
+    myFixture.enableInspections(new SpellCheckingInspection());
     myFixture.testHighlighting(false, false, true, file);
   }
 }

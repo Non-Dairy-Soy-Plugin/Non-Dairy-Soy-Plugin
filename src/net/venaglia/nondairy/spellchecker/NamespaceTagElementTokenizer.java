@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.intellij.spellchecker.tokenizer.Tokenizer;
 
 import net.venaglia.nondairy.soylang.elements.AttributeElement;
 import net.venaglia.nondairy.soylang.elements.NamespaceDefElement;
+import net.venaglia.nondairy.soylang.elements.NamespaceRefElement;
 import net.venaglia.nondairy.soylang.elements.NamespaceTagElement;
 
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +44,8 @@ public class NamespaceTagElementTokenizer extends Tokenizer<PsiElement> {
         tokenize(child, consumer);
       }
     } else if (element instanceof NamespaceDefElement) {
+      consumer.consumeToken(element, NamespaceSplitter.getInstance());
+    } else if (element instanceof NamespaceRefElement) {
       consumer.consumeToken(element, NamespaceSplitter.getInstance());
     } else if (element instanceof AttributeElement.Key) {
       consumer.consumeToken(element, AutoescapeSplitter.getInstance());

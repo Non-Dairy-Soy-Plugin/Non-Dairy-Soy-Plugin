@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ public interface SoyIcons {
     public static final Icon FILE = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy.png");
 
     public static final Icon NAMESPACE = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy-namespace.png");
+
+    public static final Icon ALIAS = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy-namespace-alias.png");
 
     public static final Icon TEMPLATE = IconLoader.getIcon("/net/venaglia/nondairy/soylang/icons/soy-template.png");
 

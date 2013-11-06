@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -37,6 +37,25 @@ public class AbsoluteTemplateNameRefTest extends AbstractPsiElementTest {
                                                      null,
                                                      1,
                                                      2);
+        LocalTemplateNameDef def = findElement("library.soy",
+                                               LocalTemplateNameDef.class,
+                                               ".format_person",
+                                               null);
+        PsiReference psiReference = ref.getReference();
+        assertNotNull(psiReference);
+        PsiElement actual = psiReference.resolve();
+        assertNotNull(actual);
+        assertSame(def, actual);
+    }
+
+    @Test
+    public void testGetAliasReference() throws Exception {
+        AbsoluteTemplateNameRef ref = findNthElement("render3.soy",
+                                                     AbsoluteTemplateNameRef.class,
+                                                     "library.format_person",
+                                                     null,
+                                                     1,
+                                                     1);
         LocalTemplateNameDef def = findElement("library.soy",
                                                LocalTemplateNameDef.class,
                                                ".format_person",

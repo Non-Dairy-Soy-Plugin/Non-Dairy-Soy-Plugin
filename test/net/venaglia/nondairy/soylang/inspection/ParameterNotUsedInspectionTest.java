@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -125,11 +125,18 @@ public class ParameterNotUsedInspectionTest extends AbstractPsiElementTest {
                 "my_unused_param"
         );
 
+        ParameterDefElement def = findElement("unused_param",
+                                              ParameterDefElement.class,
+                                              "my_unused_param",
+                                              null);
+
         List<ProblemDescriptor> problems = new ArrayList<ProblemDescriptor>();
         inspection.findProblems(findRootElement("unused_param"), new MockInspectionManager(), true, problems);
         for (ProblemDescriptor problem : problems) {
             System.out.println(problem);
         }
-        assertEquals(0, problems.size());
+        assertEquals(1, problems.size());
+        ProblemDescriptor problem = problems.get(0);
+        assertSame(def, problem.getPsiElement());
     }
 }

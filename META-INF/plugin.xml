@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2010 - 2012 Ed Venaglia
+  ~ Copyright 2010 - 2013 Ed Venaglia
   ~
   ~    Licensed under the Apache License, Version 2.0 (the "License");
   ~    you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@
         my available free time.</p>
         ]]>
     </description>
-    <version>0.5.1 (beta) (alpha ic)</version>
+    <version>0.6.0 (beta)</version>
     <vendor>Ed Venaglia</vendor>
-    <idea-version since-build="131.0"/>
+    <idea-version since-build="123.0"/>
 
     <application-components>
         <component>

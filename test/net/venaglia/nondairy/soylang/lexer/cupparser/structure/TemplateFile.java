@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -32,10 +32,16 @@ import java.util.ListIterator;
 public class TemplateFile {
 
     private final NamespaceDeclaration namespace;
+    private final List<AliasDeclaration> aliases;
     private final List<TemplateDeclaration> templates;
 
     public TemplateFile(NamespaceDeclaration namespace, List<TemplateDeclaration> templates) {
+        this(namespace, Collections.<AliasDeclaration>emptyList(), templates);
+    }
+
+    public TemplateFile(NamespaceDeclaration namespace, List<AliasDeclaration> aliases, List<TemplateDeclaration> templates) {
         this.namespace = namespace;
+        this.aliases = aliases;
         if (namespace != null && templates != null) {
             List<TemplateDeclaration> buffer = new LinkedList<TemplateDeclaration>(templates);
             for (ListIterator<TemplateDeclaration> iter = templates.listIterator(); iter.hasNext();) {
@@ -58,6 +64,10 @@ public class TemplateFile {
 
     public NamespaceDeclaration getNamespace() {
         return namespace;
+    }
+
+    public List<AliasDeclaration> getAliases() {
+        return aliases;
     }
 
     public List<TemplateDeclaration> getTemplates() {

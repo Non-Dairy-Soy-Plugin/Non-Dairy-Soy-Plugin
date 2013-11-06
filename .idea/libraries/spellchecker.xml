@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="spellchecker">
-    <CLASSES>
-      <root url="file://$PROJECT_DIR$/../community/out/test/spellchecker" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

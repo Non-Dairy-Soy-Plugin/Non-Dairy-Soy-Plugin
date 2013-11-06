@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package net.venaglia.nondairy.soylang.elements.path;
 
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Deque;
@@ -45,6 +47,12 @@ public class PushPopPredicate {
                 }
                 return new PushImpl(deque);
             }
+
+            @NonNls
+            @Override
+            public String toString() {
+                return "push()";
+            }
         };
     }
 
@@ -58,6 +66,12 @@ public class PushPopPredicate {
                     KEY.set(navigationData, deque);
                 }
                 return new PushPredicateImpl(deque, predicate);
+            }
+
+            @NonNls
+            @Override
+            public String toString() {
+                return "push().filter(" + predicate + ")";
             }
         };
     }
@@ -73,6 +87,12 @@ public class PushPopPredicate {
                 }
                 return new SwapImpl(deque);
             }
+
+            @NonNls
+            @Override
+            public String toString() {
+                return "swap()";
+            }
         };
     }
 
@@ -86,6 +106,12 @@ public class PushPopPredicate {
                     KEY.set(navigationData, deque);
                 }
                 return new PopImpl(deque);
+            }
+
+            @NonNls
+            @Override
+            public String toString() {
+                return "pop()";
             }
         };
     }
@@ -101,6 +127,12 @@ public class PushPopPredicate {
                 }
                 return new PopAddImpl(deque);
             }
+
+            @NonNls
+            @Override
+            public String toString() {
+                return "pop().add()";
+            }
         };
     }
 
@@ -115,7 +147,24 @@ public class PushPopPredicate {
                 }
                 return new PopJoinImpl(deque, join);
             }
+
+            @NonNls
+            @Override
+            public String toString() {
+                return "pop().join(" + join + ")";
+            }
         };
+    }
+
+    public static boolean isStackEmpty(@Nullable Map<Key,Object> navigationData) {
+        Deque<PsiElementCollection> deque = navigationData == null ? null : KEY.get(navigationData);
+        if (deque != null && !deque.isEmpty()) {
+            for (PsiElementCollection elements : deque) {
+                if (!elements.isEmpty()) return false;
+            }
+        }
+        return true;
+
     }
 
     private static class PushImpl implements TraversalPredicate.AlwaysTrue {
@@ -182,6 +231,7 @@ public class PushPopPredicate {
         }
     }
 
+    @NoMatchHanding(onStart = TraverseEmpty.CONTINUE)
     private static class SwapImpl implements TraversalPredicate.AlwaysTrue {
 
         private final Deque<PsiElementCollection> deque;
@@ -210,6 +260,7 @@ public class PushPopPredicate {
         }
     }
 
+    @NoMatchHanding(onStart = TraverseEmpty.CONTINUE)
     private static class PopImpl implements TraversalPredicate.AlwaysTrue {
 
         private final Deque<PsiElementCollection> deque;
@@ -236,6 +287,7 @@ public class PushPopPredicate {
         }
     }
 
+    @NoMatchHanding(onStart = TraverseEmpty.CONTINUE)
     private static class PopAddImpl implements TraversalPredicate.AlwaysTrue {
 
         private final Deque<PsiElementCollection> deque;

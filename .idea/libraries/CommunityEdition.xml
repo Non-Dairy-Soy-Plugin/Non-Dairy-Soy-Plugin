@@ -3,6 +3,9 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../community_edition/maia/out/dist.all.ce/lib/idea.jar!/" />
       <root url="jar://$PROJECT_DIR$/../community_edition/maia/out/dist.all.ce/lib/idea_rt.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../community_edition/maia/out/dist.all.ce/lib/openapi.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../community_edition/maia/out/dist.all.ce/lib/util.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../community_edition/maia/out/dist.all.ce/lib/annotations.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NonNls;
  * data types passed as function parameters.
  */
 public enum ExpressionType {
-    ANY, STRING, NUMBER, BOOLEAN, NONE;
+    ANY, OBJECT, ARRAY, STRING, NUMBER, BOOLEAN, NONE;
 
     public ExpressionType and(ExpressionType type) {
         switch (this) {
@@ -58,6 +58,7 @@ public enum ExpressionType {
             case ANY:
             case STRING:
             case BOOLEAN:
+            case OBJECT:
                 return true;
             case NUMBER:
                 return this == NUMBER;
@@ -70,6 +71,9 @@ public enum ExpressionType {
         switch (this) {
             case ANY:
                 key = "syntax.expression.type.any";
+                break;
+            case OBJECT:
+                key = "syntax.expression.type.object";
                 break;
             case STRING:
                 key = "syntax.expression.type.string";

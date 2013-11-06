@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -390,6 +390,10 @@ class TagParser {
                 nowExpect(TagDataType.NAME, TagDataType.ATTRIBUTES);
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = namespace_def;
+            } else if (token == SoyToken.ALIAS) {
+                nowExpect(TagDataType.NAME);
+                source.advanceAndMark(command_keyword, "command_keyword");
+                element = alias_def;
             } else if (token == SoyToken.TEMPLATE) {
                 nowExpect(TagDataType.NAME, TagDataType.ATTRIBUTES);
                 source.advanceAndMark(command_keyword, "command_keyword");
@@ -400,6 +404,35 @@ class TagParser {
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = deltemplate_tag;
                 requiresCloseTag = true;
+            } else if (token == SoyToken.LET) {
+                source.advanceAndMark(command_keyword, "command_keyword");
+                if (!isCloseTag && !source.eof()) {
+                    element = let_tag;
+                    if (source.token() == SoyToken.LET_IDENTIFIER) {
+                        String name = source.text();
+                        if (name.equals("$") || name.charAt(0) != '$' || name.contains(".")) {
+                            source.advanceAndMarkBad(let_parameter_def, "let_parameter_def", I18N.msg("syntax.error.invalid.let.variable.name", name));
+                        } else {
+                            name = name.substring(1); // trim the leading $
+                            source.advanceAndMark(let_parameter_def, "let_parameter_def");
+                        }
+                        if (!source.eof()) {
+                            if (source.token() == SoyToken.COLON) {
+                                source.advance();
+                                nowExpect(TagDataType.EXPRESSION);
+                            } else if (source.token() == SoyToken.TAG_RBRACE) {
+                                // this is OK, template content is an acceptable value
+                                requiresCloseTag = true;
+                            } else if (source.token() == SoyToken.TAG_END_RBRACE) {
+                                source.error(I18N.msg("syntax.error.expected.let.value", name));
+                            } else {
+                                source.error(I18N.msg("syntax.error.expected.colon.after.let.name"));
+                            }
+                        }
+                    } else if (source.token() == SoyToken.COLON || SoyToken.TAG_BRACES.contains(source.token())) {
+                        source.error(I18N.msg("syntax.error.expected.let.name"));
+                    }
+                }
             } else if (token == SoyToken.IF) {
                 nowExpect(TagDataType.EXPRESSION);
                 source.advanceAndMark(command_keyword, "command_keyword");
@@ -571,13 +604,14 @@ class TagParser {
             if (END_OF_TAG_TOKENS.contains(source.token())) break;
             source.advance();
         }
-        if (element == package_def || element == namespace_def || element == template_tag) {
+        if (element == package_def || element == namespace_def || element == alias_def || element == template_tag) {
             errorMarker.error(I18N.msg("syntax.error.unexpected.tokens.in.declaration.tag", command));
         } else if (command == null) {
             errorMarker.error(I18N.msg("syntax.error.unexpected.tokens.in.unknown.tag"));
         } else {
             errorMarker.error(I18N.msg("syntax.error.unexpected.tokens.in.tag", command));
         }
+        requiresCloseTag = false;
         done();
     }
 
@@ -588,7 +622,11 @@ class TagParser {
             if (token == SoyToken.PACKAGE_IDENTIFIER) {
                 source.advanceAndMark(package_name, "package_name");
             } else if (token == SoyToken.NAMESPACE_IDENTIFIER) {
-                source.advanceAndMark(namespace_name, "namespace_name");
+                if (element == alias_def) {
+                    source.advanceAndMark(alias_name, "alias_name");
+                } else {
+                    source.advanceAndMark(namespace_name, "namespace_name");
+                }
             } else if (token == SoyToken.TEMPLATE_IDENTIFIER) {
                 SoyElement type = element == template_tag
                                   ? template_name

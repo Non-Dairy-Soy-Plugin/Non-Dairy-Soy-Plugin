@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ public class MockTokenSource extends TokenSource {
     private final Set<Object> distinctEventsSinceLastAdvance = new LinkedHashSet<Object>();
 
     private SoySymbol current;
+    private SoySymbol previous;
     private int seq = -1;
     private int eventCountSinceLastAdvance = 0;
     private int eofCountSinceLastAdvance = 0;
@@ -108,6 +109,11 @@ public class MockTokenSource extends TokenSource {
     }
 
     @Override
+    public IElementType previous() {
+        return previous == null ? null : previous.getToken();
+    }
+
+    @Override
     public String text() {
         textReadSinceLastAdvance++;
         MockParseMetaToken TEXT_INVOKED = new MockParseMetaToken("text()", this);
@@ -138,6 +144,7 @@ public class MockTokenSource extends TokenSource {
     public void advance() {
         if (current != null) event(current.getToken());
         if (iterator.hasNext()) {
+            previous = current;
             current = iterator.next();
             countAdvance();
         } else {

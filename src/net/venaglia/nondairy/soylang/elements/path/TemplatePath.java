@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,6 +19,10 @@ package net.venaglia.nondairy.soylang.elements.path;
 import net.venaglia.nondairy.soylang.SoyElement;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+
 /**
  * User: ed
  * Date: 1/27/12
@@ -36,6 +40,10 @@ public class TemplatePath extends PsiElementPath {
         super(buildPath(templateName));
     }
 
+    private TemplatePath(@NotNull Collection<String> aliases, @NotNull String templateName) {
+        super(buildPath(aliases, templateName));
+    }
+
     private static ElementPredicate[] buildPath(@NotNull String templateName) {
         templateName = templateName.trim();
         if (templateName.length() == 0) {
@@ -47,6 +55,51 @@ public class TemplatePath extends PsiElementPath {
         int lastDot = templateName.lastIndexOf('.');
         if (lastDot < 0) {
             throw new IllegalArgumentException("invalid template name: " + templateName);
+        }
+        String namespace = templateName.substring(0, lastDot);
+//        templateName = templateName.substring(lastDot + 1);
+        return new ElementPredicate[]{
+                SoyFileElementTraversalPredicate.filesForNamespace(namespace),
+                new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                new ElementTypePredicate(SoyElement.template_tag).onDescendants(2,3),
+                new TemplateNamePredicate(templateName),
+                new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                new ElementTypePredicate(SoyElement.template_name).onChildren()
+        };
+    }
+
+    private static ElementPredicate[] buildPath(Collection<String> aliases, @NotNull String templateName) {
+        if (aliases.isEmpty()) {
+            throw new IllegalArgumentException("no aliases passed");
+        }
+        templateName = templateName.trim();
+        if (templateName.length() == 0) {
+            throw new IllegalArgumentException("template name cannot be blank.");
+        }
+        if (templateName.endsWith(".") || templateName.startsWith(".")) {
+            throw new IllegalArgumentException("invalid template name: " + templateName);
+        }
+        int lastDot = templateName.lastIndexOf('.');
+        if (lastDot < 0) {
+            throw new IllegalArgumentException("invalid template name: " + templateName);
+        }
+        if (lastDot != templateName.indexOf('.')) {
+            throw new IllegalArgumentException("template name does not contain exactly one dot: " + templateName);
+        }
+        String lastNamespacePart = templateName.substring(0, lastDot);
+        aliases = new HashSet<String>(aliases);
+        for (Iterator<String> iterator = aliases.iterator(); iterator.hasNext(); ) {
+            String alias = iterator.next();
+            String namespacePart = alias.substring(alias.lastIndexOf('.') + 1);
+            if (!namespacePart.equals(lastNamespacePart)) {
+                iterator.remove();
+            }
+        }
+        if (aliases.isEmpty()) {
+            if (aliases.isEmpty()) {
+                throw new IllegalArgumentException("no aliases passed match *." + lastNamespacePart + ": " + templateName);
+            }
+            return new ElementPredicate[]{}; // doesn't seem to match anything
         }
         String namespace = templateName.substring(0, lastDot);
 //        templateName = templateName.substring(lastDot + 1);

@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Features examples.
-// Author: Kai Huang
+// Features examples to exercise the parser
+// Author: Kai Huang, Ed Venaglia
 
 {namespace soy.examples.features}
 
+{alias soy.examples.alias}
 
 /**
 * Demo comments.
@@ -183,6 +184,16 @@ Archive
 Archive
 {/msg}<br>
 
+{/template}
+
+
+/**
+* Demo 'let'.
+*/
+{template .demoLet}
+{let $userID:42/}
+{let $userName}Fred Flinstone{/let}
+<a href="/people/{$userID}">{$userName}</a>
 {/template}
 
 
@@ -424,6 +435,26 @@ Random student's major: {$students[randomInt(length($students))].major}<br>
 <br>
 {/foreach}
 
+{/template}
+
+
+/**
+* Template that uses object and array literal values.
+* @param currentYear
+*/
+{template .demoObjectLiterals}
+{let $emptyArray: []/}
+{let $emptyObject: [:]/}
+{let $arrayOfEmptyObject: [[:],[:]]/}
+{call .demoExpressions}
+  {param currentYear: $currentYear/}
+  {param students: [
+  ['name':'Bill','major':'Engineering','year':1988],
+  ['name':'Matt','major':'Physics','year':2002],
+  ['name':'John','major':'Biology','year':1996],
+  ['name':'Arthur','major':'English','year':2006]
+]/}
+{/call}
 {/template}
 
 

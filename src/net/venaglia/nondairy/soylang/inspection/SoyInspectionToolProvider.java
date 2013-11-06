@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,13 +28,16 @@ public class SoyInspectionToolProvider implements InspectionToolProvider {
     @Override
     public Class[] getInspectionClasses() {
         return new Class[] {
+                AliasNotUsedInspection.class,
                 CallMissingRequiredParamInspection.class,
                 CallToUndeclaredTemplateInspection.class,
                 CallParameterNotDefinedInspection.class,
                 MsgTagInIteratorInspection.class,
                 MsgTagWithoutDescriptionInspection.class,
+                ParameterAlreadyDeclaredInspection.class,
                 ParameterNotUsedInspection.class,
-                ParameterNotDefinedInspection.class
+                ParameterNotDefinedInspection.class,
+                UnnecessaryAliasInspection.class
         };
     }
 }

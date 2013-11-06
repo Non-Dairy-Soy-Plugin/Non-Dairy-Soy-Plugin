@@ -1,5 +1,5 @@
 
-  Copyright 2010 - 2012 Ed Venaglia
+  Copyright 2010 - 2013 Ed Venaglia
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,6 +14,14 @@
      limitations under the License.
 
 ===============================================================================
+
+ver 0.6.0
+* Updated for IntelliJ 12 (Thanks to Ivica Ceraj)
+* Added spell checking (Thanks to Christopher Peisert)
+* Added support for alias and let commands
+* Added support for object and array literal expressions
+* Added support for null-safe reference and elvis operators
+* Fixed parser bug related to malformed command tags with closing tags
 
 ver 0.5.1
 * Fixed problem with stale VFS entries in cache

@@ -1,5 +1,5 @@
 /*
-   Copyright 2010 - 2012 Ed Venaglia
+   Copyright 2010 - 2013 Ed Venaglia
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ HtmlDecimalEntityId = "#" [1-9] [0-9] {0,4} + "#0"
 HtmlHexEntityId = "#x" [1-9a-fA-F] [0-9a-fA-F] {0,3} | "#x0"
 HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexEntityId} ) ";"
 
-%state OPEN_TAG, CLOSE_TAG, SOY_TAG, LITERAL_BLOCK, DELPACKAGE_TAG, NAMESPACE_TAG, TEMPLATE_TAG, DELTEMPLATE_TAG, IDENTIFIER_TAG, TAG_DIRECTIVE
+%state OPEN_TAG, CLOSE_TAG, SOY_TAG, LITERAL_BLOCK, DELPACKAGE_TAG, NAMESPACE_TAG, TEMPLATE_TAG, DELTEMPLATE_TAG, LET_TAG, IDENTIFIER_TAG, TAG_DIRECTIVE
 %state DOCS, DOCS_BOL, DOCS_IDENT, STRING, STRING_PARAM, STRING_IN_SINGLE_BRACES, STRING_IN_DOUBLE_BRACES
 
 %state HTML_INITIAL, HTML_TAG_START, HTML_TAG_END, HTML_ATTRIBUTE_NAME, HTML_ATTRIBUTE_NAME_RESUME, HTML_ATTRIBUTE_EQ
@@ -160,6 +160,11 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    currentCommand = closeTag ? null : yytext().toString();
                                    nextStateAfterCloseTag = YYINITIAL;
                                    return symbol(closeTag ? ILLEGAL_TAG_DECLARATION : NAMESPACE); }
+  "alias" [^a-zA-Z0-9_]          { yypushback(1);
+                                   yybegin(NAMESPACE_TAG);
+                                   currentCommand = closeTag ? null : yytext().toString();
+                                   nextStateAfterCloseTag = YYINITIAL;
+                                   return symbol(closeTag ? ILLEGAL_TAG_DECLARATION : ALIAS); }
   "template" [^a-zA-Z0-9_]       { yypushback(1);
                                    yybegin(closeTag ? CLOSE_TAG : TEMPLATE_TAG);
                                    currentCommand = closeTag ? null : yytext().toString();
@@ -201,6 +206,10 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    yybegin(closeTag ? CLOSE_TAG : SOY_TAG);
                                    currentCommand = closeTag ? null : yytext().toString();
                                    return symbol(MSG); }
+  "let" [^a-zA-Z0-9_]            { yypushback(1);
+                                   yybegin(closeTag ? CLOSE_TAG : LET_TAG);
+                                   currentCommand = closeTag ? null : yytext().toString();
+                                   return symbol(LET); }
   "if" [^a-zA-Z0-9_]             { yypushback(1);
                                    yybegin(closeTag ? CLOSE_TAG : SOY_TAG);
                                    currentCommand = closeTag ? null : yytext().toString();
@@ -358,6 +367,19 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   <<EOF>>                        { yybegin(YYINITIAL); }
 }
 
+<LET_TAG> {
+  {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
+                                   yybegin(AFTER_WHITESPACE);
+                                   return symbol(WHITESPACE); }
+  "$" |
+  {ParameterRef} |
+  {Identifier}                   { yybegin(SOY_TAG);
+                                   return symbol(LET_IDENTIFIER, yytext().toString()); }
+  "}"                            { yybegin(CLOSE_TAG); yypushback(1); }
+  .                              { yybegin(SOY_TAG); yypushback(1); return symbol(ILLEGAL_TAG_DECLARATION); }
+  <<EOF>>                        { yybegin(YYINITIAL); }
+}
+
 <IDENTIFIER_TAG> {
   {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
                                    yybegin(AFTER_WHITESPACE);
@@ -411,6 +433,10 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   /* null literal */
   "null"                         { return symbol(NULL_LITERAL); }
 
+  /* empty object literal */
+  "[]"                           { return symbol(EMPTY_ARRAY_LITERAL); }
+  "[:]"                          { return symbol(EMPTY_OBJECT_LITERAL); }
+
   /* separators */
   "("                            { return symbol(LPAREN); }
   ")"                            { return symbol(RPAREN); }
@@ -431,6 +457,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    yybegin(CLOSE_TAG); yypushback(2); }
   "/}}"                          { if (!doubleBraceTag) yypushback(1);
                                    yybegin(CLOSE_TAG); yypushback(3); }
+  "?."                           { return symbol(QUESTION_DOT); }
   "."                            { return symbol(DOT); }
 
   /* operators */
@@ -441,6 +468,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   "not"                          { return symbol(NOT); }
   "and"                          { return symbol(AND); }
   "or"                           { return symbol(OR); }
+  "?:"                           { return symbol(ELVIS); }
   "?"                            { return symbol(QUESTION); }
   ":"                            { return symbol(COLON); }
   "<="                           { return symbol(LTEQ); }

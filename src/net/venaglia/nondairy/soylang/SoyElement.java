@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -61,8 +61,12 @@ public final class SoyElement extends IElementType {
 
     @ElementClass(NamespaceTagElement.class)
     public static final SoyElement namespace_def = new SoyElement(1101, "namespace_def");
+    @ElementClass(AliasTagElement.class)
+    public static final SoyElement alias_def = new SoyElement(1103, "alias_def");
     @ElementClass(NamespaceDefElement.class)
     public static final SoyElement namespace_name = new SoyElement(1102, "namespace_name");
+    @ElementClass(NamespaceRefElement.class)
+    public static final SoyElement alias_name = new SoyElement(1104, "alias_name");
 
     @ElementClass(TemplateDefElement.class)
     public static final SoyElement template_tag = new SoyElement(1200, "template_tag");
@@ -119,10 +123,17 @@ public final class SoyElement extends IElementType {
     public static final SoyElement parameter_ref = new SoyElement(1804, "parameter_ref");
     @ElementClass(CallParameterRefElement.class)
     public static final SoyElement invocation_parameter_ref = new SoyElement(1805, "invocation_parameter_ref");
+    @ElementClass(ParameterDefElement.class)
+    public static final SoyElement let_parameter_def = new SoyElement(1808, "let_parameter_def");
     @ElementClass(MemberPropertyRefElement.class)
     public static final SoyElement member_property_ref = new SoyElement(1806, "member_property_ref");
     @ElementClass(MemberPropertyRefElement.ForBracketedStringLiteral.class)
     public static final SoyElement bracket_property_ref = new SoyElement(1807, "bracket_property_ref");
+    public static final SoyElement array_literal = new SoyElement(1809, "array_literal");
+    public static final SoyElement object_literal = new SoyElement(1810, "object_literal");
+    public static final SoyElement key_value_literal = new SoyElement(1811, "key_value_literal");
+    public static final SoyElement key_literal = new SoyElement(1812, "key_literal");
+    public static final SoyElement value_literal = new SoyElement(1813, "value_literal");
 
     @ElementClass(SoyCommandTag.class)
     public static final SoyElement call_tag = new SoyElement(1900, "call_tag");
@@ -135,6 +146,10 @@ public final class SoyElement extends IElementType {
     public static final SoyElement msg_tag = new SoyElement(2000, "msg_tag");
     public static final SoyElement msg_tag_pair = new SoyElement(2001, "msg_tag_pair");
 
+    @ElementClass(SoyCommandTag.class)
+    public static final SoyElement let_tag = new SoyElement(2100, "let_tag");
+    public static final SoyElement let_tag_pair = new SoyElement(2101, "let_tag_pair");
+
     public static final SoyElement template_content = new SoyElement(4000, "template_content");
 
     public static final SoyElement ignored_text = new SoyElement(7000, "ignored_text");
@@ -144,11 +159,11 @@ public final class SoyElement extends IElementType {
 
     public static final SoyElement unexpected_symbol = new SoyElement(8000, "unexpected_symbol");
 
-    public static final TokenSet PARAMETER_NAME_TOKENS = TokenSet.create(doc_comment_param_def, parameter_ref, parameter_def, invocation_parameter_ref);
+    public static final TokenSet PARAMETER_NAME_TOKENS = TokenSet.create(doc_comment_param_def, parameter_ref, parameter_def, let_parameter_def, invocation_parameter_ref);
     public static final TokenSet FUNCTION_NAME_TOKENS = TokenSet.create(function_call_name);
     public static final TokenSet TEMPLATE_NAME_TOKENS = TokenSet.create(template_name, template_name_ref, template_name_ref_absolute);
     public static final TokenSet PROPERTY_NAME_TOKENS = TokenSet.create(member_property_ref, bracket_property_ref);
-    public static final TokenSet TAG_PAIR_TOKENS = TokenSet.create(template_tag_pair, iterator_tag_pair, call_tag_pair, param_tag_pair, msg_tag_pair, tag_pair);
+    public static final TokenSet TAG_PAIR_TOKENS = TokenSet.create(template_tag_pair, iterator_tag_pair, call_tag_pair, param_tag_pair, msg_tag_pair, let_tag_pair, tag_pair);
 
     public static final TokenSet ALL_FIND_USAGE_TOKENS = TokenSet.orSet(PARAMETER_NAME_TOKENS, FUNCTION_NAME_TOKENS, TEMPLATE_NAME_TOKENS, PROPERTY_NAME_TOKENS);
 

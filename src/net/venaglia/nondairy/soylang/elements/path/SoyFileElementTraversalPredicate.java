@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -228,32 +229,52 @@ public class SoyFileElementTraversalPredicate implements TraversalPredicate {
         return filesForNamespaceOrDeltemplate(new NamespaceOrDeltemplate(null, namespace));
     }
     
+    public static TraversalPredicate filesForNamespace(@NotNull @NonNls Collection<String> namespaces) {
+        Collection<NamespaceOrDeltemplate> nops = new ArrayList<NamespaceOrDeltemplate>(namespaces.size());
+        for (String namespace : namespaces) {
+            nops.add(new NamespaceOrDeltemplate(null, namespace));
+        }
+        return new FilesByNamespaceOrDeltemplatePredicate(nops);
+    }
+
     public static TraversalPredicate filesForDelegateTemplate(@NotNull @NonNls final String deltemplate) {
         return filesForNamespaceOrDeltemplate(new NamespaceOrDeltemplate(deltemplate, null));
     }
 
     private static TraversalPredicate filesForNamespaceOrDeltemplate(@NotNull final NamespaceOrDeltemplate nop) {
-        return new SoyFileElementTraversalPredicate() {
-            @NotNull
-            @Override
-            public PsiElementCollection traverse(@NotNull Collection<PsiElement> current) {
-                Set<Module> search = new HashSet<Module>();
-                PsiElementCollection files = new PsiElementCollection();
-                for (PsiElement element : current) {
-                    getModulesToSearch(element, search);
-                    PsiFile containingFile = element.getContainingFile();
-                    if (containingFile != null) {
-                        files.add(containingFile);
-                    }
-                }
-                Set<NamespaceOrDeltemplate> naps = Collections.singleton(nop);
-                traverseImpl(search, files, naps);
-                return files;
-            }
-        };
+        return new FilesByNamespaceOrDeltemplatePredicate(nop);
     }
 
     public static TraversalPredicate filesStartingOnNamespaceElement() {
         return new SoyFileElementTraversalPredicate();
+    }
+
+    private static class FilesByNamespaceOrDeltemplatePredicate extends SoyFileElementTraversalPredicate {
+
+        private final Set<NamespaceOrDeltemplate> naps;
+
+        public FilesByNamespaceOrDeltemplatePredicate(NamespaceOrDeltemplate nop) {
+            this.naps = Collections.singleton(nop);
+        }
+
+        public FilesByNamespaceOrDeltemplatePredicate(Collection<NamespaceOrDeltemplate> nops) {
+            this.naps = Collections.unmodifiableSet(new HashSet<NamespaceOrDeltemplate>(nops));
+        }
+
+        @NotNull
+        @Override
+        public PsiElementCollection traverse(@NotNull Collection<PsiElement> current) {
+            Set<Module> search = new HashSet<Module>();
+            PsiElementCollection files = new PsiElementCollection();
+            for (PsiElement element : current) {
+                getModulesToSearch(element, search);
+                PsiFile containingFile = element.getContainingFile();
+                if (containingFile != null) {
+                    files.add(containingFile);
+                }
+            }
+            traverseImpl(search, files, naps);
+            return files;
+        }
     }
 }

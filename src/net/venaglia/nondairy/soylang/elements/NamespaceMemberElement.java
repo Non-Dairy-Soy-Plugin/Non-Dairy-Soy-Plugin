@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.psi.PsiElement;
+import net.venaglia.nondairy.soylang.NamespaceRef;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
@@ -30,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
  * Interface to be implemented by SoyPsiElements that live within a soy
  * namespace.
  */
-public interface NamespaceMemberElement extends PsiElement {
+public interface NamespaceMemberElement extends PsiElement, NamespaceRef {
 
     static final PsiElementPath PATH_TO_NAMESPACE_NAME =
             new PsiElementPath(new ElementTypePredicate(SoyElement.soy_file).onFirstAncestor(),

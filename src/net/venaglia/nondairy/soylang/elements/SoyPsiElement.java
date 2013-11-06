@@ -20,10 +20,12 @@ import com.intellij.extapi.psi.PsiElementBase;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.Language;
 import com.intellij.navigation.ItemPresentation;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.util.IncorrectOperationException;
+import net.venaglia.nondairy.soylang.ModuleRef;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * methods that can be overridden to consolidate the functionality specific to
  * the variety of structures of closure templates.
  */
-public class SoyPsiElement extends PsiElementBase implements PsiElement {
+public class SoyPsiElement extends PsiElementBase implements PsiElement, ModuleRef {
 
     private static final AtomicLong LAST_CREATED = new AtomicLong();
 
@@ -190,6 +192,18 @@ public class SoyPsiElement extends PsiElementBase implements PsiElement {
      */
     public boolean isDefinitionElement() {
         return false;
+    }
+
+    /**
+     * @return the Module the containing file belongs to.
+     */
+    @Nullable
+    public Module getModule() {
+        PsiElement element = getParent();
+        if (element instanceof ModuleRef) {
+            return ((ModuleRef)element).getModule();
+        }
+        return null;
     }
 
     /**

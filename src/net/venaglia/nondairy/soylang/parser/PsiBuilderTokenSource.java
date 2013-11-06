@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NonNls;
 
-import java.util.Map;
-
 /**
  * User: ed
  * Date: Aug 14, 2010
@@ -34,6 +32,7 @@ public class PsiBuilderTokenSource extends TokenSource {
     private final PsiBuilder builder;
 
     private int symbolIndex = 0;
+    private IElementType previousToken;
 
     public PsiBuilderTokenSource(PsiBuilder builder) {
         this.builder = builder;
@@ -51,6 +50,11 @@ public class PsiBuilderTokenSource extends TokenSource {
     }
 
     @Override
+    public IElementType previous() {
+        return previousToken;
+    }
+
+    @Override
     public String text() {
         return builder.getTokenText();
     }
@@ -62,6 +66,9 @@ public class PsiBuilderTokenSource extends TokenSource {
 
     @Override
     public void advance() {
+        if (!builder.eof()) {
+            previousToken = token();
+        }
         builder.advanceLexer();
         symbolIndex++;
     }

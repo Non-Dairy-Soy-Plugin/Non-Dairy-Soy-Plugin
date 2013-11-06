@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,13 +27,15 @@ import com.intellij.openapi.editor.event.DocumentAdapter;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.startup.StartupManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileAdapter;
 import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.soylang.cache.SoyCacheUpdater;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * User: ed
@@ -47,6 +49,9 @@ import org.jetbrains.annotations.NotNull;
     storages={@Storage(file = "$WORKSPACE_FILE$")}
 )
 public class SoyProjectComponent extends AbstractProjectComponent implements PersistentStateComponent<Object> {
+
+    @NonNls
+    public static final String NON_DAIRY_PROJECT_COMPONENT_NAME = "non-dairy.project-component";
 
     private final SoyCacheUpdater soyCacheUpdater;
 
@@ -95,7 +100,7 @@ public class SoyProjectComponent extends AbstractProjectComponent implements Per
     @NotNull
     @Override
     public String getComponentName() {
-        return "non-dairy.project-component";
+        return NON_DAIRY_PROJECT_COMPONENT_NAME;
     }
 
     @Override
@@ -107,5 +112,20 @@ public class SoyProjectComponent extends AbstractProjectComponent implements Per
     @Override
     public void loadState(Object state) {
         // todo
+    }
+
+    public SoyCacheUpdater getSoyCacheUpdater() {
+        return soyCacheUpdater;
+    }
+
+    @Nullable
+    public static SoyProjectComponent getSoyProjectComponent(@Nullable Project project) {
+        Object component = project == null ? null : project.getComponent(NON_DAIRY_PROJECT_COMPONENT_NAME);
+        return component instanceof SoyProjectComponent ? (SoyProjectComponent)component : null;
+    }
+
+    @Nullable
+    public static SoyProjectComponent getSoyProjectComponent(@Nullable PsiElement element) {
+        return element == null ? null : getSoyProjectComponent(element.getProject());
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,9 +23,7 @@ import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
-import com.intellij.ui.RowIcon;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.PlatformIcons;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.elements.path.AttributePredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTextPredicate;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,8 +18,12 @@ package net.venaglia.nondairy.soylang.elements;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
-import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.ElementManipulators;
+import com.intellij.psi.PsiElement;
+import com.intellij.util.IncorrectOperationException;
 import net.venaglia.nondairy.soylang.icons.SoyIcons;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -33,15 +37,25 @@ import javax.swing.*;
  */
 public class NamespaceDefElement
         extends SoyPsiElement
-        implements ItemPresentation, NamespaceMemberElement {
+        implements ItemPresentation, NamespaceMemberElement, SoyNamedElement {
 
     public NamespaceDefElement(@NotNull ASTNode node) {
         super(node);
     }
 
     @Override
+    @NotNull
     public String getName() {
         return getText();
+    }
+
+    @Override
+    public PsiElement setName(@NonNls @NotNull String name) throws IncorrectOperationException {
+        if (getText().startsWith(".") ^ name.startsWith(".")) {
+            name = name.startsWith(".") ? name.substring(1) : "." + name;
+        }
+        TextRange range = getTextRange().shiftRight(0 - getTextOffset());
+        return ElementManipulators.getManipulator(this).handleContentChange(this, range, name);
     }
 
     @Override
@@ -51,7 +65,7 @@ public class NamespaceDefElement
 
     @Override
     public String getLocationString() {
-        return null;
+        return getContainingFile().getName();
     }
 
     @Override
@@ -67,5 +81,10 @@ public class NamespaceDefElement
     @Override
     public String getNamespace() {
         return getText();
+    }
+
+    @Override
+    public boolean isDefinitionElement() {
+        return true;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -141,10 +141,12 @@ public abstract class TreeNavigator {
         @Override
         public PsiElement[] getAllChildren(@NotNull ASTNode node) {
             PsiElement psiChild = getFirstChild(node);
-            if (psiChild == null) return PsiElement.EMPTY_ARRAY;
+            if (psiChild == null || psiChild == PsiUtilCore.NULL_PSI_ELEMENT) {
+                return PsiElement.EMPTY_ARRAY;
+            }
 
             List<PsiElement> result = new ArrayList<PsiElement>();
-            while (psiChild != null) {
+            while (psiChild != null && psiChild != PsiUtilCore.NULL_PSI_ELEMENT) {
                 if (psiChild.getNode() instanceof CompositeElement) {
                     result.add(psiChild);
                 }

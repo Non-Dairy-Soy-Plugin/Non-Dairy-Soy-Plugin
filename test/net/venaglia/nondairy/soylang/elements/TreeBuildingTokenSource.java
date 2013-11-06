@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -100,6 +100,14 @@ public class TreeBuildingTokenSource extends TokenSource {
             throw new IllegalStateException("Parser is not advancing, too many successive calls to token()");
         }
         return symbols.get(symbolIndex).getToken();
+    }
+
+    @Override
+    public IElementType previous() {
+        if (symbolIndex < 1 || symbolIndex > symbolCount) {
+            return null;
+        }
+        return symbols.get(symbolIndex - 1).getToken();
     }
 
     @Override

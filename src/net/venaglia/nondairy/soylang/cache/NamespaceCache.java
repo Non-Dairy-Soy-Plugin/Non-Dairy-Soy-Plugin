@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package net.venaglia.nondairy.soylang.cache;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Key;
+import net.venaglia.nondairy.soylang.ModuleRef;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +30,7 @@ import org.jetbrains.annotations.Nullable;
  *
  * This cache stores a {@link TemplateCache} object for each namespace.
  */
-public class NamespaceCache extends AbstractChangeAwareCache<TemplateCache> {
+public class NamespaceCache extends AbstractChangeAwareCache<TemplateCache> implements ModuleRef {
 
     private static final Key<NamespaceCache> DELEGATE_CACHE_KEY = new Key<NamespaceCache>("non-dairy.namesapce-cache");
 
@@ -55,6 +56,7 @@ public class NamespaceCache extends AbstractChangeAwareCache<TemplateCache> {
         return value.getNamespace();
     }
 
+    @Override
     @NotNull
     public Module getModule() {
         return module;

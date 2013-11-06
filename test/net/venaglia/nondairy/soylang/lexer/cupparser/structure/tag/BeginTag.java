@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package net.venaglia.nondairy.soylang.lexer.cupparser.structure.tag;
 
 import net.venaglia.nondairy.soylang.lexer.cupparser.structure.expr.Expression;
+import org.jetbrains.annotations.NonNls;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +33,7 @@ public class BeginTag extends AbstractTag {
     private final List<Attribute> attributes;
     private final List<Directive> directives;
 
-    public BeginTag(String command, List<Attribute> attributes) {
+    public BeginTag(@NonNls String command, List<Attribute> attributes) {
         this(command, (List<Expression>)null, attributes, null);
     }
 

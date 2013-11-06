@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package net.venaglia.nondairy.soylang.cache;
 
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
+import net.venaglia.nondairy.soylang.NamespaceRef;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -28,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
  * This cache stores a Collection of {@link CacheEntry} objects for each
  * template name.
  */
-public class TemplateCache extends AbstractTemplateCache<TemplateCache> {
+public class TemplateCache extends AbstractTemplateCache<TemplateCache> implements NamespaceRef {
 
     private static final Key<TemplateCache> TEMPLATE_CACHE_KEY =
             new Key<TemplateCache>("non-dairy.template-cache");
@@ -37,6 +38,7 @@ public class TemplateCache extends AbstractTemplateCache<TemplateCache> {
         super(parent, namespace);
     }
 
+    @Override
     public String getNamespace() {
         return place;
     }

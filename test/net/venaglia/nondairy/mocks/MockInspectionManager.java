@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package net.venaglia.nondairy.mocks;
 
 import com.intellij.codeInspection.*;
-import com.intellij.codeInspection.ex.GlobalInspectionContextBase;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -30,17 +29,6 @@ import org.jetbrains.annotations.Nullable;
  * Time: 1:27 PM
  */
 public class MockInspectionManager extends InspectionManager {
-
-    GlobalInspectionContext context = null;
-    @NotNull
-    @Override
-    public GlobalInspectionContext createNewGlobalContext(boolean b) {
-        if( b || context == null )
-        {
-            context = new GlobalInspectionContextBase(getProject());
-        }
-        return context;
-    }
 
     @NotNull
     @Override
@@ -175,6 +163,26 @@ public class MockInspectionManager extends InspectionManager {
                                                      boolean showTooltip,
                                                      ProblemHighlightType highlightType,
                                                      LocalQuickFix... fixes) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
+                                                     @NotNull String s,
+                                                     ProblemHighlightType problemHighlightType,
+                                                     @Nullable HintAction hintAction,
+                                                     boolean b,
+                                                     LocalQuickFix... localQuickFixes) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @Deprecated
+    public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
+                                                     @NotNull String s,
+                                                     ProblemHighlightType problemHighlightType,
+                                                     @Nullable HintAction hintAction,
+                                                     LocalQuickFix... localQuickFixes) {
         throw new UnsupportedOperationException();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -283,7 +283,7 @@ public class PsiElementPath {
                     TraceState.fineMessage("\t\t%s", join(current));
                 }
             }
-            if (i < j && noMatch == ABORT && current.isEmpty()) {
+            if (i < j && noMatch == ABORT && current.isEmpty() && PushPopPredicate.isStackEmpty(navigationData)) {
                 TraceState.detailMessage("\tABORT!");
                 break;
             }
@@ -368,12 +368,15 @@ public class PsiElementPath {
      * additional path will not be added again.
      *
      * This creates a new path, and does not change the logic of this one.
-     * @param psiPath The path to combine with this one.
+     * @param psiPath The path(s) to combine with this one.
      * @return A new PsiElementPath that will follow multiple simultaneous
      *     paths.
      */
-    public PsiElementPath or(@NotNull PsiElementPath psiPath) {
-        return new OrPsiPath(this, psiPath);
+    public PsiElementPath or(@NotNull PsiElementPath... psiPath) {
+        PsiElementPath[] args = new PsiElementPath[psiPath.length + 1];
+        args[0] = this;
+        System.arraycopy(psiPath, 0, args, 1, psiPath.length);
+        return new OrPsiPath(args);
     }
 
     /**
@@ -423,7 +426,7 @@ public class PsiElementPath {
 
     /**
      * Identifies the name of this path for debugging purposes. This name is
-     * not inherited by paths built using {@link #or(PsiElementPath)},
+     * not inherited by paths built using {@link #or(PsiElementPath...)},
      * {@link #exclude(PsiElementPath)}, {@link #append(PsiElementPath)}, or
      * {@link #append(ElementPredicate...)}.
      *
@@ -461,8 +464,8 @@ public class PsiElementPath {
         }
 
         @Override
-        public PsiElementPath or(@NotNull PsiElementPath psiPath) {
-            delegates.add(psiPath);
+        public PsiElementPath or(@NotNull PsiElementPath... psiPath) {
+            Collections.addAll(delegates, psiPath);
             return this;
         }
 
@@ -479,8 +482,10 @@ public class PsiElementPath {
                     } finally {
                         TraceState.pop();
                     }
-                } else {
+                } else if (TraceState.neverTrace()) {
                     buffer.addAll(psiPath.navigateImpl(start));
+                } else {
+                    buffer.addAll(psiPath.navigate(start));
                 }
             }
             return buffer;
@@ -542,7 +547,7 @@ public class PsiElementPath {
         }
 
         @Override
-        public PsiElementPath or(@NotNull PsiElementPath psiPath) {
+        public PsiElementPath or(@NotNull PsiElementPath... psiPath) {
             throw new UnsupportedOperationException("or() not supported after calling seq()");
         }
 
@@ -609,31 +614,49 @@ public class PsiElementPath {
 
         private static final boolean TRACING_ENABLED;
         private static final boolean TRACING_PER_THREAD;
+        private static final boolean NEVER_TRACE;
         private static final Set<String> TRACING_FOR;
 
         static {
             boolean tracingPerThread = false;
+            boolean tracesDefined = false;
             String names = System.getProperty(TRACE_PATH_PROPERTY_NAME);
+            String prefix = TRACE_PATH_PROPERTY_NAME + ".";
+            Set<String> implicitNames = new HashSet<String>();
+            for (Map.Entry<Object,Object> entry : System.getProperties().entrySet()) {
+                String key = (String)entry.getKey();
+                String value = (String)entry.getValue();
+                if (key.startsWith(prefix) && Level.isValidLevel(value)) {
+                    implicitNames.add(key.substring(prefix.length()));
+                }
+            }
             if (names == null) {
-                TRACING_FOR = Collections.emptySet();
+                TRACING_FOR = implicitNames.isEmpty() ? Collections.<String>emptySet() : Collections.unmodifiableSet(implicitNames);
             } else if ("*".equals(names)) {
+                tracesDefined= true;
                 TRACING_FOR = new AllPathsSet();
             } else if (TRACE_PATH_BY_THREAD.equals(names)) {
                 tracingPerThread = true;
                 TRACING_FOR = new ThreadLocalSet();
             } else {
-                Set<String> namesSet = new HashSet<String>();
+                Set<String> namesSet = new HashSet<String>(implicitNames);
                 for (String name : names.toLowerCase().split("\\|")) {
                     namesSet.add(name.trim());
                 }
                 namesSet.remove(""); // can't contain the empty string
+                tracesDefined = !namesSet.isEmpty();
                 TRACING_FOR = Collections.unmodifiableSet(namesSet);
             }
             TRACING_PER_THREAD = tracingPerThread;
             TRACING_ENABLED = TRACING_PER_THREAD || !TRACING_FOR.isEmpty();
             if (TRACING_ENABLED) {
-                if (TRACING_PER_THREAD) {
+                if (TRACING_PER_THREAD && implicitNames.isEmpty()) {
                     System.out.println("PsiTemplatePath tracing is dynamic, configured per thread"); //NON-NLS
+                } else if (TRACING_PER_THREAD) {
+                    System.out.println("PsiTemplatePath tracing is dynamic, configured per thread -- ignoring implicit static trace for:"); //NON-NLS
+                    for (String name : implicitNames) {
+                        System.out.println("\t" + name);
+                    }
                 } else if (TRACING_FOR.contains(ALL_PATHS)) {
                     System.out.println("PsiTemplatePath tracing is enabled for:"); //NON-NLS
                 } else {
@@ -643,6 +666,7 @@ public class PsiElementPath {
                     }
                 }
             }
+            NEVER_TRACE = !(TRACING_ENABLED && (tracesDefined || tracingPerThread));
         }
 
         /**
@@ -659,6 +683,15 @@ public class PsiElementPath {
 
             private Level(Level nextAfterInherit) {
                 this.nextAfterInherit = nextAfterInherit;
+            }
+
+            public static boolean isValidLevel(String value) {
+                try {
+                    valueOf(value);
+                    return true;
+                } catch (IllegalArgumentException e) {
+                    return false;
+                }
             }
         }
 
@@ -697,6 +730,13 @@ public class PsiElementPath {
          */
         public static boolean traceActive() {
             return TRACING_ENABLED && TRACE_STATE.get().level != Level.NONE;
+        }
+
+        /**
+         * @return true if trace is not configured for any path
+         */
+        public static boolean neverTrace() {
+            return NEVER_TRACE;
         }
 
         /**
@@ -769,7 +809,7 @@ public class PsiElementPath {
          * detail level as the current top of hte TraceState stack.
          * 
          * This method is typically used inside compound paths, such as those
-         * created by {@link PsiElementPath#or(PsiElementPath)} or
+         * created by {@link PsiElementPath#or(PsiElementPath...)} or
          * {@link PsiElementPath#exclude(PsiElementPath)}.
          * @param name The debug name to be pushed on the stack.
          */

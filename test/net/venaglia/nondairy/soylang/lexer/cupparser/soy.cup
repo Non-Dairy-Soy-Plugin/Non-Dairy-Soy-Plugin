@@ -1,5 +1,5 @@
 /*
-   Copyright 2010 - 2012 Ed Venaglia
+   Copyright 2010 - 2013 Ed Venaglia
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@ import net.venaglia.nondairy.soylang.lexer.cupparser.structure.*;
 import net.venaglia.nondairy.soylang.lexer.cupparser.structure.expr.*;
 import net.venaglia.nondairy.soylang.lexer.cupparser.structure.tag.*;
 import net.venaglia.nondairy.soylang.lexer.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Map;
 
 /* Preliminaries to set up and use the scanner.  */
 
@@ -45,12 +47,13 @@ terminal String                        DOC_COMMENT_IDENTIFIER, DOC_COMMENT_BEGIN
 terminal String                        PARAMETER_REF, STRING_PARAMETER_REF, PACKAGE_IDENTIFIER, NAMESPACE_IDENTIFIER;
 terminal String                        TEMPLATE_IDENTIFIER, DELTEMPLATE_IDENTIFIER;
 terminal String                        CAPTURED_IDENTIFIER, CAPTURED_FUNCTION_IDENTIFIER;
+terminal String                        LET_IDENTIFIER;
 
 // command tag pairs
-terminal SoySymbol                     TEMPLATE, DELTEMPLATE, LITERAL, MSG, IF, SWITCH, FOREACH, FOR, CALL, DELCALL, PARAM;
+terminal SoySymbol                     TEMPLATE, DELTEMPLATE, LITERAL, MSG, LET, IF, SWITCH, FOREACH, FOR, CALL, DELCALL, PARAM;
 
 // commands
-terminal SoySymbol                     DELPACKAGE, NAMESPACE, PRINT, PRINT_IMPLICIT, ELSE_IF, ELSE, CASE, DEFAULT, IF_EMPTY, CSS;
+terminal SoySymbol                     DELPACKAGE, NAMESPACE, ALIAS, PRINT, PRINT_IMPLICIT, ELSE_IF, ELSE, CASE, DEFAULT, IF_EMPTY, CSS;
 
 // special characters
 terminal SoySymbol                     SP_LITERAL, NIL_LITERAL, CR_LITERAL, LF_LITERAL, TAB_LITERAL, LB_LITERAL, RB_LITERAL;
@@ -81,12 +84,13 @@ terminal Boolean                       BOOLEAN_LITERAL;
 terminal Integer                       INTEGER_LITERAL;
 terminal Double                        FLOATING_POINT_LITERAL;
 terminal String                        STRING_LITERAL_BEGIN, STRING_LITERAL_END, STRING_LITERAL, STRING_LITERAL_ESCAPE;
+terminal String                        EMPTY_ARRAY_LITERAL, EMPTY_OBJECT_LITERAL;
 
 // surrounding pairs
 terminal String                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
 
 // operators
-terminal SoySymbol                     EQ, EQEQ, GT, LT, NOT, AND, OR, QUESTION, COLON, LTEQ, GTEQ, NOTEQ, PLUS, UMINUS;
+terminal SoySymbol                     EQ, EQEQ, GT, LT, NOT, AND, OR, QUESTION, QUESTION_DOT, ELVIS, COLON, LTEQ, GTEQ, NOTEQ, PLUS, UMINUS;
 terminal SoySymbol                     MINUS, MULT, DIV, MOD, PIPE, DOT, COMMA;
 
 // errors
@@ -103,8 +107,10 @@ terminal SoySymbol           UNEXPECTED_EOF_IN_STRING_LITERAL, UNEXPECTED_EOF_DO
 /* major non-terminals */
 non terminal TemplateFile              template_file;
 non terminal List<TemplateDeclaration> template_list;
+non terminal List<AliasDeclaration>    alias_list;
 non terminal                           skip_element_list, skip_element;
 non terminal NamespaceDeclaration      namespace_def;
+non terminal AliasDeclaration          alias_tag;
 non terminal String                    namespace_ident;
 //non terminal       ignored_text, comment;
 non terminal TemplateDocComment        template_doc_comment;
@@ -119,17 +125,18 @@ non terminal EndTag                    end_template_tag;
 non terminal ContentWrapper<?>         content_tag, non_content_tag;
 non terminal SpecialCharacterTag       special_char_tag;
 non terminal Character                 special_char;
-non terminal ContentTagPair            literal_tag, msg_tag, for_tag, param_tag;
+non terminal ContentTagPair            literal_tag, msg_tag, let_tag, for_tag, param_tag;
 non terminal AlternatePathTag          if_tag, switch_tag, foreach_tag;
 non terminal AlternatePathTagBuffer    open_if_tag, closing_if_tag, open_switch_tag, closing_switch_tag;
 non terminal TemplateCall              call_tag;
 non terminal UnaryTag                  print_tag, else_if_tag, else_tag, case_tag, default_tag, ifempty_tag;
 //non terminal       css_tag;
-non terminal BeginTag                  begin_literal_tag, begin_msg_tag, begin_if_tag, begin_switch_tag,
-                                       begin_foreach_tag, begin_for_tag, begin_param_tag;
+non terminal BeginTag                  begin_literal_tag, begin_msg_tag, begin_let_tag, begin_if_tag,
+                                       begin_switch_tag, begin_foreach_tag, begin_for_tag, begin_param_tag;
 non terminal BeginCallTag              begin_call_tag;
-non terminal EndTag                    end_literal_tag, end_msg_tag, end_if_tag, end_switch_tag,
-                                       end_foreach_tag, end_for_tag, end_call_tag, end_param_tag;
+non terminal EndTag                    end_literal_tag, end_msg_tag, end_let_tag, end_if_tag,
+                                       end_switch_tag, end_foreach_tag, end_for_tag, end_param_tag,
+                                       end_call_tag;
 non terminal IterableSequence          foreach_seq, for_seq;
 non terminal FunctionCall              for_range;
 non terminal List<ContentWrapper<?>>   param_list;
@@ -142,14 +149,15 @@ non terminal Directive                 directive, simple_directive, compound_dir
 non terminal ContentWrapper<?>         content_element;
 non terminal List<ContentWrapper<?>>   content_sequence;
 non terminal List<Expression>          expr_list, dir_expr_list;
-non terminal Expression                expr, dot_reference, dir_expr;
+non terminal Expression                expr, dot_reference, null_safe_reference, dir_expr;
 non terminal LiteralExpression<?>      literal_value;
+non terminal Map<String,Expression>    key_value_list;
 non terminal String                    string_literal;
 non terminal StringBuilder             string_literal_buf;
 non terminal BinaryOperator            binary_operator;
 
 ///* Precedences */
-precedence left QUESTION, COLON;
+precedence left QUESTION, COLON, ELVIS;
 precedence left OR;
 precedence left AND;
 precedence left EQEQ, NOTEQ;
@@ -157,7 +165,7 @@ precedence left LT, GT, LTEQ, GTEQ;
 precedence left PLUS, MINUS;
 precedence left MULT, DIV, MOD;
 precedence left UMINUS, NOT;
-precedence left DOT, LBRACK, RBRACK, LPAREN;
+precedence left DOT, QUESTION_DOT, LBRACK, RBRACK, LPAREN;
 
 /* The grammar */
 template_file      ::= skip_element_list namespace_def:n skip_element_list template_list:l
@@ -168,6 +176,14 @@ template_file      ::= skip_element_list namespace_def:n skip_element_list templ
                        {: RESULT = new TemplateFile(n,l); :}
                    |   namespace_def:n template_list:l
                        {: RESULT = new TemplateFile(n,l); :}
+                   |   skip_element_list namespace_def:n skip_element_list alias_list:a template_list:l
+                       {: RESULT = new TemplateFile(n,a,l); :}
+                   |   skip_element_list namespace_def:n alias_list:a template_list:l
+                       {: RESULT = new TemplateFile(n,a,l); :}
+                   |   namespace_def:n skip_element_list alias_list:a template_list:l
+                       {: RESULT = new TemplateFile(n,a,l); :}
+                   |   namespace_def:n alias_list:a template_list:l
+                       {: RESULT = new TemplateFile(n,a,l); :}
                    ;
 
 template_list      ::= template_list:l skip_element
@@ -197,6 +213,8 @@ content_element    ::= TEMPLATE_TEXT:t
                        {: RESULT = ContentWrapper.create(new Comment(c)); :}
                    |   LINE_COMMENT:c
                        {: RESULT = ContentWrapper.create(new Comment(c)); :}
+                   |   let_tag:tag
+                       {: RESULT = ContentWrapper.create(tag); :}
                    |   content_tag:tag
                        {: RESULT = tag; :}
                    |   non_content_tag:tag
@@ -230,6 +248,19 @@ namespace_def      ::= TAG_LBRACE NAMESPACE NAMESPACE_IDENTIFIER:id TAG_RBRACE
                        {: RESULT = new NamespaceDeclaration(id, att); :}
                    |   TAG_LBRACE NAMESPACE RBRACE_ERROR
                        {: RESULT = new NamespaceDeclaration(null); :}
+                   ;
+
+alias_list         ::= alias_list:l skip_element
+                       {: RESULT = l; :}
+                   |   alias_list:l alias_tag:a
+                       {: l.add(a); RESULT = l; :}
+                   |   alias_tag:a
+                       {: List<AliasDeclaration> l = new LinkedList<AliasDeclaration>(); l.add(a); RESULT = l; :}
+                   ;
+alias_tag          ::= TAG_LBRACE ALIAS NAMESPACE_IDENTIFIER:id TAG_RBRACE
+                       {: RESULT = new AliasDeclaration(id); :}
+                   |   TAG_LBRACE ALIAS RBRACE_ERROR
+                       {: RESULT = new AliasDeclaration(null); :}
                    ;
 
 template_def       ::= template_doc_comment:doc template_tag:tag
@@ -313,6 +344,28 @@ begin_msg_tag      ::= TAG_LBRACE MSG attribute_list:att TAG_RBRACE
                    ;
 end_msg_tag        ::= TAG_END_LBRACE MSG TAG_RBRACE
                        {: RESULT = new EndTag("msg"); :}
+                   ;
+
+let_tag            ::= begin_let_tag:b content_sequence:l end_let_tag:e
+                       {: RESULT = new ContentTagPair(b,e,l); :}
+                   |   begin_let_tag:b end_let_tag:e
+                       {: RESULT = new ContentTagPair(b,e); :}
+                   |   TAG_LBRACE LET LET_IDENTIFIER:id COLON expr:e TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new BeginLetTag(id,e),null); :}
+                   |   TAG_LBRACE LET LET_IDENTIFIER:id TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new BeginLetTag(id),null); :}
+                   |   TAG_LBRACE LET TAG_END_RBRACE
+                       {: RESULT = new ContentTagPair(new BeginLetTag(null),null); :}
+                   ;
+begin_let_tag      ::= TAG_LBRACE LET LET_IDENTIFIER:id COLON expr:e TAG_RBRACE
+                       {: RESULT = new BeginLetTag(id,e); :}
+                   |   TAG_LBRACE LET LET_IDENTIFIER:id TAG_RBRACE
+                       {: RESULT = new BeginLetTag(id); :}
+                   |   TAG_LBRACE LET TAG_RBRACE
+                       {: RESULT = new BeginLetTag(null); :}
+                   ;
+end_let_tag        ::= TAG_END_LBRACE LET TAG_RBRACE
+                       {: RESULT = new EndTag("let"); :}
                    ;
 
 if_tag             ::= closing_if_tag:buf end_if_tag:e
@@ -600,16 +653,28 @@ expr_list          ::= expr:e
                        {: l.add(e); RESULT = l; :}
                    ;
 
+key_value_list     ::= string_literal:k COLON expr:v
+                       {: Map<String,Expression> m = new HashMap<String,Expression>(); m.put(k,v); RESULT = m; :}
+                   |   key_value_list:m COMMA string_literal:k COLON expr:v
+                       {: m.put(k,v); RESULT = m; :}
+                   ;
+
 expr               ::= CAPTURED_IDENTIFIER:id
                        {: RESULT = new CapturedIdentifier(id); :}
                    |   PARAMETER_REF:id
                        {: RESULT = new ParameterRef(id); :}
+                   |   EMPTY_ARRAY_LITERAL
+                       {: RESULT = ArrayLiteralExpression.EMPTY; :}
+                   |   EMPTY_OBJECT_LITERAL
+                       {: RESULT = ObjectLiteralExpression.EMPTY; :}
                    |   CAPTURED_FUNCTION_IDENTIFIER:id LPAREN expr_list:l RPAREN
                        {: RESULT = new FunctionCall(new CapturedIdentifier(id),l); :}
                    |   CAPTURED_FUNCTION_IDENTIFIER:id LPAREN RPAREN
                        {: RESULT = new FunctionCall(new CapturedIdentifier(id),null); :}
                    |   expr:l dot_reference:r
                        {: RESULT = new BinaryOperatorExpression(l,new BinaryOperator("."),r); :}
+                   |   expr:l null_safe_reference:r
+                       {: RESULT = new BinaryOperatorExpression(l,new BinaryOperator("?."),r); :}
                    |   expr:f LPAREN expr_list:args RPAREN
                        {: RESULT = new FunctionCall(f,args); :}
                    |   expr:f LPAREN RPAREN
@@ -624,6 +689,8 @@ expr               ::= CAPTURED_IDENTIFIER:id
                        {: RESULT = new BinaryOperatorExpression(l,op,r); :}
                    |   LPAREN expr:e RPAREN
                        {: RESULT = e; :}
+                   |   expr:q ELVIS expr:e
+                       {: RESULT = new NullCoalescingExpression(q,e); :}
                    |   expr:q QUESTION expr:y COLON expr:n
                        {: RESULT = new TernaryOperatorExpression(q,y,n); :}
                    ;
@@ -640,6 +707,10 @@ literal_value      ::= MINUS INTEGER_LITERAL:i
                        {: RESULT = new StringLiteralExpression(s); :}
                    |   BOOLEAN_LITERAL:b
                        {: RESULT = new BooleanLiteralExpression(b); :}
+                   |   LBRACK:b expr_list:l RBRACK
+                       {: RESULT = new ArrayLiteralExpression(l); :}
+                   |   LBRACK:b key_value_list:l RBRACK
+                       {: RESULT = new ObjectLiteralExpression(l); :}
                    ;
 string_literal     ::= STRING_LITERAL_BEGIN string_literal_buf:buf STRING_LITERAL_END
                        {: RESULT = buf.toString(); :}
@@ -695,6 +766,11 @@ dot_reference      ::= DOT CAPTURED_IDENTIFIER:id
                    |   LBRACK expr:e RBRACK
                        {: RESULT = e; :}
                    ;
+
+null_safe_reference ::= QUESTION_DOT CAPTURED_IDENTIFIER:id
+                       {: RESULT = new CapturedIdentifier(id); :}
+                   |   QUESTION_DOT INTEGER_LITERAL:i
+                       {: RESULT = new IntegerLiteralExpression(i); :};
 
 namespace_ident    ::= CAPTURED_IDENTIFIER:id
                        {: RESULT = id; :}

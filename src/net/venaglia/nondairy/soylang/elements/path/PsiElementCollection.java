@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,9 +17,11 @@
 package net.venaglia.nondairy.soylang.elements.path;
 
 import com.intellij.psi.PsiElement;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -40,6 +42,7 @@ public class PsiElementCollection extends LinkedHashSet<PsiElement> {
      */
     public static final PsiElementCollection EMPTY = new PsiElementCollection() {
         @Override
+        @NotNull
         public Iterator<PsiElement> iterator() {
             return Collections.<PsiElement>emptySet().iterator();
         }
@@ -70,6 +73,10 @@ public class PsiElementCollection extends LinkedHashSet<PsiElement> {
 
     public PsiElementCollection(Collection<? extends PsiElement> c) {
         super(c);
+    }
+
+    public PsiElementCollection(PsiElement... elements) {
+        super(Arrays.asList(elements));
     }
 
     public PsiElementCollection(int initialSize) {

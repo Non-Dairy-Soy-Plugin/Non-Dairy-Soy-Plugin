@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,11 +23,7 @@ import net.venaglia.nondairy.soylang.lexer.SoyToken;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -123,32 +119,11 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
         return nodeSeq.get() - 1;
     }
 
-    private String read(@NonNls String resourceName) {
-        StringBuilder buffer = new StringBuilder(2048);
-        char[] b = new char[512];
-        InputStream in = TrackedPsiBuilderTokenSource.class.getResourceAsStream(resourceName);
-        try {
-            Reader reader = new InputStreamReader(in);
-            for (int c = reader.read(b); c > 0; c = reader.read(b)) {
-                buffer.append(b, 0, c);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                in.close();
-            } catch (IOException e) {
-                // don't care
-            }
-        }
-        return buffer.toString();
-    }
-
     @SuppressWarnings("HardCodedStringLiteral")
     public void writeHtml(PrintWriter out) {
-        String template = read("template.html");
         final StringBuilder options = new StringBuilder(1024);
         final StringBuilder frames = new StringBuilder(16384);
+        HtmlTemplate template = new HtmlTemplate(options, frames);
         OutputBuffer buffer = new OutputBuffer() {
 
             private int level = -1;
@@ -230,9 +205,7 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
             buffer.close();
             frames.append("</div>\n");
         }
-        out.print(template.replace("${timestamp}", new Date().toString())
-                          .replace("${options}", options)
-                          .replace("${tree}", frames));
+        out.print(template);
     }
 
     private void toString(OutputBuffer buffer, int level, List<Node<?>> tree, int includeTraceForSeq) {
@@ -638,5 +611,157 @@ public class TrackedPsiBuilderTokenSource extends PsiBuilderTokenSource {
         void warn(String message);
         void info(String verb, Stack stack);
         void close();
+    }
+
+    private static class HtmlTemplate {
+
+        private final StringBuilder options;
+        private final StringBuilder frames;
+
+        public HtmlTemplate(StringBuilder options, StringBuilder frames) {
+            //To change body of created methods use File | Settings | File Templates.
+            this.options = options;
+            this.frames = frames;
+        }
+
+        @NonNls
+        private static String getCSS() {
+            return "" +
+                    "        body {\n" +
+                    "          font-family: Arial, sans-serif;\n" +
+                    "        }\n" +
+                    "        .instructions {\n" +
+                    "          font-size: 10px;\n" +
+                    "          color: #999;\n" +
+                    "          float: right;\n" +
+                    "        }\n" +
+                    "        #frames > * {\n" +
+                    "          display: none;\n" +
+                    "        }\n" +
+                    "        #frames > .visible {\n" +
+                    "          display: inherit;\n" +
+                    "        }\n" +
+                    "        #frames div {\n" +
+                    "          padding-left: 12px;\n" +
+                    "          font-size: 12px;\n" +
+                    "          color: #333;\n" +
+                    "        }\n" +
+                    "        #frames div .mouseover {\n" +
+                    "          padding: 4px;\n" +
+                    "        }\n" +
+                    "        .node {\n" +
+                    "          position: relative;\n" +
+                    "        }\n" +
+                    "        .mouseover {\n" +
+                    "          position: absolute;\n" +
+                    "          top: 0px;\n" +
+                    "          right: 0;\n" +
+                    "          width: 64px;\n" +
+                    "          overflow: hidden;\n" +
+                    "          height: 14px;\n" +
+                    "          border: 1px none transparent;\n" +
+                    "        }\n" +
+                    "        .mouseover > * {\n" +
+                    "          visibility: hidden;\n" +
+                    "        }\n" +
+                    "        .mouseover:hover, .mouseover.hover {\n" +
+                    "          top: -4px;\n" +
+                    "          overflow: visible;\n" +
+                    "          height: auto;\n" +
+                    "          width: 100%;\n" +
+                    "          border: 1px solid #333;\n" +
+                    "          background-color: #ffe;\n" +
+                    "          z-index: 2;\n" +
+                    "        }\n" +
+                    "        .mouseover:hover > *, .mouseover.hover > * {\n" +
+                    "          visibility: visible;\n" +
+                    "        }\n" +
+                    "        .mouseover .label {\n" +
+                    "          position: absolute;\n" +
+                    "          top: 0;\n" +
+                    "          right: 0;\n" +
+                    "          visibility: visible;\n" +
+                    "          line-height: 14px;\n" +
+                    "        }\n" +
+                    "        .mouseover:hover .label, .mouseover.hover .label {\n" +
+                    "          visibility: hidden;\n" +
+                    "        }\n" +
+                    "        .info { color: #006; }\n" +
+                    "        .warn { color: #630; }\n" +
+                    "        .verb { color: #393; }\n" +
+                    "        .seq { color: #000; font-weight: bold; }\n" +
+                    "        .source { color: #33C; }\n" +
+                    "        .name { color: #000; font-weight: bold }\n" +
+                    "        .type { color: #C3C; }\n" +
+                    "        .text { color: #33C; }\n" +
+                    "        .node-open > .name { color: #930; }\n" +
+                    "        .timestamp { color: #000; font-size: 9px; padding-top: 64px; }";
+        }
+
+        @NonNls
+        private String getJavaScript() {
+            return "" +
+                    "        var visible = null;\n" +
+                    "        function update() {\n" +
+                    "          if (visible) visible.className = \"\";\n" +
+                    "          var sel = document.getElementById(\"seq\");\n" +
+                    "          var val = sel.options[sel.selectedIndex].value;\n" +
+                    "          visible = document.getElementById(val);\n" +
+                    "          if (visible) visible.className = \"visible\";\n" +
+                    "        }\n" +
+                    "        function keyDown(code) {\n" +
+                    "          var sel = document.getElementById(\"seq\");\n" +
+                    "          switch(code) {\n" +
+                    "            case 37: // left arrow\n" +
+                    "              sel.selectedIndex = Math.max(0, sel.selectedIndex - 1);\n" +
+                    "              update();\n" +
+                    "              break;\n" +
+                    "            case 39: // right arrow\n" +
+                    "              sel.selectedIndex = Math.min(sel.options.length - 1, sel.selectedIndex + 1);\n" +
+                    "              update();\n" +
+                    "              break;\n" +
+                    "          }\n" +
+                    "        }";
+        }
+
+        private String getOptions() {
+            return options.toString();
+        }
+
+        private String getTree() {
+            return frames.toString();
+        }
+
+        private String getTimestamp() {
+            return new Date().toString();
+        }
+
+        @NonNls
+        @Override
+        public String toString() {
+            return "" +
+                    "<html>\n" +
+                    "<head>\n" +
+                    "    <title>Replay of a PSI tree as it was built</title>\n" +
+                    "    <style type=\"text/css\">\n" +
+                    getCSS() + "\n" +
+                    "    </style>\n" +
+                    "    <script type=\"text/javascript\">\n" +
+                    getJavaScript() + "\n" +
+                    "    </script>\n" +
+                    "</head>\n" +
+                    "<body onload=\"update();\" onkeydown=\"keyDown(event.keyCode);\">\n" +
+                    "<select id=\"seq\" onChange=\"update();\" onClick=\"update();\">\n" +
+                    getOptions() + "\n" +
+                    "</select>\n" +
+                    "<div class=\"instructions\">Use left and right arrow keys to navigate back and forth</div>\n" +
+                    "<hr/>\n" +
+                    "<div id=\"frames\">\n" +
+                    getTree() + "\n" +
+                    "</div>\n" +
+                    "<div class=\"timestamp\">Report created at " + getTimestamp() + ": </div>\n" +
+                    "</body>\n" +
+                    "</html>\n";
+        }
     }
 }

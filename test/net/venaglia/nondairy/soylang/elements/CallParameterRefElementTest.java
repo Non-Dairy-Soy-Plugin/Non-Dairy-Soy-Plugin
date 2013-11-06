@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -83,6 +83,17 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
                                                      null,
                                                      1,
                                                      2);
+        assertEquals("non.dairy.sample.library.format_person", ref.getTemplateName());
+    }
+
+    @Test
+    public void testGetAliasTemplateName_crossFile() throws Exception {
+        CallParameterRefElement ref = findNthElement("render3.soy",
+                                                     CallParameterRefElement.class,
+                                                     "person",
+                                                     null,
+                                                     1,
+                                                     1);
         assertEquals("non.dairy.sample.library.format_person", ref.getTemplateName());
     }
 

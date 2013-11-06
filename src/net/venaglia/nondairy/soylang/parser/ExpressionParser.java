@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.intellij.psi.tree.IElementType;
 import net.venaglia.nondairy.i18n.I18N;
 import net.venaglia.nondairy.soylang.lexer.SoyToken;
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -191,6 +192,12 @@ class ExpressionParser {
             } else {
                 done();
             }
+        } else if (token == SoyToken.EMPTY_ARRAY_LITERAL) {
+            apparentType = apparentType.or(ExpressionType.ARRAY);
+            markAsConstantExpressionAndAdvance();
+        } else if (token == SoyToken.EMPTY_OBJECT_LITERAL) {
+            apparentType = apparentType.or(ExpressionType.OBJECT);
+            markAsConstantExpressionAndAdvance();
         } else if (token == SoyToken.PARAMETER_REF) {
             prec = PREC_LITERAL;
             expressionType = parameter_ref;
@@ -211,6 +218,26 @@ class ExpressionParser {
                 capturedTokens++;
             }
             remainingValues = 0;
+        } else if (token == SoyToken.LBRACK && beginExpression(source.previous())) {
+            prec = PREC_PARENTHESIS;
+            source.advance();
+            Object result = null;
+            if (!source.eof()) {
+                result = parseObjectLiteral();
+            }
+            if (result == ParsedLiteralObjectType.ARRAY) {
+                expressionType = array_literal;
+                apparentType = apparentType.or(ExpressionType.ARRAY);
+            } else if (result == ParsedLiteralObjectType.MAP) {
+                expressionType = object_literal;
+                apparentType = apparentType.or(ExpressionType.OBJECT);
+            } else if (result != null) {
+                source.error(result.toString());
+                exprMarker.drop();
+                exprMarker = null;
+                done();
+                return this.parent;
+            }
         } else if (token == SoyToken.LBRACK) {
             prec = PREC_PARENTHESIS;
             expressionType = bracket_property_ref;
@@ -266,6 +293,123 @@ class ExpressionParser {
         return remainingValues == 0 ? this : new ExpressionParser(this);
     }
 
+    private boolean beginExpression(IElementType previousToken) {
+        return previousToken == null ||
+               SoyToken.INITIAL_EXPRESSION_OPERATORS.contains(previousToken);
+    }
+
+    private Object parseObjectLiteral() {
+        ObjectLiteralParseState state = new ObjectLiteralParseState();
+        state.keyValueMarker = source.mark("key_value_pair");
+        state.keyMarker = source.mark("key");
+        state.valueMarker = source.mark("value");
+
+        state.lastExpression = captureSingleExpression();
+        state.token = source.eof() ? null : source.token();
+        if (state.lastExpression != null && state.token == SoyToken.COLON) {
+            state.parsingType = ParsedLiteralObjectType.MAP;
+            state.valueMarker = drop(state.valueMarker);
+        } else if (state.lastExpression != null && state.token == SoyToken.COMMA) {
+            state.parsingType = ParsedLiteralObjectType.ARRAY;
+            state.keyMarker = drop(state.keyMarker);
+            state.keyValueMarker = drop(state.keyValueMarker);
+        }
+        while (state.token != null && (state.token == SoyToken.COLON || state.token == SoyToken.COMMA)) {
+            parseObjectLiteralElement(state);
+        }
+        apparentType = apparentType.and(ExpressionType.OBJECT);
+        if (state.parsingType != null && state.token == SoyToken.RBRACK) {
+            close(state.valueMarker, value_literal);
+            close(state.keyMarker, key_literal);
+            close(state.keyValueMarker, key_value_literal);
+            source.advance();
+            return state.parsingType;
+        } else {
+            drop(state.valueMarker);
+            drop(state.keyMarker);
+            drop(state.keyValueMarker);
+            if (state.token == null) {
+                return null; // eof
+            } else {
+                return I18N.msg("syntax.error.unexpected.tokens.in.literal", state.token);
+            }
+        }
+    }
+
+    private void parseObjectLiteralElement(ObjectLiteralParseState state) {
+        boolean expectKey = false;
+        if (state.token == SoyToken.COLON) {
+            if (state.parsingType == null) {
+                state.parsingType = ParsedLiteralObjectType.MAP;
+            }
+            state.valueMarker = drop(state.valueMarker);
+            if (state.keyMarker == null || state.lastExpression == null) {
+                source.error(I18N.msg("syntax.error.unexpected.colon.in.literal"));
+            } else if (state.lastExpression.isConstantOfType(ExpressionType.STRING)) {
+                state.keyMarker = close(state.keyMarker, key_literal);
+            } else if (state.lastExpression.prec == PREC_UNSPECIFIED) {
+                state.keyMarker = drop(state.keyMarker);
+            } else {
+                state.keyMarker = error(state.keyMarker, "syntax.error.expected.string.key.in.literal");
+            }
+        } else { // SoyToken.COMMA
+            if (state.parsingType == null) {
+                state.parsingType = ParsedLiteralObjectType.ARRAY;
+            }
+            if (state.valueMarker == null) {
+                source.error(I18N.msg("syntax.error.unexpected.comma.in.literal"));
+            } else if (state.lastExpression == null) {
+                state.valueMarker = error(state.valueMarker, "syntax.error.unexpected.comma.in.literal");
+            } else if (state.lastExpression.prec == PREC_UNSPECIFIED) {
+                state.valueMarker = drop(state.valueMarker);
+            } else {
+                state.valueMarker = close(state.valueMarker, value_literal);
+            }
+            state.keyMarker = error(state.keyMarker, "syntax.error.unexpected.comma.in.literal");
+            state.keyValueMarker = close(state.keyValueMarker, key_value_literal);
+            expectKey = state.parsingType == ParsedLiteralObjectType.MAP;
+        }
+        source.advance();
+        if (!source.eof()) {
+            if (expectKey) {
+                state.keyValueMarker = source.mark("key_value_pair");
+                state.keyMarker = source.mark("key");
+            } else {
+                state.valueMarker = source.mark("value");
+            }
+            if (SoyToken.EXPRESSION_TOKENS.contains(source.token())) {
+                state.lastExpression = captureSingleExpression();
+            } else {
+                state.lastExpression = null;
+            }
+        }
+        state.token = source.eof() ? null : source.token();
+    }
+
+    @Nullable
+    private PsiBuilder.Marker close(@Nullable PsiBuilder.Marker marker, @NotNull IElementType type) {
+        if (marker != null) {
+            marker.done(type);
+        }
+        return null;
+    }
+
+    @Nullable
+    private PsiBuilder.Marker error(@Nullable PsiBuilder.Marker marker, @NotNull @NonNls String errorMsg) {
+        if (marker != null) {
+            marker.error(I18N.msg(errorMsg));
+        }
+        return null;
+    }
+
+    @Nullable
+    private PsiBuilder.Marker drop(@Nullable PsiBuilder.Marker marker) {
+        if (marker != null) {
+            marker.drop();
+        }
+        return null;
+    }
+
     int parseFunctionArgs(@Nullable IElementType closeWith) {
         IElementType token = source.token();
         if (token != SoyToken.LPAREN) {
@@ -319,11 +463,22 @@ class ExpressionParser {
     }
 
     private boolean parseSingleExpression() {
+        ExpressionParser expressionParser = captureSingleExpression();
+        return expressionParser != null && expressionParser.prec != PREC_UNSPECIFIED;
+    }
+
+    private ExpressionParser captureSingleExpression() {
         ExpressionParser expressionParser = new ExpressionParser(source).expecting(expectingType);
         expressionParser.parse();
         apparentType = apparentType.or(expressionParser.expectingType);
         capturedTokens += expressionParser.capturedTokens;
-        return expressionParser.prec != PREC_UNSPECIFIED;
+        return expressionParser.capturedTokens == 0 ? null : expressionParser;
+    }
+
+    private boolean isConstantOfType(ExpressionType expectedType) {
+        return (expectedType == ExpressionType.ANY || expectedType == this.apparentType) &&
+               expressionType == constant_expression &&
+               prec != PREC_UNSPECIFIED;
     }
 
     private ExpressionParser push(int prec, int remainingValues) {
@@ -352,7 +507,7 @@ class ExpressionParser {
     }
 
     private ExpressionParser parseResume(ExpressionParser parser, IElementType token) {
-        if (token == SoyToken.DOT) {
+        if (token == SoyToken.DOT || token == SoyToken.QUESTION_DOT) {
             parser = parser.push(PREC_DOT, 1);
             parser.expressionType = member_property_ref;
         } else if (token == SoyToken.MULT || token == SoyToken.DIV || token == SoyToken.MOD) {
@@ -367,7 +522,8 @@ class ExpressionParser {
             parser = parser.push(PREC_AND, 1);
         } else if (token == SoyToken.OR) {
             parser = parser.push(PREC_OR, 1);
-        } else if (token == SoyToken.QUESTION) {
+        } else if (token == SoyToken.QUESTION || token == SoyToken.ELVIS) {
+            boolean ternary = token == SoyToken.QUESTION;
             parser = parser.push(PREC_TERNARY, 2);
             if (!source.eof()) {
                 ExpressionParser leftParser = new ExpressionParser(source);
@@ -375,7 +531,7 @@ class ExpressionParser {
                 apparentType = leftParser.apparentType;
                 parser.capturedTokens += leftParser.capturedTokens;
             }
-            if (!source.eof()) {
+            if (ternary && !source.eof()) {
                 if (source.token() == SoyToken.COLON) {
                     parser.remainingValues = 1;
                     source.advance();
@@ -407,4 +563,18 @@ class ExpressionParser {
         }
         return parser;
     }
+
+    enum ParsedLiteralObjectType {
+        MAP, ARRAY
+    }
+
+    static class ObjectLiteralParseState {
+        ParsedLiteralObjectType parsingType;
+        PsiBuilder.Marker keyValueMarker;
+        PsiBuilder.Marker keyMarker;
+        PsiBuilder.Marker valueMarker;
+        ExpressionParser lastExpression;
+        IElementType token;
+    }
+
 }

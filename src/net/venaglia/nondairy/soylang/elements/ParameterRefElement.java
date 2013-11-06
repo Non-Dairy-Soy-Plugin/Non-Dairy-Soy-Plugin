@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,11 +22,13 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.IncorrectOperationException;
 import net.venaglia.nondairy.soylang.elements.path.CommandBoundaryPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
+import net.venaglia.nondairy.soylang.elements.path.PushPopPredicate;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -62,8 +64,19 @@ public class ParameterRefElement extends ParameterElement {
                                new ElementTypePredicate(tag_between_braces).onChildren(),
                                new ElementTypePredicate(parameter_def).onChildren()).debug("path_to_parameter_def!iterator");
 
+    public static final TokenSet TAG_PAIR_CONTAINERS = TokenSet.andNot(TAG_PAIR_TOKENS, TokenSet.create(let_tag_pair));
+
+    public static final PsiElementPath PATH_TO_LET_DEF =
+            new PsiElementPath(new ElementTypePredicate(TAG_PAIR_CONTAINERS).onAncestors(),
+                               PushPopPredicate.push(),
+                               new ElementTypePredicate(let_tag_pair).onChildren(),
+                               PushPopPredicate.popAdd(),
+                               new ElementTypePredicate(let_tag).onChildren(),
+                               new ElementTypePredicate(tag_between_braces).onChildren(),
+                               new ElementTypePredicate(let_parameter_def).onChildren()).debug("path_to_parameter_def!let");
+
     public static final PsiElementPath PATH_TO_PARAMETER_DEF =
-                PATH_TO_TEMPLATE_DEF.or(PATH_TO_ITERATOR_DEF).debug("path_to_parameter_def");
+                PATH_TO_TEMPLATE_DEF.or(PATH_TO_ITERATOR_DEF, PATH_TO_LET_DEF).debug("path_to_parameter_def");
 
     private final ElementPredicate parameterNamePredicate;
 

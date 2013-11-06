@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken NAMESPACE_IDENTIFIER = new SoyToken(201, "NAMESPACE_IDENTIFIER");
     public static final SoyToken TEMPLATE_IDENTIFIER = new SoyToken(202, "TEMPLATE_IDENTIFIER");
     public static final SoyToken DELTEMPLATE_IDENTIFIER = new SoyToken(207, "DELTEMPLATE_IDENTIFIER");
+    public static final SoyToken LET_IDENTIFIER = new SoyToken(208, "LET_IDENTIFIER");
     public static final SoyToken CAPTURED_IDENTIFIER = new SoyToken(203, "CAPTURED_IDENTIFIER");
     public static final SoyToken CAPTURED_FUNCTION_IDENTIFIER = new SoyToken(204, "CAPTURED_FUNCTION_IDENTIFIER");
     public static final SoyToken STRING_PARAMETER_REF = new SoyToken(205, "STRING_PARAMETER_REF");
@@ -81,6 +82,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken DELTEMPLATE = new SoyToken(309, "DELTEMPLATE", "deltemplate");
     public static final SoyToken LITERAL = new SoyToken(301, "LITERAL", "literal");
     public static final SoyToken MSG = new SoyToken(302, "MSG", "msg");
+    public static final SoyToken LET = new SoyToken(311, "LET", "let");
     public static final SoyToken IF = new SoyToken(303, "IF", "if");
     public static final SoyToken SWITCH = new SoyToken(304, "SWITCH", "switch");
     public static final SoyToken FOREACH = new SoyToken(305, "FOREACH", "foreach");
@@ -92,6 +94,7 @@ public final class SoyToken extends IElementType {
     // commands
     public static final SoyToken DELPACKAGE = new SoyToken(409, "DELPACKAGE", "delpackage");
     public static final SoyToken NAMESPACE = new SoyToken(400, "NAMESPACE", "namespace");
+    public static final SoyToken ALIAS = new SoyToken(410, "ALIAS", "alias");
     public static final SoyToken PRINT = new SoyToken(401, "PRINT", "print");
     public static final SoyToken PRINT_IMPLICIT = new SoyToken(402, "PRINT_IMPLICIT", "print");
     public static final SoyToken ELSE_IF = new SoyToken(403, "ELSE_IF", "elseif");
@@ -168,6 +171,8 @@ public final class SoyToken extends IElementType {
     public static final SoyToken STRING_LITERAL = new SoyToken(755, "STRING_LITERAL");
     public static final SoyToken STRING_LITERAL_ESCAPE = new SoyToken(756, "STRING_LITERAL_ESCAPE");
     public static final SoyToken STRING_LITERAL_END = new SoyToken(757, "STRING_LITERAL_END");
+    public static final SoyToken EMPTY_ARRAY_LITERAL = new SoyToken(758, "EMPTY_ARRAY_LITERAL");
+    public static final SoyToken EMPTY_OBJECT_LITERAL = new SoyToken(759, "EMPTY_OBJECT_LITERAL");
 
     // surrounding pairs
     public static final SoyToken LPAREN = new SoyToken(800, "LPAREN");
@@ -193,6 +198,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken AND = new SoyToken(905, "AND");
     public static final SoyToken OR = new SoyToken(906, "OR");
     public static final SoyToken QUESTION = new SoyToken(907, "QUESTION");
+    public static final SoyToken ELVIS = new SoyToken(921, "ELVIS");
     public static final SoyToken COLON = new SoyToken(908, "COLON");
     public static final SoyToken LTEQ = new SoyToken(909, "LTEQ");
     public static final SoyToken GTEQ = new SoyToken(910, "GTEQ");
@@ -204,6 +210,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken DIV = new SoyToken(916, "DIV");
     public static final SoyToken MOD = new SoyToken(917, "MOD");
     public static final SoyToken DOT = new SoyToken(918, "DOT");
+    public static final SoyToken QUESTION_DOT = new SoyToken(920, "QUESTION_DOT");
     public static final SoyToken COMMA = new SoyToken(919, "COMMA");
 
     // errors
@@ -259,6 +266,8 @@ public final class SoyToken extends IElementType {
     public static final TokenSet DIRECTIVE_TOKENS = fromValueRange(600, 649);
     public static final TokenSet TAG_SECTION_TOKENS = TokenSet.create(ELSE_IF, ELSE, CASE, DEFAULT, IF_EMPTY, PARAM);
     public static final TokenSet NON_TAG_TOKENS = fromValueRange(100, 199);
+    /** If one of these precedes a '[', it begins an object literal */
+    public static final TokenSet INITIAL_EXPRESSION_OPERATORS = TokenSet.orSet(fromValueRange(900, 999), TokenSet.create(LBRACE, LPAREN, LBRACK));
 
     static {
         for (Field field : SoyToken.class.getFields()) {

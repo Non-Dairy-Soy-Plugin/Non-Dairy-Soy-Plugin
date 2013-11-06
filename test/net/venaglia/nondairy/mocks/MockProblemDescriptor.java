@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ public class MockProblemDescriptor extends CommonProblemDescriptorImpl implement
 
     private int lineNumber = -1;
     private TextAttributesKey key;
+    private ProblemGroup problemGroup;
 
     public MockProblemDescriptor(PsiElement startElement,
                                  PsiElement endElement,
@@ -133,7 +134,7 @@ public class MockProblemDescriptor extends CommonProblemDescriptorImpl implement
         return tooltip;
     }
 
-    public TextRange getRangeInElement() {
+    public TextRange getTextRangeInElement() {
         return rangeInElement;
     }
 
@@ -165,7 +166,6 @@ public class MockProblemDescriptor extends CommonProblemDescriptorImpl implement
         return "Problem: " + getDescriptionTemplate() + " -> \"" + source + "\" with fixes " + Arrays.asList(getFixes());
     }
 
-    ProblemGroup problemGroup = null;
     @Override
     public void setProblemGroup(@Nullable ProblemGroup problemGroup) {
         this.problemGroup = problemGroup;

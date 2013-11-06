@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package net.venaglia.nondairy.soylang.parser;
 
 import net.venaglia.nondairy.SoyTestUtil;
 import org.jetbrains.annotations.NonNls;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -32,54 +31,9 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings({ "HardCodedStringLiteral" })
 public class SoyStructureParserTest extends BaseParserTest {
 
-    public static final String SIMPLE_TAG_PAIR_SOURCE =
-            "{template .testTemplate}\n" +
-                    "<h1>Hello World</h1>\n" +
-                    "{/template}";
-
-    public static final String SIMPLE_TAG_PAIR_EXPECT =
-            "tag_pair:{\n" +
-                    "    template_tag:{\n" +
-                    "        TAG_LBRACE\n" +
-                    "        tag_between_braces:{\n" +
-                    "            command_keyword:{\n" +
-                    "                TEMPLATE\n" +
-                    "            }\n" +
-                    "            template_name:{\n" +
-                    "                TEMPLATE_IDENTIFIER\n" +
-                    "            }\n" +
-                    "        }\n" +
-                    "        TAG_RBRACE\n" +
-                    "    }\n" +
-                    "    template_content:{\n" +
-                    "        XML_START_TAG_START\n" +
-                    "        XML_TAG_NAME\n" +
-                    "        XML_TAG_END\n" +
-                    "        XML_DATA_CHARACTERS\n" +
-                    "        XML_END_TAG_START\n" +
-                    "        XML_TAG_NAME\n" +
-                    "        XML_TAG_END" +
-                    "    }\n" +
-                    "    tag:{\n" +
-                    "        TAG_END_LBRACE\n" +
-                    "        tag_between_braces:{\n" +
-                    "            command_keyword:{\n" +
-                    "                TEMPLATE\n" +
-                    "            }\n" +
-                    "        }\n" +
-                    "        TAG_RBRACE\n" +
-                    "    }\n" +
-                    "}";
-
     @Override
     protected void parseImpl(TokenSource tokenSource) {
         new SoyStructureParser(tokenSource).parse();
-    }
-
-    @Test
-    @Ignore("This is two tags, not one -- need to refactor it somewhere else")
-    public void testSimpleTagPair() throws Exception {
-        testParseSequence(SIMPLE_TAG_PAIR_SOURCE, SIMPLE_TAG_PAIR_EXPECT, "YYINITIAL", null);
     }
 
     @Test
@@ -90,6 +44,11 @@ public class SoyStructureParserTest extends BaseParserTest {
     @Test
     public void testExample() throws Exception {
         testNoErrorsImpl("example.soy");
+    }
+
+    @Test
+    public void testLet() throws Exception {
+        testNoErrorsImpl("let.soy");
     }
 
     @Test
@@ -120,6 +79,11 @@ public class SoyStructureParserTest extends BaseParserTest {
     @Test
     public void testErrorCases() throws Exception {
         testParseSequence(SoyTestUtil.getTestSourceBuffer("error-cases.soy"), "YYINITIAL", "error-cases.soy");
+    }
+
+    @Test
+    public void testBadParam() throws Exception {
+        testParseSequence("{namespace foo.bar}\n{template .bam}\n{param :foo}value{/param}\n{/template}", "YYINITIAL", "inline-source");
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -97,20 +97,7 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
     }
 
     public void reset(CharSequence buffer) {
-        reset(buffer, YYINITIAL);
-    }
-
-    @Override
-    public void reset(final CharSequence buffer, final int initialState) {
-        doReset = new Runnable() {
-            public void run() {
-                _reset(buffer, initialState);
-                yychar = 0;
-                yycolumn = 0;
-                yyline = 0;
-            }
-        };
-        doReset.run();
+        reset(buffer, 0, buffer.length(), YYINITIAL);
     }
 
     @Override
@@ -124,10 +111,6 @@ public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol
             }
         };
         doReset.run();
-    }
-
-    private void _reset(CharSequence buffer, int initialState) {
-        super.reset(buffer, initialState);
     }
 
     private void _reset(CharSequence buffer, int start, int end, int initialState) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package net.venaglia.nondairy.soylang.inspection;
 
-import static net.venaglia.nondairy.soylang.SoyElement.call_tag;
-
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.ProblemDescriptor;
@@ -31,17 +29,13 @@ import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.soylang.SoyElement;
 import net.venaglia.nondairy.soylang.SoyFile;
 import net.venaglia.nondairy.soylang.elements.ParameterElement;
-import net.venaglia.nondairy.soylang.elements.path.AttributePredicate;
 import net.venaglia.nondairy.soylang.elements.path.ElementTypePredicate;
-import net.venaglia.nondairy.soylang.elements.path.NoMatchHanding;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import net.venaglia.nondairy.soylang.elements.path.PushPopPredicate;
-import net.venaglia.nondairy.soylang.elements.path.TraversalPredicate;
 import net.venaglia.nondairy.soylang.elements.path.TraverseEmpty;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,7 +78,6 @@ public class ParameterNotUsedInspection extends AbstractSoyInspectionWithSingleQ
             PsiElementPath.PARENT_ELEMENT,
             PsiElementPath.PARENT_ELEMENT,
             new ElementTypePredicate(SoyElement.template_tag_pair).onNextSiblings(false),
-            new TemplateWithoutDataAllPredicate(),
             new ElementTypePredicate(SoyElement.parameter_ref).onAllDescendants(),
             PushPopPredicate.popAndJoin(POP_JOIN)
     ).debug("parameter_not_used!unused_params");
@@ -94,10 +87,6 @@ public class ParameterNotUsedInspection extends AbstractSoyInspectionWithSingleQ
             new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
             PATH_TO_UNUSED_PARAMS.asForkingTraversalPredicate()
     ).debug("parameter_not_used!templates");
-
-    private static final PsiElementPath PATH_TO_DATA_ALL =
-            new PsiElementPath(new ElementTypePredicate(call_tag).onAllDescendants(),
-                               AttributePredicate.hasAttributeWithValue("data", "all").onChildrenOfChildren()).debug("parameter_not_used!data_all");
 
     public ParameterNotUsedInspection() {
         super("unused.parameter");
@@ -170,29 +159,6 @@ public class ParameterNotUsedInspection extends AbstractSoyInspectionWithSingleQ
                     PsiDocumentManager.getInstance(docElement.getProject()).commitDocument(document);
                 }
             }
-        }
-    }
-
-    @NoMatchHanding
-    private static class TemplateWithoutDataAllPredicate implements TraversalPredicate {
-
-        @NotNull
-        @Override
-        public PsiElementCollection traverse(@NotNull Collection<PsiElement> current) {
-            if (PATH_TO_DATA_ALL.navigate(current).isEmpty()) {
-                return PsiElementCollection.castOrCopy(current);
-            }
-            return PsiElementCollection.EMPTY;
-        }
-
-        @Override
-        public boolean test(PsiElement element) {
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return "![data=all]"; // NON-NLS
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,11 +22,9 @@ import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * User: ed
@@ -34,11 +32,6 @@ import java.util.Set;
  * Time: 9:50 PM
  */
 public class MockProjectFileIndex implements ProjectFileIndex {
-
-    @Override
-    public boolean isUnderSourceRootOfType(@NotNull VirtualFile virtualFile, @NotNull Set<? extends JpsModuleSourceRootType<?>> jpsModuleSourceRootTypes) {
-        return false;
-    }
 
     @Override
     public boolean isContentSourceFile(@NotNull VirtualFile virtualFile) {

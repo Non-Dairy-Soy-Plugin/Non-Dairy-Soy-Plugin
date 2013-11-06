@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 - 2012 Ed Venaglia
+ * Copyright 2010 - 2013 Ed Venaglia
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -64,6 +64,11 @@ public abstract class TokenSource {
      * @return the type of the current token.
      */
     public abstract IElementType token();
+
+    /**
+     * @return The token previous to the current one, or null if at the BOF.
+     */
+    public abstract IElementType previous();
 
     /**
      * @return The string that the current token was generated from.
