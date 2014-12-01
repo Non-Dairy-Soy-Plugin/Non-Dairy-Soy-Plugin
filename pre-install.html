@@ -1,0 +1,59 @@
+<html>
+<head>
+<script>
+    jive.tile.onOpen(function(config) {
+        $("#cfg").val(JSON.stringify(config || {}, null, "    "));
+        $("#save").click(function(ev) {
+            ev.preventDefault();
+            var c = JSON.parse($("#cfg").val());
+            jive.tile.close(c);
+        });
+        $("#cancel").click(function(ev) {
+            ev.preventDefault();
+            jive.tile.close();
+        });
+        $("#test").click(function(ev) {
+            ev.preventDefault();
+            var url = config.jiveURL + "/api/version";
+            var msg = "Executing: GET " + url;
+            $("#cfg").val(msg);
+            $.ajax({
+                    dataType: "text",
+                    url: url
+                }).then(
+                function(data) {
+                    data == String(data);
+                    var prefix = "throw 'allowIllegalResourceCall is false.';\n";
+                    if (data.substring(0, prefix.length) == prefix) {
+                        data = data.substring(prefix.length);
+                    }
+                    msg += "\n\n" + data;
+                    $("#cfg").val(msg);
+                },
+                function(xhr, staus, error) {
+                    msg += "\n\nstatus: " + status + "\nerror: " + error;
+                    $("#cfg").val(msg);
+                }
+           );
+        });
+        gadgets.window.adjustHeight();
+    });
+</script>
+<style>
+    body { font-family: sans-serif; }
+</style>
+</head>
+<body>
+    <div>
+        <label for="cfg">__MSG_extension.name__</label>
+    </div>
+    <div>
+        <textarea id="cfg" style="width: 100%; min-height: 200px;"></textarea>
+    </div>
+    <div>
+        <button id="save">Continue</button>
+        <button id="test">Test</button>
+        <button id="cancel">Cancel</button>
+    </div>
+</body>
+</html>
