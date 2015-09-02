@@ -20,6 +20,7 @@ import static net.venaglia.nondairy.soylang.elements.path.TraverseEmpty.*;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import net.venaglia.nondairy.util.TinySet;
@@ -215,6 +216,9 @@ public class PsiElementPath {
         }
         try {
             return navigateImpl(start);
+        } catch (ProcessCanceledException e) {
+            TraceState.summaryMessage("## [ cancelled path: %s ] (%s: %s)", name, e.getClass().getSimpleName(), e.getMessage());
+            return PsiElementCollection.EMPTY;
         } catch (RuntimeException e) {
             LOG.error(e);
             TraceState.summaryMessage("## [ abort path: %s ] (%s: %s)", name, e.getClass().getSimpleName(), e.getMessage());

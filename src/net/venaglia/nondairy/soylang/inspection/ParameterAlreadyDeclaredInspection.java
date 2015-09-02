@@ -78,8 +78,8 @@ public class ParameterAlreadyDeclaredInspection extends AbstractSoyInspection {
                 if (!def.isEmpty()) {
                     problems.add(manager.createProblemDescriptor(element,
                                                                  getMessage(parameterName),
+                                                                 false,
                                                                  ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-                                                                 null,
                                                                  true));
                 }
             }

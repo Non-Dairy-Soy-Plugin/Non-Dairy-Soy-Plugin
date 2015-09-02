@@ -23,6 +23,7 @@ import com.intellij.ide.structureView.TextEditorBasedStructureViewModel;
 import com.intellij.ide.structureView.TreeBasedStructureViewBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.PsiStructureViewFactory;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiFile;
 import net.venaglia.nondairy.soylang.structure.SoyRootTreeElement;
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +48,7 @@ public class SoyStructureViewFactory implements PsiStructureViewFactory {
         return new TreeBasedStructureViewBuilder() {
             @NotNull
             @Override
-            public StructureViewModel createStructureViewModel() {
+            public StructureViewModel createStructureViewModel(Editor editor) {
                 return new TextEditorBasedStructureViewModel(psiFile) {
                     @NotNull
                     @Override
