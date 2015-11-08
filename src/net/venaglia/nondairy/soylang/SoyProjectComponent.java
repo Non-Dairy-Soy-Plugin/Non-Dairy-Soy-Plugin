@@ -26,6 +26,7 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentAdapter;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileAdapter;
@@ -66,7 +67,7 @@ public class SoyProjectComponent extends AbstractProjectComponent implements Per
         startupManager.registerStartupActivity(new Runnable() {
             @Override
             public void run() {
-                startupManager.registerCacheUpdater(soyCacheUpdater);
+                DumbService.getInstance(myProject).queueTask(soyCacheUpdater);
             }
         });
         EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentAdapter() {

@@ -16,11 +16,11 @@
 
 package net.venaglia.nondairy.soylang.cache;
 
-import com.intellij.ide.caches.CacheUpdater;
-import com.intellij.ide.caches.FileContent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.project.DumbModeTask;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -61,8 +61,7 @@ import java.util.regex.Pattern;
  *
  * CacheUpdater implementation used to initialize the soy template cache.
  */
-public class SoyCacheUpdater implements CacheUpdater {
-
+public class SoyCacheUpdater extends DumbModeTask {
     @NonNls
     private static final String MATCH_COMMANDS_PATTERN = "\\{(delpackage|namespace|alias|deltemplate|template)\\s+\\.?([a-z0-9_.]+)";
     private static final Pattern MATCH_COMMANDS = Pattern.compile(MATCH_COMMANDS_PATTERN, Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -92,31 +91,31 @@ public class SoyCacheUpdater implements CacheUpdater {
     }
 
     @Override
-    public int getNumberOfPendingUpdateJobs() {
-        return 0;
+    public void performInDumbMode(@NotNull final ProgressIndicator indicator) {
+        // FIXME: Use the indicator to show *real* progress
+        indicator.setIndeterminate(true);
+
+        ApplicationManager.getApplication().runReadAction(new Runnable() {
+            @Override
+            public void run() {
+                final Collection<VirtualFile> files = queryNeededFiles(indicator);
+                for (VirtualFile file : files) {
+                    processFile(file);
+                }
+            }
+        });
     }
 
-    @Override
-    public VirtualFile[] queryNeededFiles(ProgressIndicator indicator) {
+    private Collection<VirtualFile> queryNeededFiles(ProgressIndicator indicator) {
         String ext = SoyFileType.INSTANCE.getDefaultExtension();
-        Collection<VirtualFile> files = FilenameIndex.getAllFilesByExt(project, ext);
-        return files.toArray(new VirtualFile[files.size()]);
+        return FilenameIndex.getAllFilesByExt(project, ext);
     }
 
-    @Override
-    public void processFile(FileContent fileContent) {
+    private void processFile(VirtualFile virtualFile) {
         if (disposed) {
             return;
         }
-        updateCache(fileContent.getVirtualFile());
-    }
-
-    @Override
-    public void updatingDone() {
-    }
-
-    @Override
-    public void canceled() {
+        updateCache(virtualFile);
     }
 
     public void updateCache(@NotNull VirtualFile file) {
@@ -372,7 +371,7 @@ public class SoyCacheUpdater implements CacheUpdater {
             for (Module module : modules) {
                 lastVersions.put(module, createEmpty(module));
             }
-            
+
             for (Module module : lastVersions.keySet()) {
                 E current = getForModule(module);
                 E previous = lastVersions.get(module);
@@ -408,7 +407,7 @@ public class SoyCacheUpdater implements CacheUpdater {
             }
             return String.valueOf(obj);
         }
-        
+
         @SuppressWarnings("unchecked")
         private <V> Iterator<Map.Entry<String,V>> iter(@Nullable Map<String,V> map) {
             if (map == null) {
@@ -416,8 +415,8 @@ public class SoyCacheUpdater implements CacheUpdater {
             } else {
                 return map.entrySet().iterator();
             }
-        } 
-        
+        }
+
         private <V> int logChanges(@Nullable Object parent,
                                    @Nullable String parentSimpleName,
                                    @Nullable NavigableMap<String,V> current,
