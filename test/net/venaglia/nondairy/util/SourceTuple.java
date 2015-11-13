@@ -20,6 +20,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.lang.Language;
 import com.intellij.mock.MockDocument;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
@@ -246,6 +247,18 @@ public class SourceTuple {
         @Override
         public <T> void putUserData(@NotNull Key<T> key, @Nullable T value) {
             userData.put(key, value);
+        }
+
+        @NotNull
+        @Override
+        public PsiFile getStubBindingRoot() {
+            return root.getContainingFile();
+        }
+
+        @NotNull
+        @Override
+        public FileType getFileType() {
+            return file.getFileType();
         }
     }
 }

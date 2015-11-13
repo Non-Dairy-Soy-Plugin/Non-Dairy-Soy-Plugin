@@ -34,8 +34,8 @@ public interface TemplateMemberElement extends NamespaceMemberElement {
 
     static final PsiElementPath PATH_TO_CONTAINING_TEMPLATE_NAME =
             new PsiElementPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
-                               new ElementTypePredicate(template_tag_pair).onChildren(),
-                               new ElementTypePredicate(template_tag).onChildren())
+                               new ElementTypePredicate(template_tag_pair, deltemplate_tag_pair).onChildren(),
+                               new ElementTypePredicate(template_tag, deltemplate_tag).onChildren())
                     .debug("path_to_containing_template_name");
 
     /**

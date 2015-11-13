@@ -77,6 +77,11 @@ public class SoyStructureParserTest extends BaseParserTest {
     }
 
     @Test
+    public void testDelegatesCallSimple() throws Exception {
+        testNoErrorsImpl("delegates-simple.soy");
+    }
+
+    @Test
     public void testErrorCases() throws Exception {
         testParseSequence(SoyTestUtil.getTestSourceBuffer("error-cases.soy"), "YYINITIAL", "error-cases.soy");
     }

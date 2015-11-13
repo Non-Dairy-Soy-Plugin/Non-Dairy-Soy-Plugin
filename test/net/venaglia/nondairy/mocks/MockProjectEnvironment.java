@@ -19,9 +19,13 @@ package net.venaglia.nondairy.mocks;
 import com.intellij.mock.MockModule;
 import com.intellij.mock.MockProject;
 import com.intellij.mock.MockPsiManager;
+import com.intellij.openapi.fileTypes.FileTypeRegistry;
+import com.intellij.openapi.fileTypes.MockFileTypeManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.util.Getter;
+import com.intellij.openapi.util.StaticGetter;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiFile;
@@ -57,6 +61,7 @@ public class MockProjectEnvironment {
     private ProjectFileIndex fileIndex;
     private SoyCacheUpdater soyCacheUpdater;
     private Map<String,SourceTuple> parsedFiles;
+    private FileTypeRegistry fileTypeRegistry;
 
     private final AtomicBoolean initialized = new AtomicBoolean();
 
@@ -84,15 +89,19 @@ public class MockProjectEnvironment {
             fileIndex = new MockProjectFileIndex();
             parsedFiles = new HashMap<String,SourceTuple>();
             soyCacheUpdater = new SoyCacheUpdater(project);
+            fileTypeRegistry = new MockFileTypeManager();
         }
     }
 
     public void runWith(Runnable runnable) {
+        Getter<FileTypeRegistry> before = FileTypeRegistry.ourInstanceGetter;
         try {
+            FileTypeRegistry.ourInstanceGetter = new StaticGetter<FileTypeRegistry>(fileTypeRegistry);
             CURRENT_ENVIRONMENT.set(new WeakReference<MockProjectEnvironment>(this));
             init();
             runnable.run();
         } finally {
+            FileTypeRegistry.ourInstanceGetter = before;
             CURRENT_ENVIRONMENT.remove();
         }
     }

@@ -38,6 +38,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * User: ed
@@ -320,7 +322,23 @@ public class PsiElementPath {
             if (node != null && node.getElementType() != null) {
                 buffer.append(node.getElementType());
                 buffer.append(":\'");
-                buffer.append(node.getText().replace("\\","\\\\").replace("\n","\\n")); //NON-NLS
+                String text = node.getText().replace("\\", "\\\\").replace("\n", "\\n"); // NON_NLS
+                if (text.length() > 100) {
+                    Matcher m1 = Pattern.compile("^\\s*(.{0,74}\\w)\\b").matcher(text);
+                    if (m1.find()) {
+                        String head = m1.group(1);
+                        String re = "\\b(\\w.{0,96})\\s*$".replace("96", String.valueOf(96 - head.length())); //NON-NLS
+                        Matcher m2 = Pattern.compile(re).matcher(text.substring(text.length() - 100));
+                        if (m2.find()) {
+                            text = head + "..." + m2.group(1);
+                        } else {
+                            text = head + "..." + text.substring(text.length() - 97 + head.length());
+                        }
+                    } else {
+                        text = text.substring(0,97) + "...";
+                    }
+                }
+                buffer.append(text);
                 buffer.append("\'");
             } else {
                 buffer.append("[null]"); // NON-NLS

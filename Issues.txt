@@ -19,6 +19,7 @@
 
 Pri | Fix   | Description
 ----+-------+-------------------------------------------------------------------------------------
+ P1 | 0.6.1 | ConcurrentModificationException when reloading project
  P2 | 0.6.x | incomplete support for {deltemplate}
  P2 | 0.6.x | go to declaration on a template arbitrarily finds one, not all delegates
  P3 | 0.6.x | Highlight usages on an alias command sometimes marks more than it should

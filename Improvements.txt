@@ -15,6 +15,11 @@
 
 ===============================================================================
 
+ver 0.6.1
+* Fixed unused alias inspection when call used within deltemplate
+* Fixed ConcurrentModificationException when reloading projects
+* Updated to work with IntelliJ 15
+
 ver 0.6.0
 * Updated for IntelliJ 12 (Thanks to Ivica Ceraj)
 * Added spell checking (Thanks to Christopher Peisert)

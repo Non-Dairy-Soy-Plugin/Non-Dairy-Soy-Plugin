@@ -50,7 +50,7 @@ public abstract class AbstractTemplateCache<ME extends AbstractTemplateCache<ME>
     @NotNull
     @Override
     protected Set<CacheEntry> create(String key) {
-        return new CacheSet(key);
+        return Collections.synchronizedSet(new CacheSet(key));
     }
 
     @SuppressWarnings("unchecked")
@@ -87,13 +87,12 @@ public abstract class AbstractTemplateCache<ME extends AbstractTemplateCache<ME>
         Set<CacheEntry> removed = new HashSet<CacheEntry>();
         for (Iterator<Set<CacheEntry>> cesi = values().iterator(); cesi.hasNext(); ) {
             Set<CacheEntry> cec = cesi.next();
-            for (Iterator<CacheEntry> cei = cec.iterator(); cei.hasNext(); ) {
-                CacheEntry ce = cei.next();
-                if (file.equals(ce.getFile())) {
-                    cei.remove();
+            for (CacheEntry ce : cec) {
+                if (ce != null && file.equals(ce.getFile())) {
                     removed.add(ce);
                 }
             }
+            cec.removeAll(removed);
             if (cec.isEmpty()) {
                 cesi.remove();
             }

@@ -74,7 +74,7 @@ public class AliasNotUsedInspection extends AbstractSoyInspectionWithSingleQuick
             PushPopPredicate.swap(),
             new ElementTypePredicate(SoyElement.soy_file).onChildren(),
             new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
-            new ElementTypePredicate(SoyElement.template_tag_pair).onChildren(),
+            new ElementTypePredicate(SoyElement.template_tag_pair, SoyElement.deltemplate_tag_pair).onChildren(),
             new ElementTypePredicate(SoyElement.template_name_ref_absolute).onAllDescendants(),
             PushPopPredicate.popAndJoin(POP_JOIN),
             PsiElementPath.PARENT_ELEMENT,
@@ -110,7 +110,7 @@ public class AliasNotUsedInspection extends AbstractSoyInspectionWithSingleQuick
                 problems.add(manager.createProblemDescriptor(element,
                              getMessage(name),
                              getQuickFix(name),
-                             ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+                             ProblemHighlightType.LIKE_UNUSED_SYMBOL,
                              true));
 
             }

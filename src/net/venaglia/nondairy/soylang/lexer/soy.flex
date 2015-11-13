@@ -358,8 +358,8 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   {WhiteSpace}+                  { nextStateAfterWhitespace = yystate();
                                    yybegin(AFTER_WHITESPACE);
                                    return symbol(WHITESPACE); }
-  {Identifier} |
-  {CompoundIdentifier}           { yybegin(SOY_TAG);
+  {Identifier} {ParameterDotRef}*
+                                 { yybegin(SOY_TAG);
                                    currentTemplate = yytext().toString();
                                    return symbol(DELTEMPLATE_IDENTIFIER, currentTemplate); }
   "}"                            { yybegin(CLOSE_TAG); yypushback(1); }

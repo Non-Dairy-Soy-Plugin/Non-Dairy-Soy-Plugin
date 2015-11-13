@@ -50,7 +50,7 @@ import java.util.Collection;
  * PsiElement implementation that represents the fully qualified template name
  * in a call soy tag.
  */
-public class AbsoluteTemplateNameRef extends SoyPsiElement implements SoyNamedElement, ItemPresentation, TemplateMemberElement {
+public class AbsoluteTemplateNameRef extends SoyPsiElement implements SoyNamedElement, ItemPresentation, TemplateMemberElement, NamespaceMemberElement {
 
     private SimpleRef<String> templateNameCachedRef;
 

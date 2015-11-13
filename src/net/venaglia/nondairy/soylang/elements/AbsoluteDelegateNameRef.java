@@ -23,7 +23,9 @@ import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
+import net.venaglia.nondairy.soylang.elements.path.DeltemplatePath;
 import net.venaglia.nondairy.soylang.elements.path.PsiElementCollection;
+import net.venaglia.nondairy.soylang.elements.path.PsiElementPath;
 import net.venaglia.nondairy.soylang.icons.SoyIcons;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -55,17 +57,23 @@ public class AbsoluteDelegateNameRef extends SoyPsiElement implements SoyNamedEl
 
     @Override
     public PsiReference getReference() {
-//        String templateName = getTemplateName();
-//        if (templateName == null) return null;
-//        PsiElementPath pathToTemplateName = TemplatePath.forTemplateName(templateName)
-//                .debug("for_template_name!absolute");
-//        return new SoyPsiElementReference(this, pathToTemplateName, null);
-        return null;
+        String packageName = getDelegatePackage();
+        String templateName = getName();
+        if (templateName == null) return null;
+        PsiElementPath pathToTemplateName;
+        if (packageName == null) {
+            pathToTemplateName = DeltemplatePath.forTemplateName(templateName).debug("for_deltemplate_name!simple");
+        } else {
+            pathToTemplateName = DeltemplatePath.forTemplateName(packageName, templateName).debug("for_deltemplate_name!absolute");
+        }
+        return new SoyPsiElementReference(this, pathToTemplateName, null);
     }
 
     @Override
     public String getPresentableText() {
-        return getName();
+        String packageName = getDelegatePackage();
+        String templateName = getName();
+        return packageName == null ? templateName : "[" + packageName + "] " + templateName;
     }
 
     @Override

@@ -36,6 +36,10 @@ public class DeltemplatePath extends PsiElementPath {
         super(buildPath(templateName));
     }
 
+    private DeltemplatePath(@NotNull String packageName, @NotNull String templateName) {
+        super(buildPath(packageName, templateName));
+    }
+
     private static ElementPredicate[] buildPath(@NotNull String templateName) {
         templateName = templateName.trim();
         if (templateName.length() == 0) {
@@ -47,8 +51,31 @@ public class DeltemplatePath extends PsiElementPath {
         return new ElementPredicate[]{
                 SoyFileElementTraversalPredicate.filesForDelegateTemplate(templateName),
                 new ElementTypePredicate(SoyElement.soy_file).onChildren(),
-                new ElementTypePredicate(SoyElement.template_tag).onDescendants(2,3),
-                new TemplateNamePredicate(templateName),
+                new ElementTypePredicate(SoyElement.deltemplate_tag).onDescendants(2,3),
+                new DeltemplateNamePredicate(templateName),
+                new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                new ElementTypePredicate(SoyElement.deltemplate_name).onChildren()
+        };
+    }
+
+    private static ElementPredicate[] buildPath(@NotNull String packageName, @NotNull String templateName) {
+        templateName = templateName.trim();
+        if (templateName.length() == 0) {
+            throw new IllegalArgumentException("template name cannot be blank.");
+        }
+        if (templateName.endsWith(".") || templateName.startsWith(".")) {
+            throw new IllegalArgumentException("invalid template name: " + templateName);
+        }
+        return new ElementPredicate[]{
+                SoyFileElementTraversalPredicate.filesForDelegateTemplate(templateName),
+                new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                new ElementTypePredicate(SoyElement.package_def).onChildren(),
+                new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
+                PushPopPredicate.push(),
+                new PackageNamePredicate(packageName).onChildren(),
+                PushPopPredicate.pop(),
+                new ElementTypePredicate(SoyElement.deltemplate_tag).onDescendants(2,3),
+                new DeltemplateNamePredicate(templateName),
                 new ElementTypePredicate(SoyElement.tag_between_braces).onChildren(),
                 new ElementTypePredicate(SoyElement.deltemplate_name).onChildren()
         };
@@ -65,6 +92,23 @@ public class DeltemplatePath extends PsiElementPath {
     public static PsiElementPath forTemplateName(@NotNull String templateName) {
         try {
             return new DeltemplatePath(templateName);
+        } catch (IllegalArgumentException e) {
+            return PsiElementPath.EMPTY;
+        }
+    }
+
+    /**
+     * Safely builds a new {@link net.venaglia.nondairy.soylang.elements.path.PsiElementPath} for the specified template
+     * name. If the template name is malformed, {@link net.venaglia.nondairy.soylang.elements.path.PsiElementPath#EMPTY} is
+     * returned.
+     * @param packageName The package name to navigate within.
+     * @param templateName The template name to navigate to.
+     * @return A path object to navigate to the specified template.
+     */
+    @NotNull
+    public static PsiElementPath forTemplateName(@NotNull String packageName, @NotNull String templateName) {
+        try {
+            return new DeltemplatePath(packageName, templateName);
         } catch (IllegalArgumentException e) {
             return PsiElementPath.EMPTY;
         }

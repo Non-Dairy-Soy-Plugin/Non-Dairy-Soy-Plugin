@@ -19,6 +19,7 @@ package net.venaglia.nondairy.mocks;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.FileASTNode;
 import com.intellij.lang.Language;
+import com.intellij.lang.LighterAST;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -449,7 +450,11 @@ public class MockTreeNode implements ASTNode {
             return true;
         }
 
-
+        @Nullable
+        @Override
+        public LighterAST getLighterAST() {
+            return null;
+        }
     }
 
     private static class MockLeafNode extends MockTreeNode {

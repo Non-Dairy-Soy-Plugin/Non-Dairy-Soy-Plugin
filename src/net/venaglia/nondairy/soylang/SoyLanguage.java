@@ -53,6 +53,7 @@ public class SoyLanguage extends Language {
         return true;
     }
 
+    @NotNull
     @Override
     public String getDisplayName() {
         return I18N.msg("soy.language.display_name");

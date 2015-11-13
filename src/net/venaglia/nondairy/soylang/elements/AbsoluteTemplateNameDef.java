@@ -46,7 +46,7 @@ import javax.swing.*;
  */
 public class AbsoluteTemplateNameDef
         extends SoyPsiElement
-        implements SoyNamedElement, ItemPresentation, TemplateMemberElement {
+        implements SoyNamedElement, ItemPresentation, TemplateMemberElement, NamespaceMemberElement {
 
     private static final PsiElementPath PARAMETER_DECLARATION_PATH =
             new PsiElementPath(new ElementTypePredicate(SoyElement.tag_and_doc_comment).onFirstAncestor(),

@@ -27,9 +27,9 @@
         my available free time.</p>
         ]]>
     </description>
-    <version>0.6.0 (beta)</version>
+    <version>0.6.1 (beta)</version>
     <vendor>Ed Venaglia</vendor>
-    <idea-version since-build="123.0"/>
+    <idea-version since-build="143.0"/>
 
     <application-components>
         <component>

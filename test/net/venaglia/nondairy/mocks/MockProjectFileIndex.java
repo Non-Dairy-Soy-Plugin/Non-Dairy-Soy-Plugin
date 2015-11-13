@@ -22,9 +22,12 @@ import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: ed
@@ -118,6 +121,34 @@ public class MockProjectFileIndex implements ProjectFileIndex {
 
     @Override
     public boolean isInTestSourceContent(@NotNull VirtualFile fileOrDir) {
+        return false;
+    }
+
+    @Nullable
+    @Override
+    public Module getModuleForFile(@NotNull VirtualFile file, boolean honorExclusion) {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public VirtualFile getContentRootForFile(@NotNull VirtualFile file, boolean honorExclusion) {
+        return null;
+    }
+
+    @Override
+    public boolean isExcluded(@NotNull VirtualFile file) {
+        return false;
+    }
+
+    @Override
+    public boolean isUnderIgnored(@NotNull VirtualFile file) {
+        return false;
+    }
+
+    @Override
+    public boolean isUnderSourceRootOfType(@NotNull VirtualFile fileOrDir,
+                                           @NotNull Set<? extends JpsModuleSourceRootType<?>> rootTypes) {
         return false;
     }
 }

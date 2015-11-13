@@ -21,7 +21,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * User: ed
@@ -47,7 +46,7 @@ public class MockInspectionManager extends InspectionManager {
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      @NotNull String descriptionTemplate,
                                                      LocalQuickFix fix,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      boolean onTheFly) {
         return new MockProblemDescriptor(psiElement, psiElement, descriptionTemplate, new LocalQuickFix[]{fix}, highlightType, false, null, false, null, onTheFly);
     }
@@ -58,7 +57,7 @@ public class MockInspectionManager extends InspectionManager {
                                                      @NotNull String descriptionTemplate,
                                                      boolean onTheFly,
                                                      LocalQuickFix[] fixes,
-                                                     ProblemHighlightType highlightType) {
+                                                     @NotNull ProblemHighlightType highlightType) {
         return new MockProblemDescriptor(psiElement, psiElement, descriptionTemplate, fixes, highlightType, false, null, false, null, onTheFly);
     }
 
@@ -67,7 +66,7 @@ public class MockInspectionManager extends InspectionManager {
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      @NotNull String descriptionTemplate,
                                                      LocalQuickFix[] fixes,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      boolean onTheFly,
                                                      boolean isAfterEndOfLine) {
         return new MockProblemDescriptor(psiElement, psiElement, descriptionTemplate, fixes, highlightType, isAfterEndOfLine, null, false, null, onTheFly);
@@ -78,27 +77,29 @@ public class MockInspectionManager extends InspectionManager {
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement startElement,
                                                      @NotNull PsiElement endElement,
                                                      @NotNull String descriptionTemplate,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      boolean onTheFly,
                                                      LocalQuickFix... fixes) {
         return new MockProblemDescriptor(startElement, endElement, descriptionTemplate, fixes, highlightType, false, null, false, null, onTheFly);
     }
 
+    @NotNull
     @Override
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      TextRange rangeInElement,
                                                      @NotNull String descriptionTemplate,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      boolean onTheFly,
                                                      LocalQuickFix... fixes) {
         return new MockProblemDescriptor(psiElement, psiElement, descriptionTemplate, fixes, highlightType, false, rangeInElement, false, null, onTheFly);
     }
 
+    @NotNull
     @Override
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      @NotNull String descriptionTemplate,
                                                      boolean showTooltip,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      boolean onTheFly,
                                                      LocalQuickFix... fixes) {
         return new MockProblemDescriptor(psiElement, psiElement, descriptionTemplate, fixes,  highlightType, false, null, showTooltip, null, onTheFly);
@@ -110,7 +111,7 @@ public class MockInspectionManager extends InspectionManager {
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      @NotNull String descriptionTemplate,
                                                      LocalQuickFix fix,
-                                                     ProblemHighlightType highlightType) {
+                                                     @NotNull ProblemHighlightType highlightType) {
         throw new UnsupportedOperationException();
     }
 
@@ -120,7 +121,7 @@ public class MockInspectionManager extends InspectionManager {
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      @NotNull String descriptionTemplate,
                                                      LocalQuickFix[] fixes,
-                                                     ProblemHighlightType highlightType) {
+                                                     @NotNull ProblemHighlightType highlightType) {
         throw new UnsupportedOperationException();
     }
 
@@ -130,7 +131,7 @@ public class MockInspectionManager extends InspectionManager {
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      @NotNull String descriptionTemplate,
                                                      LocalQuickFix[] fixes,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      boolean isAfterEndOfLine) {
         throw new UnsupportedOperationException();
     }
@@ -141,48 +142,36 @@ public class MockInspectionManager extends InspectionManager {
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement startElement,
                                                      @NotNull PsiElement endElement,
                                                      @NotNull String descriptionTemplate,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      LocalQuickFix... fixes) {
         throw new UnsupportedOperationException();
     }
 
+    @NotNull
     @Override
     @Deprecated
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      TextRange rangeInElement,
                                                      @NotNull String descriptionTemplate,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      LocalQuickFix... fixes) {
         throw new UnsupportedOperationException();
     }
 
+    @NotNull
     @Override
     @Deprecated
     public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
                                                      @NotNull String descriptionTemplate,
                                                      boolean showTooltip,
-                                                     ProblemHighlightType highlightType,
+                                                     @NotNull ProblemHighlightType highlightType,
                                                      LocalQuickFix... fixes) {
         throw new UnsupportedOperationException();
     }
 
+    @NotNull
     @Override
-    public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
-                                                     @NotNull String s,
-                                                     ProblemHighlightType problemHighlightType,
-                                                     @Nullable HintAction hintAction,
-                                                     boolean b,
-                                                     LocalQuickFix... localQuickFixes) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    @Deprecated
-    public ProblemDescriptor createProblemDescriptor(@NotNull PsiElement psiElement,
-                                                     @NotNull String s,
-                                                     ProblemHighlightType problemHighlightType,
-                                                     @Nullable HintAction hintAction,
-                                                     LocalQuickFix... localQuickFixes) {
+    public GlobalInspectionContext createNewGlobalContext(boolean reuse) {
         throw new UnsupportedOperationException();
     }
 }
