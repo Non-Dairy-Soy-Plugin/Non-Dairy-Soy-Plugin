@@ -158,9 +158,10 @@ public final class SoyToken extends IElementType {
 //    public static final SoyToken BIDI_END_EDGE = new SoyToken(666, "BIDI_END_EDGE");
 //    public static final SoyToken BIDI_TEXT_DIR = new SoyToken(667, "BIDI_TEXT_DIR");
 
-    // iterator keywords
+    // keywords
     public static final SoyToken IN = new SoyToken(700, "IN");
     public static final SoyToken RANGE = new SoyToken(701, "RANGE");
+    public static final SoyToken AS = new SoyToken(703, "AS");
 
     // literals
     public static final SoyToken NULL_LITERAL = new SoyToken(750, "NULL_LITERAL");
@@ -246,7 +247,7 @@ public final class SoyToken extends IElementType {
     public static final TokenSet SPECIAL_CHARS = fromValueRange(500, 599);
     public static final TokenSet DIRECTIVE_OPERATORS = TokenSet.create(DIRECTIVE_PIPE, DIRECTIVE_COLON, DIRECTIVE_COMMA);
     public static final TokenSet NUMERIC_LITERALS = TokenSet.create(INTEGER_LITERAL, FLOATING_POINT_LITERAL);
-    public static final TokenSet KEYWORDS = TokenSet.create(NOT, AND, OR, BOOLEAN_LITERAL, NULL_LITERAL, IN, RANGE );
+    public static final TokenSet KEYWORDS = TokenSet.create(NOT, AND, OR, BOOLEAN_LITERAL, NULL_LITERAL, IN, AS, RANGE );
     public static final TokenSet PARENS = TokenSet.create(LPAREN, RPAREN);
     public static final TokenSet BRACKETS = TokenSet.create(LBRACK, RBRACK);
     public static final TokenSet BRACES = TokenSet.create(LBRACE, RBRACE);
