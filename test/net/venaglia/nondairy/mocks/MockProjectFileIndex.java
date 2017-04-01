@@ -21,6 +21,7 @@ import com.intellij.openapi.roots.ContentIterator;
 import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
@@ -88,6 +89,11 @@ public class MockProjectFileIndex implements ProjectFileIndex {
     }
 
     @Override
+    public boolean isInLibrary(@NotNull VirtualFile virtualFile) {
+        return false;
+    }
+
+    @Override
     public boolean isInLibrarySource(@NotNull VirtualFile fileOrDir) {
         return false;
     }
@@ -105,6 +111,11 @@ public class MockProjectFileIndex implements ProjectFileIndex {
     @Override
     public boolean iterateContentUnderDirectory(@NotNull VirtualFile dir,
                                                 @NotNull ContentIterator iterator) {
+        return false;
+    }
+
+    @Override
+    public boolean iterateContentUnderDirectory(@NotNull VirtualFile virtualFile, @NotNull ContentIterator contentIterator, @NotNull VirtualFileFilter virtualFileFilter) {
         return false;
     }
 

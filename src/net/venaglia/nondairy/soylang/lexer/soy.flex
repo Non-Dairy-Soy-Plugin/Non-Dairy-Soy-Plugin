@@ -522,6 +522,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    if ("in".equals(ident) && ("for".equals(currentCommand) || "foreach".equals(currentCommand))) {
                                      return symbol(IN);
                                    }
+                                   if ("as".equals(ident) && "alias".equals(currentCommand)) {
+                                     return symbol(AS);
+                                   }
                                    if (EXPRESSION_TOKENS.containsKey(ident)) {
                                      return EXPRESSION_TOKENS.get(ident).toSymbol(this, ident);
                                    }
@@ -531,6 +534,9 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    if ("in".equals(ident) && ("for".equals(currentCommand) || "foreach".equals(currentCommand))) {
                                      return symbol(IN);
                                    }
+                                  if ("as".equals(ident) && "alias".equals(currentCommand)) {
+                                    return symbol(AS);
+                                  }
                                    return symbol(CAPTURED_IDENTIFIER, yytext().toString()); }
   .                              { return symbol(ILLEGAL_TAG_DECLARATION, yytext().toString()); }
   <<EOF>>                        { yybegin(YYINITIAL); }

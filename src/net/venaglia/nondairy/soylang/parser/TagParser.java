@@ -192,6 +192,18 @@ class TagParser {
                     }
                     parseDirective();
                     break;
+                case KEYWORD:
+                    if (token == SoyToken.AS) {
+                        source.advance();
+                        token = source.token();
+                        if (token == SoyToken.CAPTURED_IDENTIFIER) {
+                            source.advance();
+                        } else {
+                            source.advanceAndMarkBad(token, "token", I18N.msg("syntax.error.expected.name"));
+                        }
+                    }
+                    notExpect(TagDataType.KEYWORD);
+                    break;
                 case DIRECTIVE_ARG:
 
                     break;
@@ -391,7 +403,7 @@ class TagParser {
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = namespace_def;
             } else if (token == SoyToken.ALIAS) {
-                nowExpect(TagDataType.NAME);
+                nowExpect(TagDataType.NAME, TagDataType.KEYWORD);
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = alias_def;
             } else if (token == SoyToken.TEMPLATE) {
