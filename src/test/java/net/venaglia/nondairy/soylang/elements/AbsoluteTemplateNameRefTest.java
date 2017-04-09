@@ -28,7 +28,6 @@ import static org.junit.Assert.*;
  * Date: 3/8/12
  * Time: 6:09 PM
  */
-@Ignore("TODO: understand why it fails")
 public class AbsoluteTemplateNameRefTest extends AbstractPsiElementTest {
 
     @Test

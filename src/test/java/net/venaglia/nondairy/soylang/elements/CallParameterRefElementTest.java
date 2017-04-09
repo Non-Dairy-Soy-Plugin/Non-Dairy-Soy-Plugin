@@ -49,7 +49,6 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
     }
 
     @Test
-    @Ignore("TODO: understand why it fails")
     public void testGetReference_crossFile() throws Exception {
         CallParameterRefElement ref = findNthElement("render1.soy",
                                                      CallParameterRefElement.class,
@@ -78,7 +77,6 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
     }
 
     @Test
-    @Ignore("TODO: understand why it fails")
     public void testGetTemplateName_crossFile() throws Exception {
         CallParameterRefElement ref = findNthElement("render1.soy",
                                                      CallParameterRefElement.class,
@@ -90,7 +88,6 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
     }
 
     @Test
-    @Ignore("TODO: understand why it fails")
     public void testGetAliasTemplateName_crossFile() throws Exception {
         CallParameterRefElement ref = findNthElement("render3.soy",
                                                      CallParameterRefElement.class,
@@ -111,7 +108,6 @@ public class CallParameterRefElementTest extends AbstractPsiElementTest {
     }
 
     @Test
-    @Ignore("TODO: understand why it fails")
     public void testGetNamespace_crossFile() throws Exception {
         CallParameterRefElement ref = findNthElement("render1.soy",
                                                      CallParameterRefElement.class,

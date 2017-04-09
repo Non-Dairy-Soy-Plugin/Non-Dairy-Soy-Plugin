@@ -51,7 +51,6 @@ import java.util.regex.Pattern;
  * Time: 12:24:23 PM
  */
 @SuppressWarnings({ "HardCodedStringLiteral" })
-@Ignore("TODO: understand why it fails")
 public class ParserDeliveryAcceptanceTest extends BaseParserTest {
 
     private static final Pattern MATCH_DELETED_TEXT = Pattern.compile("\u007F+");

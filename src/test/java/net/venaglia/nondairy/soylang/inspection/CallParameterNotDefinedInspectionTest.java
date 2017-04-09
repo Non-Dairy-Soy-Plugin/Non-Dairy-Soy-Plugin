@@ -68,7 +68,6 @@ public class CallParameterNotDefinedInspectionTest extends AbstractPsiElementTes
     }
 
     @Test
-    @Ignore("TODO: understand why it fails")
     @ProjectFiles(files = "example.soy")
     public void testExternalTemplateCall_invalid() throws Exception {
         buildAnonymousTestTemplate(

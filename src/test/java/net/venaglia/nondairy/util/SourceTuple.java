@@ -83,9 +83,7 @@ public class SourceTuple {
                                     Charset.defaultCharset(),
                                     System.currentTimeMillis());
         fileUrl = file.getUrl();
-        MockDocument doc = new MockDocument();
-        doc.setText(text);
-        document = doc;
+        document = new MockDocument(text);
     }
 
     private String loadSource(String name) {

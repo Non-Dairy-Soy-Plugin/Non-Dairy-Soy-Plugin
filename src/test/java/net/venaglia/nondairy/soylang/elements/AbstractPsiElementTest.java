@@ -19,6 +19,7 @@ package net.venaglia.nondairy.soylang.elements;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.testFramework.PsiTestCase;
 import net.venaglia.nondairy.mocks.MockProjectEnvironment;
 import net.venaglia.nondairy.soylang.SoyFile;
 import net.venaglia.nondairy.soylang.elements.path.ElementPredicate;
@@ -51,7 +52,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(MockProjectEnvironmentRunner.class)
 @ProjectFiles(files = {"library.soy","render1.soy","render2.soy","render3.soy"})
-public abstract class AbstractPsiElementTest {
+public abstract class AbstractPsiElementTest extends PsiTestCase {
 
     private static final AtomicInteger ANONYMOUS_SOURCE_SEQ = new AtomicInteger();
     private static final Pattern ERROR_PATTERN = Pattern.compile("error", Pattern.CASE_INSENSITIVE);

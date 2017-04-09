@@ -51,7 +51,6 @@ public class CallMissingRequiredParamInspectionTest extends AbstractPsiElementTe
     }
 
     @Test
-    @Ignore("TODO: understand why it fails")
     @ProjectFiles(files = "example.soy")
     public void testExternalTemplateCall() throws Exception {
         buildAnonymousTestTemplate(

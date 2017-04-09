@@ -19,6 +19,12 @@ necessary to add or revise something.
 ./gradlew buildPlugin
 ```
 
+## Run
+```bash
+./gradlew runIdea
+```
+
+
 ## FAQ
 
 ### Why am I seeing errors in IntelliJ?
@@ -33,7 +39,7 @@ necessary to add or revise something.
 > accountable if they loose productivity on account of the plugin.
 >
 > If you find that your bug is genuine, please report it at
-> [Non_Dairy issue page](https://github.com/evenaglia/Non-Dairy-Soy-Plugin/issues)
+> [Non_Dairy issue page](https://github.com/Non-Dairy-Soy-Plugin/Non-Dairy-Soy-Plugin/issues)
 > and I'll get to it as soon as I can.
 >
 > Please include:
@@ -42,12 +48,6 @@ necessary to add or revise something.
 > * Steps to reproduce the error
 > * A sample source file if possible
 
-### I'm using IntelliJ Idea 9 or 10. Do you plan on back porting bug fixes or improvements?
-
-> In short, no. I know that there were a few minor bugs left in IDEA 9 and some
-> nastier ones in 10, but nothing that should crash the IDE. The new work is
-> built on top of architectural changes made for IDEA 11, and back porting
-> recent improvements would consume a tremendous amount of time.
 
 ### Can you add *such-and-such* feature?
 
@@ -56,7 +56,7 @@ necessary to add or revise something.
 > we get there."
 >
 > The *big list* is on
-> [GitHub](https://github.com/evenaglia/Non-Dairy-Soy-Plugin/blob/master/IdLikeToHave.txt).
+> [GitHub](https://github.com/Non-Dairy-Soy-Plugin/Non-Dairy-Soy-Plugin/blob/master/IdLikeToHave.txt).
 > Additional ideas are welcome. Prioritization is tracked on little yellow
 > sticky notes and entirely subject to available time, feasibility, ROI, and public demand.
 
