@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/nondairy.iml" filepath="$PROJECT_DIR$/nondairy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/non-dairy-soy-plugin.iml" filepath="$PROJECT_DIR$/.idea/modules/non-dairy-soy-plugin.iml" />
     </modules>
   </component>
 </project>
-

@@ -1,4 +1,5 @@
 # Welcome to the Non-Dairy Soy plugin!
+[![Build Status](https://travis-ci.org/Non-Dairy-Soy-Plugin/Non-Dairy-Soy-Plugin.svg?branch=master)](https://travis-ci.org/Non-Dairy-Soy-Plugin/Non-Dairy-Soy-Plugin)
 
 This document is subject to change, particularly at any point it is deemed
 necessary to add or revise something.
@@ -11,6 +12,12 @@ necessary to add or revise something.
   developer experience
 * I18N support (still looking for translators)
 * Automated tests designed to ensure a quality release every time
+== Build
+
+## Build
+```bash
+./gradlew buildPlugin
+```
 
 ## FAQ
 
