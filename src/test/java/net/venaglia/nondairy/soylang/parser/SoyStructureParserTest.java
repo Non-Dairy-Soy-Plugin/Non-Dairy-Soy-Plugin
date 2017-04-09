@@ -42,6 +42,11 @@ public class SoyStructureParserTest extends BaseParserTest {
     }
 
     @Test
+    public void testAliases() throws Exception {
+        testNoErrorsImpl("aliases.soy");
+    }
+
+    @Test
     public void testExample() throws Exception {
         testNoErrorsImpl("example.soy");
     }

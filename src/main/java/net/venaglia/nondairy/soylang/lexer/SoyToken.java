@@ -401,8 +401,6 @@ public final class SoyToken extends IElementType {
         for (SoyToken token : ALL_TOKENS_BY_VALUE.values()) {
             try {
                 token.parserValue = (Integer)parserSymbolClass.getField(token.name()).get(null);
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

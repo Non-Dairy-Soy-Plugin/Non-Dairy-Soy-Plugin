@@ -70,7 +70,7 @@ terminal String                        DIRECTIVE_IDENTIFIER, DIRECTIVE_PIPE, DIR
 //terminal SoySymbol           BIDI_GLOBAL_DIR, BIDI_DIR_ATTR, BIDI_MARK, BIDI_MARK_AFTER, BIDI_START_EDGE, BIDI_END_EDGE, BIDI_TEXT_DIR;
 
 // expression keywords
-terminal SoySymbol                     IN, RANGE;
+terminal SoySymbol                     AS, IN, RANGE;
 
 // msg attributes
 //terminal SoySymbol           DESC, MEANING;
@@ -259,8 +259,8 @@ alias_list         ::= alias_list:l skip_element
                    ;
 alias_tag          ::= TAG_LBRACE ALIAS NAMESPACE_IDENTIFIER:id TAG_RBRACE
                        {: RESULT = new AliasDeclaration(id); :}
-                   |   TAG_LBRACE ALIAS RBRACE_ERROR
-                       {: RESULT = new AliasDeclaration(null); :}
+                   |   TAG_LBRACE ALIAS NAMESPACE_IDENTIFIER:id AS NAMESPACE_IDENTIFIER TAG_RBRACE
+                       {: RESULT = new AliasDeclaration(id); :}
                    |   TAG_LBRACE ALIAS RBRACE_ERROR
                        {: RESULT = new AliasDeclaration(null); :}
                    ;

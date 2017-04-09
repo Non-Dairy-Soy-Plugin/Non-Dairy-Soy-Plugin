@@ -403,8 +403,7 @@ class TagParser {
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = namespace_def;
             } else if (token == SoyToken.ALIAS) {
-                nowExpect(TagDataType.NAME);
-//                nowExpect(TagDataType.NAME, TagDataType.KEYWORD);
+                nowExpect(TagDataType.NAME, TagDataType.KEYWORD);
                 source.advanceAndMark(command_keyword, "command_keyword");
                 element = alias_def;
             } else if (token == SoyToken.TEMPLATE) {

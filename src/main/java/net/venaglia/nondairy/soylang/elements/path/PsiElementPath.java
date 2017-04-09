@@ -641,7 +641,7 @@ public class PsiElementPath {
 
         static {
             boolean tracingPerThread = false;
-            boolean tracesDefined = false;
+            boolean tracesDefined = true;
             String names = System.getProperty(TRACE_PATH_PROPERTY_NAME);
             String prefix = TRACE_PATH_PROPERTY_NAME + ".";
             Set<String> implicitNames = new HashSet<String>();
