@@ -28,6 +28,6 @@ import com.intellij.lexer.FlexAdapter;
 public class SoyLexer extends FlexAdapter {
 
     public SoyLexer() {
-        super(new SoyScanner());
+        super(new _SoyLexer());
     }
 }

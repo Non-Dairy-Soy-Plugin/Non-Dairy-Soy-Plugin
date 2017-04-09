@@ -56,7 +56,7 @@ public class SoyScannerTest {
 
     private static TestableSoyScanner buildScanner(String name) throws Exception {
         String testSource = SoyTestUtil.getTestSourceBuffer(name);
-        TestableSoyScanner testableSoyScanner = buildScanner(testSource, SoyScanner.YYINITIAL);
+        TestableSoyScanner testableSoyScanner = buildScanner(testSource, _SoyLexer.YYINITIAL);
         int start;
         if (testSource.startsWith("/*") && (start = testSource.indexOf("*/", 2)) > 0) {
             testSource = testSource.substring(start + 2);
@@ -66,7 +66,7 @@ public class SoyScannerTest {
     }
 
     public static TestableSoyScanner buildScanner(CharSequence testSource, @NonNls String initialState) throws Exception {
-        return buildScanner(testSource, (Integer)SoyScanner.class.getField(initialState).get(null));
+        return buildScanner(testSource, (Integer)_SoyLexer.class.getField(initialState).get(null));
     }
 
     private static TestableSoyScanner buildScanner(CharSequence testSource, int initialState) throws Exception {

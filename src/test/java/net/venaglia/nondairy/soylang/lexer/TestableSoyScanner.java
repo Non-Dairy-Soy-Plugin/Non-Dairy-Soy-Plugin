@@ -37,7 +37,7 @@ import java.util.Set;
  * Date: Aug 11, 2010
  * Time: 8:44:33 AM
  */
-public class TestableSoyScanner extends SoyScanner implements Iterable<SoySymbol>, Scanner {
+public class TestableSoyScanner extends _SoyLexer implements Iterable<SoySymbol>, Scanner {
 
     private static Set<IElementType> INPUT_TOKENS_TO_SKIP;
 

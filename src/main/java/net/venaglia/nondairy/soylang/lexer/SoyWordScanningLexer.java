@@ -48,7 +48,7 @@ public class SoyWordScanningLexer extends FlexAdapter {
     private Deque<TokenFragment> fragmentBuffer = new LinkedList<TokenFragment>();
     
     public SoyWordScanningLexer() {
-        super(new SoyScanner());
+        super(new _SoyLexer());
     }
 
     @Override

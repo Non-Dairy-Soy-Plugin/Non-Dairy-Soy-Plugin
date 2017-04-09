@@ -77,7 +77,7 @@ public class SoySymbol extends ComplexSymbolFactory.ComplexSymbol {
 
     public String getState() {
         if (STATES_BY_ID == null) {
-            STATES_BY_ID = SoySyntaxUtil.extractSymbolNames(SoyScanner.class);
+            STATES_BY_ID = SoySyntaxUtil.extractSymbolNames(_SoyLexer.class);
         }
         return STATES_BY_ID.get(state);
     }

@@ -27,7 +27,7 @@ import com.intellij.psi.tree.IElementType;
 %%
 
 //%public
-%class SoyScanner
+%class _SoyLexer
 %extends BaseSoyScanner
 %implements com.intellij.lexer.FlexLexer
 %function advance
@@ -48,7 +48,7 @@ import com.intellij.psi.tree.IElementType;
 //%eofval}
 
 %{
-  public SoyScanner() {
+  public _SoyLexer() {
     this((java.io.Reader)null);
   }
 %}
