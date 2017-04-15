@@ -76,6 +76,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken CAPTURED_IDENTIFIER = new SoyToken(203, "CAPTURED_IDENTIFIER");
     public static final SoyToken CAPTURED_FUNCTION_IDENTIFIER = new SoyToken(204, "CAPTURED_FUNCTION_IDENTIFIER");
     public static final SoyToken STRING_PARAMETER_REF = new SoyToken(205, "STRING_PARAMETER_REF");
+    public static final SoyToken INNER_PARAMETER_DEF = new SoyToken(209, "INNER_PARAMETER_DEF");
 
     // command tag pairs
     public static final SoyToken TEMPLATE = new SoyToken(300, "TEMPLATE", "template");
@@ -90,6 +91,7 @@ public final class SoyToken extends IElementType {
     public static final SoyToken CALL = new SoyToken(307, "CALL", "call");
     public static final SoyToken DELCALL = new SoyToken(310, "DELCALL", "delcall");
     public static final SoyToken PARAM = new SoyToken(308, "PARAM", "param");
+    public static final SoyToken INNER_PARAM = new SoyToken(313, "INNER_PARAM", "@param");
 
     // commands
     public static final SoyToken DELPACKAGE = new SoyToken(409, "DELPACKAGE", "delpackage");
@@ -400,9 +402,10 @@ public final class SoyToken extends IElementType {
     public static void importParserValues(Class<?> parserSymbolClass) {
         for (SoyToken token : ALL_TOKENS_BY_VALUE.values()) {
             try {
+
                 token.parserValue = (Integer)parserSymbolClass.getField(token.name()).get(null);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+//                throw new RuntimeException(e);
             }
         }
     }

@@ -537,6 +537,9 @@ class TagParser {
                 source.advanceAndMarkBad(invalid_text, "invalid_text");
                 done();
                 return null;
+            } else if (token == SoyToken.INNER_PARAM) {
+                nowExpect(TagDataType.NAME);
+                source.advance();
             }
             tagToken = token;
             this.command = command;
@@ -659,6 +662,13 @@ class TagParser {
                 } else {
                     source.advanceAndMarkBad(member_property_ref, "member_property_ref");
                 }
+            } else if (token == SoyToken.INNER_PARAMETER_DEF) {
+                source.advanceAndMark(parameter_def, "parameter_def");
+                if(source.token() == SoyToken.COLON) {
+                    source.advance();
+                }
+                // skip type for now
+                source.advance();
             } else {
                 return this;
             }

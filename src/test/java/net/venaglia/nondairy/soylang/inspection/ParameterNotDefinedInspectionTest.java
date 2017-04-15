@@ -92,6 +92,22 @@ public class ParameterNotDefinedInspectionTest extends AbstractPsiElementTest {
         assertEquals(0, problems.size());
     }
 
+//    @Test
+//    public void testInnerParameterNotDefined_valid() throws Exception {
+//        buildAnonymousTestTemplate(
+//                "local",
+//                "" +
+//                        "{template .test}\n" +
+//                        "    {@param optional: string}\n" +
+//                        "    {$optional}\n" +
+//                        "{/template}\n"
+//        );
+//
+//        List<ProblemDescriptor> problems = new ArrayList<>();
+//        inspection.findProblems(findRootElement("local"), new MockInspectionManager(), true, problems);
+//        assertEquals(0, problems.size());
+//    }
+
     @Test
     public void testParameterNotDefined_ij() throws Exception {
         buildAnonymousTestTemplate(

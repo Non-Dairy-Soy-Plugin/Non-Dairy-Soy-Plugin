@@ -249,6 +249,11 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
                                    yybegin(closeTag ? CLOSE_TAG : IDENTIFIER_TAG);
                                    currentCommand = closeTag ? null : yytext().toString();
                                    return symbol(CALL); }
+  "@param" [^a-zA-Z0-9_]         { yypushback(1);
+                                   capturedIdentifierType = INNER_PARAMETER_DEF;
+                                   yybegin(closeTag ? CLOSE_TAG : IDENTIFIER_TAG);
+                                   currentCommand = closeTag ? null : yytext().toString();
+                                   return symbol(INNER_PARAM); }
   "delcall" [^a-zA-Z0-9_]        { yypushback(1);
                                    capturedIdentifierType = DELTEMPLATE_IDENTIFIER;
                                    yybegin(closeTag ? CLOSE_TAG : IDENTIFIER_TAG);

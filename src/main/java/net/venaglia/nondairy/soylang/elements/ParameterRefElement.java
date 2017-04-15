@@ -51,11 +51,16 @@ public class ParameterRefElement extends ParameterElement {
         }
     };
 
+    public static final PsiElementPath PATH_TO_INNER_PARAM_DEF =
+            new PsiElementPath(new ElementTypePredicate(template_content).onFirstAncestor(),
+                    new ElementTypePredicate(parameter_def).onChildren()).debug("path_to_parameter_def!template");
+
     public static final PsiElementPath PATH_TO_TEMPLATE_DEF =
             new PsiElementPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
-                               new ElementTypePredicate(doc_comment).onChildren(),
-                               new ElementTypePredicate(doc_comment_tag_with_description).onChildren(),
-                               new ElementTypePredicate(doc_comment_param_def).onChildren()).debug("path_to_parameter_def!template");
+                    new ElementTypePredicate(doc_comment).onChildren(),
+                    new ElementTypePredicate(doc_comment_tag_with_description).onChildren(),
+                    new ElementTypePredicate(doc_comment_param_def).onChildren()).debug("path_to_parameter_def!template");
+
 
     public static final PsiElementPath PATH_TO_ITERATOR_DEF =
             new PsiElementPath(new ElementTypePredicate(iterator_tag_pair).onAncestors(),
@@ -76,7 +81,7 @@ public class ParameterRefElement extends ParameterElement {
                                new ElementTypePredicate(let_parameter_def).onChildren()).debug("path_to_parameter_def!let");
 
     public static final PsiElementPath PATH_TO_PARAMETER_DEF =
-                PATH_TO_TEMPLATE_DEF.or(PATH_TO_ITERATOR_DEF, PATH_TO_LET_DEF).debug("path_to_parameter_def");
+                PATH_TO_TEMPLATE_DEF.or(PATH_TO_ITERATOR_DEF, PATH_TO_LET_DEF).or(PATH_TO_INNER_PARAM_DEF).debug("path_to_parameter_def");
 
     private final ElementPredicate parameterNamePredicate;
 
