@@ -671,7 +671,9 @@ class TagParser {
                     source.advance();
                 }
                 // skip type for now
-                source.advance();
+                while (!source.eof() && !END_OF_TAG_TOKENS.contains(source.token())) {
+                    source.advance();
+                }
             } else {
                 return this;
             }

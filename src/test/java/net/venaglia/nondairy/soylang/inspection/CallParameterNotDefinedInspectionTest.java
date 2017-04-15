@@ -151,4 +151,28 @@ public class CallParameterNotDefinedInspectionTest extends AbstractPsiElementTes
         inspection.findProblems(findRootElement("call_local"), new MockInspectionManager(), true, problems);
         assertEquals(0, problems.size());
     }
+
+    @Test
+    @Ignore //TODO
+    public void testLocalTemplateCallInnerParams_valid() throws Exception {
+        buildAnonymousTestTemplate(
+                "call_local",
+                "/**\n" +
+                        " */\n" +
+                        "{template .call_local}\n" +
+                        "    {call .test}\n" +
+                        "        {param declared:''/}\n" +
+                        "    {/call}\n" +
+                        "{/template}\n" +
+                        "\n" +
+                        "{template .test}\n" +
+                        "    {@param? declared: string}" +
+                        "    {$declared}\n" +
+                        "{/template}"
+        );
+
+        List<ProblemDescriptor> problems = new ArrayList<ProblemDescriptor>();
+        inspection.findProblems(findRootElement("call_local"), new MockInspectionManager(), true, problems);
+        assertEquals(0, problems.size());
+    }
 }

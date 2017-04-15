@@ -66,10 +66,13 @@ public class CallParameterNotDefinedInspection extends AbstractSoyInspectionWith
             PsiElementCollection result = new PsiElementCollection(popped.size());
             for (PsiElement element : popped) {
                 if (element instanceof ParameterElement &&
-                    !namesDeclared.contains(((ParameterElement)element).getName()) &&
-                    ParameterRefElement.PATH_TO_ITERATOR_DEF.navigate(element)
-                                                            .applyPredicate(new ParameterPredicate(((ParameterElement)element).getName()))
-                                                            .isEmpty()) {
+                        !namesDeclared.contains(((ParameterElement) element).getName()) &&
+                        ParameterRefElement.PATH_TO_ITERATOR_DEF.navigate(element)
+                                .applyPredicate(new ParameterPredicate(((ParameterElement) element).getName()))
+                                .isEmpty() &&
+                        ParameterRefElement.PATH_TO_INNER_PARAM_DEF.navigate(element)
+                                .applyPredicate(new ParameterPredicate(((ParameterElement) element).getName()))
+                                .isEmpty()) {
                     result.add(element);
                 }
             }
