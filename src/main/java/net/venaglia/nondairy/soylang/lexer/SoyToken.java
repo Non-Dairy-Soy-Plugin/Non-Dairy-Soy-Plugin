@@ -118,6 +118,7 @@ public final class SoyToken extends IElementType {
     // template attributes
 //    public static final SoyToken PRIVATE = new SoyToken(550, "PRIVATE");
 //    public static final SoyToken AUTOESCAPE = new SoyToken(551, "AUTOESCAPE");
+    public static final SoyToken KIND = new SoyToken(552, "KIND");
 
     // msg attributes
 //    public static final SoyToken DESC = new SoyToken(560, "DESC");
@@ -265,7 +266,7 @@ public final class SoyToken extends IElementType {
                                                                                     CAPTURED_FUNCTION_IDENTIFIER));
     public static final TokenSet COMMAND_TOKENS = fromValueRange(300, 549);
     public static final TokenSet NAME_TOKENS = fromValueRange(200, 299);
-    public static final TokenSet ATTRIBUTE_TOKENS = TokenSet.create(CAPTURED_IDENTIFIER, EQ, STRING_PARAMETER_REF);
+    public static final TokenSet ATTRIBUTE_TOKENS = TokenSet.create(CAPTURED_IDENTIFIER, EQ, STRING_PARAMETER_REF, KIND);
     public static final TokenSet DIRECTIVE_TOKENS = fromValueRange(600, 649);
     public static final TokenSet TAG_SECTION_TOKENS = TokenSet.create(ELSE_IF, ELSE, CASE, DEFAULT, IF_EMPTY, PARAM);
     public static final TokenSet NON_TAG_TOKENS = fromValueRange(100, 199);

@@ -174,7 +174,7 @@ class TagParser {
                     }
                     break;
                 case ATTRIBUTES:
-                    if (!SoyToken.ATTRIBUTE_TOKENS.contains(token)) {
+                    if (!SoyToken.ATTRIBUTE_TOKENS.contains(token) && token != SoyToken.KIND) {
                         notExpect(TagDataType.ATTRIBUTES);
                         break;
                     }
@@ -221,7 +221,7 @@ class TagParser {
     private void parseAttribute() {
         IElementType token = source.token();
         PsiBuilder.Marker beginAttribute;
-        if (token == SoyToken.CAPTURED_IDENTIFIER) {
+        if (token == SoyToken.CAPTURED_IDENTIFIER || token == SoyToken.KIND) {
             beginAttribute = source.mark("beginAttribute");
         } else {
             source.advanceAndMarkBad(unexpected_symbol, "unexpected_symbol");
@@ -510,6 +510,8 @@ class TagParser {
                             if (source.token() == SoyToken.COLON) {
                                 source.advance();
                                 nowExpect(TagDataType.EXPRESSION);
+                            } else if (source.token() == SoyToken.KIND) {
+                                nowExpect(TagDataType.ATTRIBUTES);
                             } else if (source.token() == SoyToken.TAG_RBRACE) {
                                 // this is OK, template content is an acceptable value
                             } else if (source.token() == SoyToken.TAG_END_RBRACE) {

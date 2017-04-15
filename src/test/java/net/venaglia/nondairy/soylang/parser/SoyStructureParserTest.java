@@ -82,6 +82,11 @@ public class SoyStructureParserTest extends BaseParserTest {
     }
 
     @Test
+    public void attributesKind() throws Exception {
+        testNoErrorsImpl("attributes-kind.soy");
+    }
+
+    @Test
     public void testDelegatesDefault() throws Exception {
         testNoErrorsImpl("delegates-default.soy");
     }

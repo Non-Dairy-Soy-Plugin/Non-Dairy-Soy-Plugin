@@ -403,6 +403,7 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
 //  /* template attributes */
 //  "private"                      { return symbol(PRIVATE); }
 //  "autoescape"                   { return symbol(AUTOESCAPE); }
+    "kind"                         { return symbol(KIND); }
 
 //  /* functions */
 //  "isFirst"                      { return symbol(IS_FIRST); }
