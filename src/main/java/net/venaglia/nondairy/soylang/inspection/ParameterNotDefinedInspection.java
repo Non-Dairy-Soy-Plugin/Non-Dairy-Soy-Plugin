@@ -69,9 +69,9 @@ public class ParameterNotDefinedInspection extends AbstractSoyInspectionWithSing
                     ParameterRefElement.PATH_TO_LET_DEF.navigate(element)
                                                        .applyPredicate(new ParameterPredicate(((ParameterElement)element).getName()))
                                                        .isEmpty() &&
-//                    ParameterRefElement.PATH_TO_INNER_PARAM_DEF.navigate(element)
-//                            .applyPredicate(new ParameterPredicate(((ParameterElement)element).getName()))
-//                            .isEmpty() &&
+                    ParameterRefElement.PATH_TO_INNER_PARAM_DEF.navigate(element)
+                            .applyPredicate(new ParameterPredicate(((ParameterElement)element).getName()))
+                            .isEmpty() &&
                     ParameterRefElement.PATH_TO_ITERATOR_DEF.navigate(element)
                                                             .applyPredicate(new ParameterPredicate(((ParameterElement)element).getName()))
                                                             .isEmpty()) {

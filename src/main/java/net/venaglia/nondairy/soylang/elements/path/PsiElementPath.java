@@ -641,7 +641,7 @@ public class PsiElementPath {
 
         static {
             boolean tracingPerThread = false;
-            boolean tracesDefined = true;
+            boolean tracesDefined = false;
             String names = System.getProperty(TRACE_PATH_PROPERTY_NAME);
             String prefix = TRACE_PATH_PROPERTY_NAME + ".";
             Set<String> implicitNames = new HashSet<String>();
@@ -723,7 +723,7 @@ public class PsiElementPath {
         private static final ThreadLocal<TraceState> TRACE_STATE = new ThreadLocal<TraceState>() {
             @Override
             protected TraceState initialValue() {
-                return new TraceState(Level.NONE, null, null, -1);
+                return new TraceState(Level.FINE, null, null, -1);
             }
         };
 

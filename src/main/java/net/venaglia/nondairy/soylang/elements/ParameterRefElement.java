@@ -52,7 +52,10 @@ public class ParameterRefElement extends ParameterElement {
     };
 
     public static final PsiElementPath PATH_TO_INNER_PARAM_DEF =
-            new PsiElementPath(new ElementTypePredicate(template_content).onFirstAncestor(),
+            new PsiElementPath( //
+                    new ElementTypePredicate(template_tag_pair).onFirstAncestor(),
+                    new ElementTypePredicate(tag).onChildren(),
+                    new ElementTypePredicate(tag_between_braces).onChildren(),
                     new ElementTypePredicate(parameter_def).onChildren()).debug("path_to_parameter_def!template");
 
     public static final PsiElementPath PATH_TO_TEMPLATE_DEF =
