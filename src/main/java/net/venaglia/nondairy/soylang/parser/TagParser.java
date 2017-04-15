@@ -663,6 +663,9 @@ class TagParser {
                     source.advanceAndMarkBad(member_property_ref, "member_property_ref");
                 }
             } else if (token == SoyToken.INNER_PARAMETER_DEF) {
+                if(source.token() == SoyToken.QUESTION) {
+                    source.advance();
+                }
                 source.advanceAndMark(parameter_def, "parameter_def");
                 if(source.token() == SoyToken.COLON) {
                     source.advance();

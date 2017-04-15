@@ -67,6 +67,11 @@ public class SoyStructureParserTest extends BaseParserTest {
     }
 
     @Test
+    public void testInnerParametersNullable() throws Exception {
+        testNoErrorsImpl("innerParamsNullable.soy");
+    }
+    
+    @Test
     public void testEdgeCases() throws Exception {
         testNoErrorsImpl("edge-cases.soy");
     }
