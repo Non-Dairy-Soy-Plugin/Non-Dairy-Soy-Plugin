@@ -153,7 +153,6 @@ public class CallParameterNotDefinedInspectionTest extends AbstractPsiElementTes
     }
 
     @Test
-    @Ignore //TODO
     public void testLocalTemplateCallInnerParams_valid() throws Exception {
         buildAnonymousTestTemplate(
                 "call_local",

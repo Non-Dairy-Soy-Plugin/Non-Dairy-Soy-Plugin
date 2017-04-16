@@ -18,6 +18,8 @@ package net.venaglia.nondairy.soylang.inspection;
 
 import static net.venaglia.nondairy.soylang.SoyElement.*;
 
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Sets;
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.ProblemDescriptor;
@@ -60,7 +62,7 @@ public class CallParameterNotDefinedInspection extends AbstractSoyInspectionWith
             @NonNls Set<String> namesDeclared = new HashSet<String>(current.size());
             for (PsiElement element : current) {
                 if (element instanceof ParameterElement) {
-                    namesDeclared.add(((ParameterElement)element).getName());
+                    namesDeclared.add(((ParameterElement) element).getName());
                 }
             }
             PsiElementCollection result = new PsiElementCollection(popped.size());
@@ -68,9 +70,6 @@ public class CallParameterNotDefinedInspection extends AbstractSoyInspectionWith
                 if (element instanceof ParameterElement &&
                         !namesDeclared.contains(((ParameterElement) element).getName()) &&
                         ParameterRefElement.PATH_TO_ITERATOR_DEF.navigate(element)
-                                .applyPredicate(new ParameterPredicate(((ParameterElement) element).getName()))
-                                .isEmpty() &&
-                        ParameterRefElement.PATH_TO_INNER_PARAM_DEF.navigate(element)
                                 .applyPredicate(new ParameterPredicate(((ParameterElement) element).getName()))
                                 .isEmpty()) {
                     result.add(element);
@@ -87,13 +86,13 @@ public class CallParameterNotDefinedInspection extends AbstractSoyInspectionWith
             Set<String> names = new HashSet<String>(popped.size());
             for (PsiElement element : popped) {
                 if (element instanceof TemplateMemberElement) {
-                    names.add(((TemplateMemberElement)element).getTemplateName());
+                    names.add(((TemplateMemberElement) element).getTemplateName());
                 }
             }
             PsiElementCollection result = new PsiElementCollection();
             for (PsiElement element : current) {
                 if (element instanceof TemplateMemberElement &&
-                        names.contains(((TemplateMemberElement)element).getTemplateName())) {
+                        names.contains(((TemplateMemberElement) element).getTemplateName())) {
                     result.add(element);
                 }
             }
@@ -101,36 +100,63 @@ public class CallParameterNotDefinedInspection extends AbstractSoyInspectionWith
         }
     };
 
+    //TODO: deduplicate
+
     private static final PsiElementPath PATH_TO_UNDECLARED_CALL_PARAMS =
             new PsiElementPath(TraverseEmpty.CONTINUE,
-                               new ElementTypePredicate(param_tag).onChildren(),
-                               new ElementTypePredicate(invocation_parameter_ref).onChildrenOfChildren(),
-                               PushPopPredicate.push(),
-                               PushPopPredicate.push(),
-                               SoyFileElementTraversalPredicate.filesStartingOnNamespaceElement(),
-                               new ElementTypePredicate(soy_file).onChildren(),
-                               new ElementTypePredicate(tag_and_doc_comment).onChildren(),
-                               new ElementTypePredicate(template_tag).onChildrenOfChildren(),
-                               PushPopPredicate.popAndJoin(FILTER_TEMPLATE_NAMES_POP_JOIN),
-                               new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
-                               new ElementTypePredicate(doc_comment).onChildren(),
-                               new ElementTypePredicate(doc_comment_tag_with_description).onChildren(),
-                               new ElementTypePredicate(doc_comment_param_def).onChildren(),
-                               PushPopPredicate.popAndJoin(FILTER_UNDECLARED_POP_JOIN)).debug("call_parameter_not_declared!call_params");
+                    new ElementTypePredicate(param_tag).onChildren(),
+                    new ElementTypePredicate(invocation_parameter_ref).onChildrenOfChildren(),
+                    PushPopPredicate.push(),
+                    PushPopPredicate.push(),
+                    SoyFileElementTraversalPredicate.filesStartingOnNamespaceElement(),
+                    new ElementTypePredicate(soy_file).onChildren(),
+                    new ElementTypePredicate(tag_and_doc_comment).onChildren(),
+                    new ElementTypePredicate(template_tag).onChildrenOfChildren(),
+                    PushPopPredicate.popAndJoin(FILTER_TEMPLATE_NAMES_POP_JOIN),
+                    new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
+                    new ElementTypePredicate(doc_comment).onChildren(),
+                    new ElementTypePredicate(doc_comment_tag_with_description).onChildren(),
+                    new ElementTypePredicate(doc_comment_param_def).onChildren(),
+                    PushPopPredicate.popAndJoin(FILTER_UNDECLARED_POP_JOIN)).debug("call_parameter_not_declared!call_params");
 
     private static final PsiElementPath FIND_UNDECLARED_PARAMS =
             new PsiElementPath(TraverseEmpty.CONTINUE,
-                               new ElementTypePredicate(SoyElement.soy_file).onChildren(),
-                               new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
-                               new ElementTypePredicate(call_tag_pair).onAllDescendants(),
-                               PATH_TO_UNDECLARED_CALL_PARAMS.asForkingTraversalPredicate()).debug("call_parameter_not_declared!main");
+                    new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                    new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
+                    new ElementTypePredicate(call_tag_pair).onAllDescendants(),
+                    PATH_TO_UNDECLARED_CALL_PARAMS.asForkingTraversalPredicate()).debug("call_parameter_not_declared!main");
+
+    private static final PsiElementPath PATH_TO_UNDECLARED_CALL_INNER_PARAMS =
+            new PsiElementPath( //
+                    TraverseEmpty.CONTINUE,
+                    new ElementTypePredicate(param_tag).onChildren(),
+                    new ElementTypePredicate(invocation_parameter_ref).onChildrenOfChildren(),
+                    PushPopPredicate.push(),
+                    PushPopPredicate.push(),
+                    SoyFileElementTraversalPredicate.filesStartingOnNamespaceElement(),
+                    new ElementTypePredicate(soy_file).onChildren(),
+                    new ElementTypePredicate(tag_and_doc_comment).onChildren(),
+                    new ElementTypePredicate(template_tag).onChildrenOfChildren(),
+                    PushPopPredicate.popAndJoin(FILTER_TEMPLATE_NAMES_POP_JOIN),
+                    new ElementTypePredicate(template_tag_pair).onFirstAncestor(),
+                    new ElementTypePredicate(tag).onChildren(),
+                    new ElementTypePredicate(tag_between_braces).onChildren(),
+                    new ElementTypePredicate(parameter_def).onChildren(),
+                    PushPopPredicate.popAndJoin(FILTER_UNDECLARED_POP_JOIN)).debug("call_parameter_not_declared!call_params");
+
+    private static final PsiElementPath FIND_UNDECLARED_INNER_PARAMS =
+            new PsiElementPath(TraverseEmpty.CONTINUE,
+                    new ElementTypePredicate(SoyElement.soy_file).onChildren(),
+                    new ElementTypePredicate(SoyElement.tag_and_doc_comment).onChildren(),
+                    new ElementTypePredicate(call_tag_pair).onAllDescendants(),
+                    PATH_TO_UNDECLARED_CALL_INNER_PARAMS.asForkingTraversalPredicate()).debug("call_parameter_not_declared!main");
 
     private static final PsiElementPath PATH_TO_TEMPLATE_TAG_PAIR =
             new PsiElementPath(new ElementTypePredicate(template_tag_pair).onFirstAncestor());
 
     private static final PsiElementPath PATH_TO_TEMPLATE_DOC =
             new PsiElementPath(new ElementTypePredicate(tag_and_doc_comment).onFirstAncestor(),
-                               new ElementTypePredicate(doc_comment).onChildren()).debug("call_parameter_not_declared!docs");
+                    new ElementTypePredicate(doc_comment).onChildren()).debug("call_parameter_not_declared!docs");
 
     public CallParameterNotDefinedInspection() {
         super("undeclared.call.parameter");
@@ -152,11 +178,12 @@ public class CallParameterNotDefinedInspection extends AbstractSoyInspectionWith
                                 @NotNull InspectionManager manager,
                                 boolean isOnTheFly,
                                 @NotNull List<ProblemDescriptor> problems) {
-        PsiElementCollection elements = FIND_UNDECLARED_PARAMS.navigate(file);
-        for (PsiElement element : elements) {
+        PsiElementCollection elements1 = FIND_UNDECLARED_PARAMS.navigate(file);
+        PsiElementCollection elements2 = FIND_UNDECLARED_INNER_PARAMS.navigate(file);
+        for (PsiElement element : Sets.intersection(elements1, elements2)) {
             checkCanceled();
             if (element instanceof ParameterElement) {
-                String name = ((ParameterElement)element).getName();
+                String name = ((ParameterElement) element).getName();
                 problems.add(manager.createProblemDescriptor(element,
                         getMessage(name),
                         getQuickFix(name),
@@ -168,7 +195,7 @@ public class CallParameterNotDefinedInspection extends AbstractSoyInspectionWith
 
     @Override
     protected void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-        ParameterElement element = (ParameterElement)descriptor.getPsiElement();
+        ParameterElement element = (ParameterElement) descriptor.getPsiElement();
         VirtualFile containingFile = element.getContainingFile().getVirtualFile();
         @NonNls String parameterName = element.getName();
         PsiElement templatePair = PATH_TO_TEMPLATE_TAG_PAIR.navigate(element).oneOrNull();
