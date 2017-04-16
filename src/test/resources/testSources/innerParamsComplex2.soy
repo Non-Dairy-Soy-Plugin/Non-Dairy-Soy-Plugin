@@ -1,7 +1,10 @@
 {template .member}
-  {@param professions: list<[
-    id: string,
-    name: string
+  {@param? frames: list<[
+    errorText: string,
+    previewSrc: string|null,
+    thumbnailSrc: string|null,
+    unvailableText: string,
+    visible: bool|null
   ]>}
   <p class="dialogMember">{$professions}</p>
 {/template}

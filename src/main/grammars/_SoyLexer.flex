@@ -485,7 +485,8 @@ HtmlEntityRef = "&" ( {HtmlMnemonicEntityId} | {HtmlDecimalEntityId} | {HtmlHexE
   "*"                            { return symbol(MULT); }
   "/"                            { return symbol(DIV); }
   "%"                            { return symbol(MOD); }
-  "|"                            { yybegin(TAG_DIRECTIVE); return symbol(DIRECTIVE_PIPE); }
+  // TODO: special fix for @param `|` syntax
+  "|"                            { if (currentCommand == null || !currentCommand.startsWith("@param")) yybegin(TAG_DIRECTIVE); return symbol(DIRECTIVE_PIPE); }
   ","                            { return symbol(COMMA); }
 
   /* string literal */

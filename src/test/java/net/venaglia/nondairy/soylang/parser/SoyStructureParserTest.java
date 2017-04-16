@@ -77,6 +77,11 @@ public class SoyStructureParserTest extends BaseParserTest {
     }
 
     @Test
+    public void testInnerParametersComplex2() throws Exception {
+        testNoErrorsImpl("innerParamsComplex2.soy");
+    }
+
+    @Test
     public void testEdgeCases() throws Exception {
         testNoErrorsImpl("edge-cases.soy");
     }
