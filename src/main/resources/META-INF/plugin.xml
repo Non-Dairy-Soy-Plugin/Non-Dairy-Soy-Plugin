@@ -15,7 +15,7 @@
   -->
 
 <idea-plugin version="2">
-    <id>net.venaglia.nondairy</id>
+    <id>Non-Dairy Soy Plugin</id>
     <name>Non-Dairy Soy Plugin</name>
     <description><![CDATA[
         <p>A plugin to help with the development of Closure Templates
