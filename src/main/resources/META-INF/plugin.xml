@@ -17,20 +17,29 @@
 <idea-plugin version="2">
     <id>net.venaglia.nondairy</id>
     <name>Non-Dairy Soy Plugin</name>
-    <description>
-        <![CDATA[
+    <description><![CDATA[
         <p>A plugin to help with the development of Closure Templates
         (soy files).</p>
         <p>This plugin includes support for syntax highlighting, code folding,
         find usages and go to declaration on parameters and templates, and
         Structure view.</p>
         <p>This plugin is still under development, and updates are subject to
-        my available free time.</p>
-        ]]>
-    </description>
+        our available free time.</p>
+    ]]></description>
     <version>0.6.2-SNAPSHOT</version>
-    <vendor>Ed Venaglia</vendor>
+    <vendor url="https://github.com/Non-Dairy-Soy-Plugin/Non-Dairy-Soy-Plugin">Non-Dairy Soy plugin</vendor>
     <idea-version since-build="143.0"/>
+    <change-notes><![CDATA[
+      <p>
+        <b>v7.0.0</b>
+        <ul>
+          <li>support for {alias as} syntax</li>
+          <li>support for @param syntax</li>
+          <li>support for kind attribute</li>
+        </ul>
+      </p>
+    ]]>
+    </change-notes>
 
     <application-components>
         <component>

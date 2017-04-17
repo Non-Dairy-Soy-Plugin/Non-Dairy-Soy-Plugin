@@ -6,13 +6,9 @@ necessary to add or revise something.
 
 ## Project Goals
 
-* Develop a top-quality IntelliJ language plugin
 * Enhance the usability and maintainability of soy files
 * Leverage the most powerful features of IntelliJ IDEA to promote a superior
   developer experience
-* I18N support (still looking for translators)
-* Automated tests designed to ensure a quality release every time
-== Build
 
 ## Build
 ```bash
