@@ -208,11 +208,7 @@ public class SoyStructureParser {
         while (!unclosedTagParsers.isEmpty()) {
             TagParser top = unclosedTagParsers.pop();
             if (types.contains(top.getTagToken())) {
-                /*
-                 * TODO: last should be used here instead of offendingTag
-                 * But since 2016.1 it breaks IDE
-                 */
-                processBadTag(offendingTag, notAtTopOfStack.toString());
+                processBadTag(offendingTag, last, notAtTopOfStack.toString());
                 if (unclosedTagParsers.isEmpty() && docBeginMarker != null) {
                     if (visitBeforeDone != null) {
                         visitBeforeDone.visit(top);
@@ -227,6 +223,11 @@ public class SoyStructureParser {
         // should never get here
         processBadTag(offendingTag, notInStack.toString());
         return null;
+    }
+
+    private void processBadTag(TagParser offendingTag, TagParser tagParser, String message) {
+        PsiBuilder.Marker badMarker = tagParser.getTagMarker().precede();
+        badMarker.errorBefore(message, offendingTag.getTagMarker());
     }
 
     private void processBadTag(TagParser tagParser, String message) {
