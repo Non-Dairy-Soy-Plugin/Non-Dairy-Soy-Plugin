@@ -314,7 +314,7 @@ public class TreeBuildingTokenSource extends TokenSource {
 
         @Override
         public void errorBefore(String message, PsiBuilder.Marker before) {
-            throw new UnsupportedOperationException();
+            error(message);
         }
 
         @Override
