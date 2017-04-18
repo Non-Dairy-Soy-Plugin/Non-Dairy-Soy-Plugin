@@ -538,6 +538,10 @@ class TagParser {
             } else if (token == SoyToken.CSS) {
                 nowExpect(TagDataType.EXPRESSION, TagDataType.DIRECTIVES);
                 source.advanceAndMark(command_keyword, "command_keyword");
+                if (source.token() == SoyToken.MOD) {
+                    // `%` is allowed as a first symbol in css
+                    source.advance();
+                }
             } else if (SoyToken.NON_TAG_TOKENS.contains(token)) {
                 source.advanceAndMarkBad(invalid_text, "invalid_text");
                 done();

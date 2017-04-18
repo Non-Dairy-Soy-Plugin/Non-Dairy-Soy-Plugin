@@ -107,6 +107,11 @@ public class SoyStructureParserTest extends BaseParserTest {
     }
 
     @Test
+    public void testCss() throws Exception {
+        testNoErrorsImpl("css.soy");
+    }
+
+    @Test
     public void testDelegatesCallSimple() throws Exception {
         testNoErrorsImpl("delegates-simple.soy");
     }
