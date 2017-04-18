@@ -429,7 +429,10 @@ class TagParser {
                             source.advanceAndMark(let_parameter_def, "let_parameter_def");
                         }
                         if (!source.eof()) {
-                            if (source.token() == SoyToken.COLON) {
+                            if (source.token() == SoyToken.KIND) {
+                                requiresCloseTag = true;
+                                nowExpect(TagDataType.ATTRIBUTES);
+                            } else if (source.token() == SoyToken.COLON) {
                                 source.advance();
                                 nowExpect(TagDataType.EXPRESSION);
                             } else if (source.token() == SoyToken.TAG_RBRACE) {
