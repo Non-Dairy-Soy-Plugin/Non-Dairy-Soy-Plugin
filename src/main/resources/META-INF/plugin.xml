@@ -26,16 +26,21 @@
         <p>This plugin is still under development, and updates are subject to
         our available free time.</p>
     ]]></description>
-    <version>0.6.2-SNAPSHOT</version>
     <vendor url="https://github.com/Non-Dairy-Soy-Plugin/Non-Dairy-Soy-Plugin">Non-Dairy Soy plugin</vendor>
     <idea-version since-build="143.0"/>
     <change-notes><![CDATA[
       <p>
+        <b>v0.7.1</b>
+        <ul>
+          <li>fix the bug when the plugin could crash the IDE (unbalanced markers)</li>
+          <li>support a leading % in the css command</li>
+          <li>support "kind" attributes on "let" elements (thanks to @codahale)</li>
+        </ul>
         <b>v0.7.0</b>
         <ul>
-          <li>support for {alias as} syntax</li>
-          <li>support for @param syntax</li>
-          <li>support for kind attribute</li>
+          <li>support {alias as} syntax</li>
+          <li>support @param syntax</li>
+          <li>support kind attribute</li>
         </ul>
       </p>
     ]]>
