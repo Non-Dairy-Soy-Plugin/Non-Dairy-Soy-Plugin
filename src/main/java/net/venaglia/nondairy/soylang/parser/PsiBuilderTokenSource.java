@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NonNls;
  */
 public class PsiBuilderTokenSource extends TokenSource {
 
-    public static final boolean DEBUG_PSI_BUILDER = true;
+    public static final boolean DEBUG_PSI_BUILDER = false;
 
     private final PsiBuilder builder;
 

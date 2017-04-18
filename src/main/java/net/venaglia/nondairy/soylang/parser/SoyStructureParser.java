@@ -16,9 +16,6 @@
 
 package net.venaglia.nondairy.soylang.parser;
 
-import static net.venaglia.nondairy.i18n.MessageBuffer.msg;
-import static net.venaglia.nondairy.soylang.SoyElement.*;
-
 import com.intellij.lang.PsiBuilder;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.xml.IXmlElementType;
@@ -32,6 +29,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Stack;
+
+import static net.venaglia.nondairy.i18n.MessageBuffer.msg;
+import static net.venaglia.nondairy.soylang.SoyElement.*;
 
 /**
  * User: ed
@@ -68,7 +68,7 @@ public class SoyStructureParser {
 
     /**
      * Parses the body of a soy file.
-     * @see net.venaglia.nondairy.soylang.lexer.SoyScanner#YYINITIAL
+     * @see net.venaglia.nondairy.soylang.lexer._SoyLexer#YYINITIAL
      */
     public void parse() {
         PsiBuilder.Marker marker = source.mark("marker");
@@ -208,7 +208,11 @@ public class SoyStructureParser {
         while (!unclosedTagParsers.isEmpty()) {
             TagParser top = unclosedTagParsers.pop();
             if (types.contains(top.getTagToken())) {
-                processBadTag(last, notAtTopOfStack.toString());
+                /*
+                 * TODO: last should be used here instead of offendingTag
+                 * But since 2016.1 it breaks IDE
+                 */
+                processBadTag(offendingTag, notAtTopOfStack.toString());
                 if (unclosedTagParsers.isEmpty() && docBeginMarker != null) {
                     if (visitBeforeDone != null) {
                         visitBeforeDone.visit(top);
