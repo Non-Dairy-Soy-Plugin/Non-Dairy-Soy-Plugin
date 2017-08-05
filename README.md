@@ -4,6 +4,10 @@
 This document is subject to change, particularly at any point it is deemed
 necessary to add or revise something.
 
+## Current status
+
+The plugin development has stopped. There is a plugin for closure templates that is officially supported by Google now - [bamboo soy](https://github.com/google/bamboo-soy). It has already covered most of non-dairy soy plugin features and it will become better over time. Give it a try. 
+
 ## Project Goals
 
 * Enhance the usability and maintainability of soy files
